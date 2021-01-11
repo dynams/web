@@ -1,0 +1,71 @@
+ <!DOCTYPE html>
+<html>
+ <meta charset="UTF-8">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <link rel="stylesheet" href="style.css"></style>
+    <script src="dynam.space.js"></script> 
+  </head>
+
+  <body>
+   <div id="main">
+  <div id="buttons">
+    <button v-show="!I.hasStarted" @click="start">Start</button>
+    <button v-show="I.isRunning" @click="stop">Stop</button>
+    <button v-show="I.hasStarted && !I.isRunning" @click="reset">Reset</button>
+    <a v-if="I.hasStarted && !I.isRunning" :href="csv" :download="filename">
+      <button>Save</button>
+    </a>
+  </div>
+  <div>
+    <button v-for="(param, idx) in params" @click="load(param)">
+       {{idx}}
+    </button>
+  </div>
+  <div>
+
+  </div>
+  <div>
+    <canvas id="myCanvas" ref="myCanvas" width="255" height="255"></canvas>
+  </div>
+  <div class="params">
+    <table>
+      <th>Inputs</th>
+      <tr v-for="(item, key, idx) in I">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+
+      <th>Outputs</th>
+      <tr v-for="(item, key, idx) in O">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+      <th>States</th>
+      <tr v-for="(item, key, idx) in S">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+    </table>
+    </div>
+    <div class="params">
+    <table>
+      <th>Parameters</th>
+      <tr v-for="(item, key, idx) in P">
+        <td>{{ key }}:</td>
+        <td v-if="typeof item == 'number'">
+          <input v-model.number="P[key]">
+        </td>
+        <td v-else-if="typeof item == 'string'">
+          <input v-model="P[key]">
+        </td>
+        <td v-else-if="typeof item == 'boolean'">
+          <input type='checkbox' v-model="P[key]">
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+<script>app()</script>
+</body>
+</html>
