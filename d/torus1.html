@@ -1,0 +1,238 @@
+ <!DOCTYPE html>
+<html>
+ <meta charset="UTF-8">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <link rel="stylesheet" href="../css/style.css"></style>
+    <script src="../js/dynam.space.js"></script> 
+  </head>
+
+  <body>
+  <div id="main">
+  <div id="buttons">
+    <button v-show="!I.hasStarted" @click="start">Start</button>
+    <button v-show="I.isRunning" @click="stop">Stop</button>
+    <button v-show="I.hasStarted && !I.isRunning" @click="reset">Reset</button>
+    <a v-if="I.hasStarted && !I.isRunning" :href="csv" :download="filename">
+      <button>Save</button>
+    </a>
+  </div>
+  <div>
+    <button v-for="(param, idx) in params" @click="load(param)">
+       {{idx}}
+    </button>
+  </div>
+  <div>
+
+  </div>
+  <div>
+    <canvas id="myCanvas" ref="myCanvas" width="255" height="255"></canvas>
+  </div>
+  <div class="params">
+    <table>
+      <th>Inputs</th>
+      <tr v-for="(item, key, idx) in I">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+
+      <th>Outputs</th>
+      <tr v-for="(item, key, idx) in O">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+      <th>States</th>
+      <tr v-for="(item, key, idx) in S">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+    </table>
+    </div>
+    <div class="params">
+    <table>
+      <th>Parameters</t>
+      <tr v-for="(item, key, idx) in P">
+        <td>{{ key }}:</td>
+        <td v-if="typeof item == 'number'">
+          <input v-model.number="P[key]">
+        </td>
+        <td v-else-if="typeof item == 'string'">
+          <input v-model="P[key]">
+        </td>
+        <td v-else-if="typeof item == 'boolean'">
+          <input type='checkbox' v-model="P[key]">
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+<script>
+const s = (v) => Math.sin(v)
+const c = (v) => Math.cos(v)
+
+const experiment = {
+  fast: {
+    learnrate: 0.5
+  },
+  med: {
+    learnrate: 0.05
+  },
+  slow: {
+    learnrate: 0.005
+  }
+}
+
+const data = {
+  P: { //parameters
+    playStack: false,
+    showHCost: true,
+    showMCost: true,
+    autoNext: true,
+    duration: 10, //seconds
+    period: 20, //ms
+    aM: 1,
+    aH: 1.5,
+    regM: .01,
+    regH: 0,
+    learnrate: 0.5,
+    smooth: 0.9,
+    radius: 100,
+    dotRadius: 5,
+    showInput: false,
+    costWidth: 4,
+    colorM: 'hsl(0,50%,50%)',
+    colorH: 'yellow',
+  },
+  I: { //inputs
+    hasStarted: false,
+    isRunning: false,
+    posX: 0,
+    posY: 0,
+    theta: 0,
+    radius: 0
+  },
+  O: { //outputs
+    time: 0,
+    cost: 0,
+    elapsed: 0,
+    period: 0,
+    fps: 0,
+    costH: 0,
+    gradH: 0,
+    gradHStack: 0,
+    costM: 0,
+    gradM: 0,
+    gradMStack: 0,
+  },
+  S: { //state
+    prevT: 0,
+    machine: 0.001,
+  }
+}
+
+
+function update(S, I, O, P) {
+  const x = S.machine //theta
+  const y = I.theta //machine
+
+  O.costM = -c(x) + P.aM * c(x - y)
+  O.costH = -c(y) + P.aH * c(y - x)
+
+  O.gradM = s(x) - P.aM * s(x - y)
+  O.gradH = s(y) - P.aH * s(y - x)
+
+  O.gradMStack = s(x) - P.aM * s(x - y) - P.aM * P.aH * c(x - y) * s(x - y) / (c(y) - P.aH * c(x - y) + P.regM)
+  O.gradHStack = s(y) - P.aH * s(y - x) - P.aM * P.aH * c(y - x) * s(y - x) / (c(x) - P.aM * c(y - x) + P.regH)
+
+  const g = P.playStack ? O.gradMStack : O.gradM
+  S.machine -= P.learnrate * g
+}
+
+function draw(canvas, S, I, O, P) {
+  const width = canvas.width;
+  const height = canvas.height;
+  const R = P.radius;
+
+  const theta = S.machine;
+  let x = Math.sin(theta) * R
+  let y = Math.cos(theta) * R
+
+  ctx = canvas.getContext('2d')
+  ctx.resetTransform()
+  ctx.setLineDash([]);
+  ctx.lineWidth = 1;
+
+  ctx.clearRect(0, 0, width, height)
+  ctx.strokeStyle = 'gray'
+  ctx.strokeRect(0, 0, width, height)
+  ctx.transform(1, 0, 0, 1, width / 2, height / 2)
+
+
+  ctx.strokeStyle = 'white'
+
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, 2 * Math.PI, )
+  ctx.stroke()
+
+
+  ctx.beginPath();
+  ctx.moveTo(5, 0);
+  ctx.lineTo(-5, 0);
+  ctx.moveTo(0, 5);
+  ctx.lineTo(0, -5)
+  ctx.stroke()
+
+
+
+  ctx.fillStyle = P.colorM
+  ctx.beginPath();
+  ctx.arc(x, y, P.dotRadius, 0, 2 * Math.PI, )
+  ctx.fill()
+
+  ctx.fillStyle = P.colorH
+  ctx.beginPath();
+  ctx.arc(R * Math.sin(I.theta),
+    R * Math.cos(I.theta),
+    P.dotRadius, 0, 2 * Math.PI, )
+  ctx.fill()
+
+  const w = P.costWidth
+  if (P.showHCost) {
+    ctx.setLineDash([9, 1]);
+
+    ctx.strokeStyle = P.colorH;
+    ctx.beginPath();
+    ctx.lineWidth = w;
+    ctx.moveTo(-width / 2 + w / 2 + 1, height / 2);
+    ctx.lineTo(-width / 2 + w / 2 + 1, height / 2 - (O.costH + 2) * height / 2)
+    ctx.stroke()
+  }
+  if (P.showMCost) {
+    ctx.setLineDash([9, 1]);
+    ctx.lineWidth = w;
+    ctx.strokeStyle = P.colorM;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - w / 2 - 1, height / 2);
+    ctx.lineTo(width / 2 - w / 2 - 1, height / 2 - (O.costM + 2) * height / 2)
+    ctx.stroke()
+  }
+  if (P.showInput) {
+    ctx.setLineDash([5, 3]);
+    ctx.strokeStyle = 'gray'
+    ctx.beginPath();
+    ctx.arc(0, 0, I.radius, 0, 2 * Math.PI, )
+    ctx.stroke()
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.sin(I.theta) * I.radius,
+      Math.cos(I.theta) * I.radius)
+    ctx.stroke()
+  }
+}
+
+DynamSpace(data, update, draw, experiment)
+
+	</script>
+</body>
+</html>
