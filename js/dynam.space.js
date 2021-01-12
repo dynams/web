@@ -1,4 +1,7 @@
-function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
+
+function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) {
+
+
  var vue = new Vue({
 	el: "#main",
   data: { 
@@ -31,9 +34,9 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
       for (var s in this.H.S) c += 'S.' + s + ','
       c += "%0A"
       for (var t = 0; t < this.H.O.time.length; t++) {
-        for (var o in this.H.O) c += this.H.O[o][t] + ','
-        for (var i in this.H.I) c += this.H.I[i][t] + ','
-        for (var s in this.H.S) c += this.H.S[s][t] + ','
+        for (var o in this.H.O) c += this.H.O[o][t].toFixed(3) + ','
+        for (var i in this.H.I) c += this.H.I[i][t].toFixed(3) + ','
+        for (var s in this.H.S) c += this.H.S[s][t].toFixed(3) + ','
         c += "%0A"
       }
       
@@ -56,7 +59,14 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
       this.info.period = this.P.period
 
       this.S.time = this.info.elapsed
-      this.S.machine = 0
+
+      var queryDict = {}
+      location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]})
+      console.log(queryDict)
+      
+      for (var p in queryDict) {
+       if(p != "") this.P[p] = queryDict[p]
+      }
 
       for (var i in this.O) this.H.O[i] = []
       for (var i in this.I) this.H.I[i] = []
@@ -133,7 +143,7 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
       ctx.setLineDash([])
       ctx.lineWidth = 1;
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-      ctx.transform(1, 0, 0, 1, this.canvas.width / 2, this.canvas.height / 2)
+      ctx.transform(1, 0, 0, -1, this.canvas.width / 2, this.canvas.height / 2)
 
       draw_fn(this.canvas, this.S, this.I, this.O, this.P);
     },
@@ -152,6 +162,8 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
      this.start()
     } else if(this.info.hasStarted && this.info.isRunning) {
      this.stop()
+    } else if(this.info.hasStarted && !this.info.isRunning) {
+     this.reset()
     }
    })
 
@@ -180,12 +192,6 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
     });
     self.canvas.dispatchEvent(mouseEvent);
    }, false);
-
-
-
-
-
-
 
     this.reset()
   }

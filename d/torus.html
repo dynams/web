@@ -230,7 +230,11 @@ function inputs(canvas, S, I, O, P, x, y) {
         I.radius = Math.sqrt(Math.pow(x - width/2,2) + Math.pow(y - height/2,2))
 }
 
-DynamSpace(data, update, draw, inputs, experiment)
+function reset(S, I, O, P) {
+  S.machine = 0
+ }
+
+DynamSpace(update, draw, inputs, reset, data, experiment)
 
 	</script>
 </body>
