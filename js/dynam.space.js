@@ -1,14 +1,21 @@
-function DynamSpace(data, update_fn, draw_fn, experiments) {
+function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
  var vue = new Vue({
 	el: "#main",
   data: { 
     ...data,
-    H: { //history
-    	I: {}, O: {time:[]}, S: {}
-    },
-    canvas: null,
     params: {
       ...experiments
+    },
+    info: {
+      hasStarted: false,
+      isRunning: false,
+      elapsed: 0,
+      fps: 0,
+      period: 0,
+    },
+    canvas: null,
+    H: { //history
+    	I: {}, O: {}, S: {}
     },
   },
   filters: {
@@ -37,14 +44,17 @@ function DynamSpace(data, update_fn, draw_fn, experiments) {
   },
   methods: {
   	reset() {
-      this.I.hasStarted = false
-      this.I.isRunning = false
+      this.info.hasStarted = false
+      this.info.isRunning = false
 
-    	this.O.elapsed = 0
-      this.O.fps = 1000/this.P.period
-      this.O.period = this.P.period
-      this.S.prevT = 0
+     	this.info.elapsed = 0
+      this.info.prevT = 0
+      this.info.fps = 1000/this.P.period
+      this.info.period = this.P.period
+
       this.I.theta = 0   	
+
+      this.S.time = this.info.elapsed
       this.S.machine = 0
 
       for (var i in this.O) this.H.O[i] = []
@@ -54,18 +64,18 @@ function DynamSpace(data, update_fn, draw_fn, experiments) {
       this.draw()
     },
     start() {
-    	this.I.hasStarted = true      
-    	this.I.isRunning = true
+    	 this.info.hasStarted = true      
+    	 this.info.isRunning = true
+      this.info.startTime = Date.now()
       this.tick()
     },
     load(params) {
-    	console.log(params)
     	for (var p in params) {
       	this.P[p] = params[p]
-      }
+     }
     },
     stop() {
-    	this.I.isRunning = false
+    	this.info.isRunning = false
     },
     smooth(val1, val2) {
     	return this.P.smooth*val1 + (1-this.P.smooth)*val2
@@ -77,33 +87,33 @@ function DynamSpace(data, update_fn, draw_fn, experiments) {
     },
     update() {
       // Output smoothed fps 
-      const deltaT = this.O.time - this.S.prevT
+      const deltaT = this.O.time - this.info.prevT
 
-      if(this.S.prevT && deltaT) {
-        this.O.fps = this.smooth(this.O.fps, 1000/deltaT)
-        this.O.period = this.smooth(this.O.period, deltaT)
+      if(this.info.prevT && deltaT) {
+        this.info.fps = this.smooth(this.info.fps, 1000/deltaT)
+        this.info.period = this.smooth(this.info.period, deltaT)
       }
 
       // Update system
       update_fn(this.S, this.I, this.O, this.P)
 
-      this.S.prevT = this.O.time
+      this.info.prevT = this.O.time
     },
   	tick() {
-    	this.O.time = Date.now() 
-      this.O.elapsed += this.P.period
+    	 this.O.time = Date.now() - this.info.startTime
+      this.S.time += this.P.period
 
       this.update()
       this.draw()
       this.log()
 
-      if(this.O.elapsed >= this.P.duration*1000) {
+      if(this.S.time >= this.P.duration*1000) {
         this.stop()
       }
 
       // Call tick
       this.correction = Date.now() - this.O.time
-      if (this.I.isRunning) {
+      if (this.info.isRunning) {
         if(this.P.period - this.correction > 0) {
           window.setTimeout(this.tick, this.P.period - this.correction)
         } else if (this.P.period > 0) {
@@ -118,15 +128,7 @@ function DynamSpace(data, update_fn, draw_fn, experiments) {
     },
     input(e) {
         const rect = this.canvas.getBoundingClientRect();
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        this.I.posX = e.clientX - rect.left
-        this.I.posY = e.clientY - rect.top
-        this.I.theta = Math.atan2(this.I.posX - width/2,
-                                  this.I.posY - height/2) 
-        this.I.radius = Math.sqrt(
-          Math.pow(this.I.posX - width/2,2)+
-          Math.pow(this.I.posY - height/2,2))
+        input_fn(this.canvas, this.I, e.clientX - rect.left, e.clientY - rect.top)
     },
   },
   mounted() {
@@ -134,10 +136,10 @@ function DynamSpace(data, update_fn, draw_fn, experiments) {
 		this.canvas.addEventListener('mousemove', this.input)
     //this.canvas.addEventListener('touchmove', this.input)
     this.canvas.addEventListener('mousedown', (e) => {
-    	if(!this.I.hasStarted && !this.I.isRunning) {
+    	if(!this.info.hasStarted && !this.info.isRunning) {
       	this.start()
       }    	
-      else if(this.I.hasStarted && this.I.isRunning) {
+      else if(this.info.hasStarted && this.info.isRunning) {
       	this.stop()
       }
     })
@@ -145,6 +147,5 @@ function DynamSpace(data, update_fn, draw_fn, experiments) {
   }
 })
 
-  Vue.component('')
 }
 

@@ -10,10 +10,10 @@
   <body>
   <div id="main">
   <div id="buttons">
-    <button v-show="!I.hasStarted" @click="start">Start</button>
-    <button v-show="I.isRunning" @click="stop">Stop</button>
-    <button v-show="I.hasStarted && !I.isRunning" @click="reset">Reset</button>
-    <a v-if="I.hasStarted && !I.isRunning" :href="csv" :download="filename">
+    <button v-show="!info.hasStarted" @click="start">Start</button>
+    <button v-show="info.isRunning" @click="stop">Stop</button>
+    <button v-show="info.hasStarted && !info.isRunning" @click="reset">Reset</button>
+    <a v-if="info.hasStarted && !info.isRunning" :href="csv" :download="filename">
       <button>Save</button>
     </a>
   </div>
@@ -65,6 +65,9 @@
       </tr>
     </table>
   </div>
+  <div>
+   fps: {{ info.fps.toFixed(1) }}
+  </div>
 </div>
 <script>
 const s = (v) => Math.sin(v)
@@ -84,17 +87,13 @@ const experiment = {
 
 const data = {
   P: { //parameters
-    playStack: false,
-    showHCost: true,
-    showMCost: true,
-    autoNext: true,
+    learnrate: 0.5,
     duration: 10, //seconds
     period: 20, //ms
     aM: 1,
     aH: 1.5,
     regM: .01,
     regH: 0,
-    learnrate: 0.5,
     smooth: 0.9,
     radius: 100,
     dotRadius: 5,
@@ -102,34 +101,29 @@ const data = {
     costWidth: 4,
     colorM: 'hsl(0,50%,50%)',
     colorH: 'yellow',
+    playStack: false,
+    showHCost: true,
+    showMCost: true,
+    autoNext: true,
   },
   I: { //inputs
-    hasStarted: false,
-    isRunning: false,
-    posX: 0,
-    posY: 0,
     theta: 0,
     radius: 0
   },
   O: { //outputs
     time: 0,
-    cost: 0,
-    elapsed: 0,
-    period: 0,
-    fps: 0,
     costH: 0,
-    gradH: 0,
-    gradHStack: 0,
     costM: 0,
+    gradH: 0,
     gradM: 0,
+    gradHStack: 0,
     gradMStack: 0,
   },
   S: { //state
-    prevT: 0,
+    time: 0,
     machine: 0.001,
   }
 }
-
 
 function update(S, I, O, P) {
   const x = S.machine //theta
@@ -231,7 +225,14 @@ function draw(canvas, S, I, O, P) {
   }
 }
 
-DynamSpace(data, update, draw, experiment)
+function inputs(canvas, I, x, y) {
+        const width = canvas.width;
+        const height = canvas.height;
+        I.theta = Math.atan2(x - width/2, y - height/2) 
+        I.radius = Math.sqrt(Math.pow(x - width/2,2) + Math.pow(y - height/2,2))
+}
+
+DynamSpace(data, update, draw, inputs, experiment)
 
 	</script>
 </body>
