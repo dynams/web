@@ -144,16 +144,47 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
   },
   mounted() {
    this.canvas = this.$refs.myCanvas
+
    this.canvas.addEventListener('mousemove', this.input)
-    //this.canvas.addEventListener('touchmove', this.input)
-    this.canvas.addEventListener('mousedown', (e) => {
-    	if(!this.info.hasStarted && !this.info.isRunning) {
-      	this.start()
-      }    	
-      else if(this.info.hasStarted && this.info.isRunning) {
-      	this.stop()
-      }
-    })
+
+   this.canvas.addEventListener('mousedown', (e) => {
+    if(!this.info.hasStarted && !this.info.isRunning) {
+     this.start()
+    } else if(this.info.hasStarted && this.info.isRunning) {
+     this.stop()
+    }
+   })
+
+   var self = this
+   this.canvas.addEventListener("touchstart", function (e) {
+    var touch = e.touches[0];
+    var mouseEvent = new MouseEvent("mousemove", {
+     clientX: touch.clientX,
+     clientY: touch.clientY
+    });
+    self.canvas.dispatchEvent(mouseEvent);
+   }, false);
+
+   this.canvas.addEventListener("touchend", function (e) {
+    var mouseEvent = new MouseEvent("mouseup", {});
+    self.canvas.dispatchEvent(mouseEvent);
+   }, false);
+
+   this.canvas.addEventListener("touchmove", function (e) {
+    var touch = e.touches[0];
+    var mouseEvent = new MouseEvent("mousemove", {
+     clientX: touch.clientX,
+     clientY: touch.clientY
+    });
+    self.canvas.dispatchEvent(mouseEvent);
+   }, false);
+
+
+
+
+
+
+
     this.reset()
   }
 })
