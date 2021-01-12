@@ -18,7 +18,7 @@
     </a>
   </div>
   <div>
-    <button v-for="(param, idx) in params" @click="load(param)">
+	  <button v-for="(param, idx) in params" :class="{ active: isActive(param)}" @click="load(param)">
        {{idx}}
     </button>
   </div>
