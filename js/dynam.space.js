@@ -62,7 +62,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
 
       var queryDict = {}
       location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]})
-      console.log(queryDict)
       
       for (var p in queryDict) {
        if(p != "") this.P[p] = queryDict[p]
@@ -72,6 +71,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
       for (var i in this.I) this.H.I[i] = []
       for (var i in this.S) this.H.S[i] = []
 
+      reset_fn(this.S, this.I, this.O, this.P)
       this.tick()
     },
     start() {
@@ -83,6 +83,14 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     	for (var p in params) {
       	this.P[p] = params[p]
      }
+    },
+    isActive(params) {
+        for (var p in params) {
+      	if(this.P[p] != params[p]) {
+		return false
+	}
+	}
+	return true
     },
     stop() {
     	this.info.isRunning = false
@@ -192,6 +200,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     });
     self.canvas.dispatchEvent(mouseEvent);
    }, false);
+    
 
     this.reset()
   }

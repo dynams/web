@@ -5,6 +5,8 @@
   font-family: Monaco, monospace;
 }
 
+
+
 #myCanvas {
   touch-action:none;
 }
@@ -12,9 +14,11 @@
   display: grid;
   grid-gap: 1px;
   grid-template-columns: auto auto auto;
+  padding: 10px;
+  margin: 10px;
 }
 
-@media(max-width:512px){
+@media screen and (max-width:600px){
   #main {
     grid-template-columns: auto;
   }
@@ -35,7 +39,8 @@
 body {
   background-color: black;
   font-family: monospace;
-  padding: 3em
+  padding: 10px
+  margin: 10px
 }
 
 th {
@@ -47,6 +52,12 @@ th {
 
 button {
   border: 1px solid white;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+button.active {
+  background-color: gray;
 }
 
 button:hover {  

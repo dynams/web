@@ -1,6 +1,7 @@
  <!DOCTYPE html>
 <html>
  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <head>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
     <link rel="stylesheet" href="../css/style.css"></style>
@@ -18,7 +19,7 @@
     </a>
   </div>
   <div id='experiments'>
-    <button v-for="(param, idx) in params" @click="load(param)">
+	  <button v-for="(param, idx) in params" :class="{ active: isActive(param) }" @click="load(param)">
        {{idx}}
     </button>
   </div>
@@ -92,7 +93,7 @@ const experiments = {
 
 const data = {
   P: { //parameters
-    mode: 'force',
+    mode: 'single',
     duration: 100, //seconds
     period: 20, //ms
     smooth: 0.9,
