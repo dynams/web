@@ -161,13 +161,11 @@ function draw(canvas, S, I, O, P) {
   ctx.strokeRect(0, 0, width, height)
   ctx.transform(1, 0, 0, 1, width / 2, height / 2)
 
-
   ctx.strokeStyle = 'white'
 
   ctx.beginPath();
   ctx.arc(0, 0, R, 0, 2 * Math.PI, )
   ctx.stroke()
-
 
   ctx.beginPath();
   ctx.moveTo(5, 0);
@@ -225,7 +223,7 @@ function draw(canvas, S, I, O, P) {
   }
 }
 
-function inputs(canvas, I, x, y) {
+function inputs(canvas, S, I, O, P, x, y) {
         const width = canvas.width;
         const height = canvas.height;
         I.theta = Math.atan2(x - width/2, y - height/2) 

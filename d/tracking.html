@@ -1,0 +1,161 @@
+ <!DOCTYPE html>
+<html>
+ <meta charset="UTF-8">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <link rel="stylesheet" href="../css/style.css"></style>
+    <script src="../js/dynam.space.js"></script> 
+  </head>
+
+  <body>
+  <div id="main">
+  <div>
+    <canvas id="myCanvas" ref="myCanvas" width="255" height="255"></canvas>
+  </div>
+  <div class="params">
+    <table>
+      <th>States</th>
+      <tr v-for="(item, key, idx) in S">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+
+      <th>Inputs</th>
+      <tr v-for="(item, key, idx) in I">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+
+      <th>Outputs</th>
+      <tr v-for="(item, key, idx) in O">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+    </table>
+    </div>
+    <div class="params">
+    <table>
+      <th>Parameters</t>
+      <tr v-for="(item, key, idx) in P">
+        <td>{{ key }}:</td>
+        <td v-if="typeof item == 'number'">
+          <input v-model.number="P[key]">
+        </td>
+        <td v-else-if="typeof item == 'string'">
+          <input v-model="P[key]">
+        </td>
+        <td v-else-if="typeof item == 'boolean'">
+          <input type='checkbox' v-model="P[key]">
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div id="buttons">
+    <button v-show="!info.hasStarted" @click="start">Start</button>
+    <button v-show="info.isRunning" @click="stop">Stop</button>
+    <button v-show="info.hasStarted && !info.isRunning" @click="reset">Reset</button>
+    <a v-if="info.hasStarted && !info.isRunning" :href="csv" :download="filename">
+      <button>Save</button>
+    </a>
+  </div>
+  <div>
+    <button v-for="(param, idx) in params" @click="load(param)">
+       {{idx}}
+    </button>
+  </div>
+  <div>
+
+  </div>
+  <div>
+   fps: {{ info.fps.toFixed(1) }}
+  </div>
+</div>
+<script>
+const s = (v) => Math.sin(v)
+const c = (v) => Math.cos(v)
+
+const experiment = {
+  fast: {
+    learnrate: 0.5
+  },
+  med: {
+    learnrate: 0.05
+  },
+  slow: {
+    learnrate: 0.005
+  }
+}
+
+const data = {
+  P: { //parameters
+    duration: 100, //seconds
+    period: 20, //ms
+    smooth: 0.9,
+    delta: 0.01,
+    freq1: 1,
+    freq2: .1,
+    freq3: .01,
+    amplitude1: 10,
+    amplitude2: 50,
+    amplitude3: 100,
+  },
+  I: { //inputs
+    posX: 0,
+    velX: 0,
+    r: 0,
+  },
+  O: { //outputs
+    time: 0,
+  },
+  S: { //state
+    time: 0,
+    x: 0,
+  },
+}
+
+function update(S, I, O, P) {
+  I.r = Math.sin(2*S.time/1000*P.freq1)*P.amplitude1
+  I.r += Math.sin(2*S.time/1000*P.freq2)*P.amplitude2
+  I.r += Math.sin(2*S.time/1000*P.freq3)*P.amplitude3
+  S.x = S.x + P.delta*I.posX
+}
+
+function draw(canvas, S, I, O, P) {
+  ctx = canvas.getContext('2d')
+  width = canvas.width
+  height = canvas.height
+
+  ctx.strokeStyle = 'white'
+  ctx.fillStyle = 'white'
+
+  ctx.strokeRect(-width/2, -height/2, width, height)
+
+  ctx.beginPath();
+  ctx.arc(I.r, 0, 10, 0, 2*Math.PI)
+  ctx.stroke()
+
+  ctx.beginPath();
+  ctx.arc(S.x, 0, 8, 0, 2*Math.PI)
+  ctx.fill()
+
+  ctx.beginPath();
+  ctx.lineWidth = 10;
+  ctx.moveTo(0, height/2)
+  ctx.lineTo(I.posX, height/2)
+  ctx.stroke()
+}
+
+function inputs(canvas, S, I, O, P, x, y) {
+  prevX = I.posX
+
+  I.posX = x - canvas.width/2
+  //I.posY = y - canvas.height/2
+
+  I.velX = (I.posX - prevX)/P.period*1000
+}
+
+DynamSpace(data, update, draw, inputs, experiment)
+
+	</script>
+</body>
+</html>

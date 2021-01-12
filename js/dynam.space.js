@@ -7,6 +7,7 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
       ...experiments
     },
     info: {
+      isDrawing: true,
       hasStarted: false,
       isRunning: false,
       elapsed: 0,
@@ -44,15 +45,15 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
   },
   methods: {
   	reset() {
+      this.info.isDrawing = true
       this.info.hasStarted = false
       this.info.isRunning = false
+      this.info.startTime = Date.now()
 
      	this.info.elapsed = 0
       this.info.prevT = 0
       this.info.fps = 1000/this.P.period
       this.info.period = this.P.period
-
-      this.I.theta = 0   	
 
       this.S.time = this.info.elapsed
       this.S.machine = 0
@@ -61,13 +62,12 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
       for (var i in this.I) this.H.I[i] = []
       for (var i in this.S) this.H.S[i] = []
 
-      this.draw()
+      this.tick()
     },
     start() {
     	 this.info.hasStarted = true      
     	 this.info.isRunning = true
       this.info.startTime = Date.now()
-      this.tick()
     },
     load(params) {
     	for (var p in params) {
@@ -76,6 +76,7 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
     },
     stop() {
     	this.info.isRunning = false
+     this.info.isDrawing = false
     },
     smooth(val1, val2) {
     	return this.P.smooth*val1 + (1-this.P.smooth)*val2
@@ -100,12 +101,15 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
       this.info.prevT = this.O.time
     },
   	tick() {
-    	 this.O.time = Date.now() - this.info.startTime
-      this.S.time += this.P.period
-
-      this.update()
-      this.draw()
-      this.log()
+      if (this.info.hasStarted) {
+    	   this.O.time = Date.now() - this.info.startTime
+        this.S.time += this.P.period
+        this.update()
+        this.log()
+      }
+      if (this.info.isDrawing) {
+        this.draw()
+      }
 
       if(this.S.time >= this.P.duration*1000) {
         this.stop()
@@ -113,7 +117,7 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
 
       // Call tick
       this.correction = Date.now() - this.O.time
-      if (this.info.isRunning) {
+      if (this.info.isRunning || this.info.isDrawing) {
         if(this.P.period - this.correction > 0) {
           window.setTimeout(this.tick, this.P.period - this.correction)
         } else if (this.P.period > 0) {
@@ -124,16 +128,23 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
       }
     },
     draw() {
+      ctx = this.canvas.getContext('2d')
+      ctx.resetTransform()
+      ctx.setLineDash([])
+      ctx.lineWidth = 1;
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+      ctx.transform(1, 0, 0, 1, this.canvas.width / 2, this.canvas.height / 2)
+
       draw_fn(this.canvas, this.S, this.I, this.O, this.P);
     },
     input(e) {
         const rect = this.canvas.getBoundingClientRect();
-        input_fn(this.canvas, this.I, e.clientX - rect.left, e.clientY - rect.top)
+        input_fn(this.canvas, this.S, this.I, this.O, this.P, e.clientX - rect.left, e.clientY - rect.top)
     },
   },
   mounted() {
-    this.canvas = this.$refs.myCanvas
-		this.canvas.addEventListener('mousemove', this.input)
+   this.canvas = this.$refs.myCanvas
+   this.canvas.addEventListener('mousemove', this.input)
     //this.canvas.addEventListener('touchmove', this.input)
     this.canvas.addEventListener('mousedown', (e) => {
     	if(!this.info.hasStarted && !this.info.isRunning) {
