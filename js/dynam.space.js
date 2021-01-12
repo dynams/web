@@ -157,6 +157,8 @@ function DynamSpace(data, update_fn, draw_fn, input_fn, experiments) {
 
    var self = this
    this.canvas.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
     var touch = e.touches[0];
     var mouseEvent = new MouseEvent("mousemove", {
      clientX: touch.clientX,
