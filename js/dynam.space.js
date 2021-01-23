@@ -150,9 +150,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
         }
       }
     },
-   updatePosition(e) {
-    console.log(e.movementX)
-   },
     draw() {
       ctx = this.canvas.getContext('2d')
       ctx.resetTransform()
@@ -175,7 +172,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
         x = e.movementX
         y = e.movementY
      }
-        console.log(e.movementX)
         input_fn(this.canvas, this.S, this.I, this.O, this.P, x, y)
     },
   },
