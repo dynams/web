@@ -75,10 +75,19 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
       this.tick()
     },
     start() {
+     // Start game
     	 this.info.hasStarted = true      
     	 this.info.isRunning = true
       this.info.startTime = Date.now()
+      
+     this.canvas.requestPointerLock()
     },
+    stop() {
+    	this.info.isRunning = false
+     this.info.isDrawing = false
+     document.exitPointerLock()
+    },
+
     load(params) {
     	for (var p in params) {
       	this.P[p] = params[p]
@@ -91,10 +100,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
 	}
 	}
 	return true
-    },
-    stop() {
-    	this.info.isRunning = false
-     this.info.isDrawing = false
     },
     smooth(val1, val2) {
     	return this.P.smooth*val1 + (1-this.P.smooth)*val2
@@ -145,6 +150,9 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
         }
       }
     },
+   updatePosition(e) {
+    console.log(e.movementX)
+   },
     draw() {
       ctx = this.canvas.getContext('2d')
       ctx.resetTransform()
@@ -157,13 +165,47 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     },
     input(e) {
         const rect = this.canvas.getBoundingClientRect();
-        input_fn(this.canvas, this.S, this.I, this.O, this.P, e.clientX - rect.left, e.clientY - rect.top)
+     let x = 0
+     let y = 0
+        if (this.P.inputmode == 'absolute') {
+        x = e.clientX - rect.left
+        y = e.clientX - rect.left
+        }
+     else if (this.P.inputmode == 'lock') {
+        x = e.movementX
+        y = e.movementY
+     }
+        console.log(e.movementX)
+        input_fn(this.canvas, this.S, this.I, this.O, this.P, x, y)
     },
   },
   mounted() {
+   var self = this
    this.canvas = this.$refs.myCanvas
 
-   this.canvas.addEventListener('mousemove', this.input)
+
+
+     document.exitPointerLocker = document.exitPointerLock ||
+      document.mozExitPointerLock;
+     this.canvas.requestPointerLock = this.canvas.requestPointerLock || 
+      this.canvas.mozRequestPointerLock;
+
+   function lockChangeAlert() {
+      if (document.pointerLockElement === self.canvas ||
+          document.mozPointerLockElement === self.canvas) {
+        console.log('The pointer lock status is now locked');
+        document.addEventListener("mousemove", self.input, false);
+      } else {
+        console.log('The pointer lock status is now unlocked');
+        document.removeEventListener("mousemove", self.input, false);
+      }
+    }
+    // Hook pointer lock state change events for different browsers
+    document.addEventListener('pointerlockchange', lockChangeAlert, false);
+    document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+
+
+//   this.canvas.addEventListener('mousemove', this.input)
 
    this.canvas.addEventListener('mousedown', (e) => {
     if(!this.info.hasStarted && !this.info.isRunning) {
@@ -175,7 +217,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     }
    })
 
-   var self = this
    this.canvas.addEventListener("touchstart", function (e) {
     e.preventDefault();
     e.stopPropagation();

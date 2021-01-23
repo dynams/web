@@ -88,12 +88,17 @@ const experiments = {
   '4_lqr': {
     mode: 'lqr'
    },
+  '5_vel': {
+    mode: 'velocity',
+    inputmode: 'lock'
+   }
 }
 
 
 const data = {
   P: { //parameters
     mode: 'single',
+    inputmode: 'lock',//or absolute
     duration: 100, //seconds
     period: 20, //ms
     smooth: 0.9,
@@ -113,6 +118,8 @@ const data = {
     posY: 0,
     velX: 0,
     velY: 0,
+    movX: 0,
+    movY: 0
   },
   O: { //outputs
     time: 0,
@@ -132,6 +139,9 @@ function update(S, I, O, P) {
   I.r += Math.sin(2*S.time/1000*P.freq2)*P.amplitude2
   I.r += Math.sin(2*S.time/1000*P.freq3)*P.amplitude3
 
+  I.velX = I.movX/P.period*1000
+  I.movX = 0
+
   switch (P.mode) {
     case 'single': 
      S.x = S.x + P.alpha*I.posX
@@ -144,6 +154,9 @@ function update(S, I, O, P) {
      break;
     case 'lqr':
    S.x = S.x + P.gamma*I.posX*(I.r - S.x) + P.beta*I.posY*(I.r - S.x)
+     break;
+    case 'velocity':
+   S.x = S.x + P.alpha*I.velX
      break;
    }
 }
@@ -199,15 +212,18 @@ function draw(canvas, S, I, O, P) {
 }
 
 function inputs(canvas, S, I, O, P, x, y) {
-  const prevX = I.posX
-  const prevY = I.posY
 
-  I.posX = x - canvas.width/2
-  I.posY = canvas.height -y
+  if (P.inputmode == 'absolute') {
+    I.posX = x - canvas.width/2
+    I.posY = canvas.height -y
+  }
+  if (P.inputmode == 'lock') {
+    I.movX = I.movX + x 
+    I.movY = I.movY + y
+  }
+
   if (P.mode == 'lqr') I.posX = x
 
-  I.velX = (I.posX - prevX)/P.period*1000
-  I.velY = (I.posY - prevY)/P.period*1000
 }
 
 DynamSpace(update, draw, inputs, reset, data, experiments)
