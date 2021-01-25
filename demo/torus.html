@@ -13,23 +13,26 @@
     <button v-show="!info.hasStarted" @click="start">Start</button>
     <button v-show="info.isRunning" @click="stop">Stop</button>
     <button v-show="info.hasStarted && !info.isRunning" @click="reset">Reset</button>
-    <a v-if="info.hasStarted && !info.isRunning" :href="csv" :download="filename">
-      <button>Save</button>
-    </a>
   </div>
-  <div>
+  <div id='experiments'>
 	  <button v-for="(param, idx) in params" :class="{ active: isActive(param)}" @click="load(param)">
        {{idx}}
     </button>
   </div>
   <div>
-
+   fps: {{ info.fps.toFixed(1) }}
   </div>
   <div>
     <canvas id="myCanvas" ref="myCanvas" width="255" height="255"></canvas>
   </div>
   <div class="params">
     <table>
+      <th>States</th>
+      <tr v-for="(item, key, idx) in S">
+        <td>{{ key }}:</td>
+        <td>{{ item | toFixed }}</td>
+      </tr>
+
       <th>Inputs</th>
       <tr v-for="(item, key, idx) in I">
         <td>{{ key }}:</td>
@@ -38,11 +41,6 @@
 
       <th>Outputs</th>
       <tr v-for="(item, key, idx) in O">
-        <td>{{ key }}:</td>
-        <td>{{ item | toFixed }}</td>
-      </tr>
-      <th>States</th>
-      <tr v-for="(item, key, idx) in S">
         <td>{{ key }}:</td>
         <td>{{ item | toFixed }}</td>
       </tr>
@@ -66,7 +64,12 @@
     </table>
   </div>
   <div>
-   fps: {{ info.fps.toFixed(1) }}
+   <h3>Download:</h3>
+   <div v-for="(result, idx) in results">
+    <a :href="result.csv"  :download="'data' + idx + '.csv'"> 
+     Trial {{ idx + 1 }} ({{ result.duration/1000 }}s)
+    </a>
+   </div>
   </div>
 </div>
 <script>
@@ -101,12 +104,15 @@ const data = {
     dotRadius: 5,
     showInput: false,
     showCircle: false,
-    costWidth: 40,
+    costWidth: 10,
     colorM: 'hsl(0,50%,50%)',
     colorH: 'yellow',
     playStack: false,
-    showHCost: true,
+    showHCost: false,
     showMCost: false,
+    showCost: true,
+    costScale: 30,
+    costOffset: 60,
     autoNext: true,
   },
   I: { //inputs
@@ -192,6 +198,13 @@ function draw(canvas, S, I, O, P) {
   ctx.fill()
    }
 
+  if (P.showCost) {
+  ctx.fillStyle = P.colorH
+    ctx.beginPath();
+    ctx.arc(0,0, O.costH * P.costScale + P.costOffset, 0, 2*Math.PI, )
+    console.log(O.costH)
+    ctx.fill()
+   }
   const w = P.costWidth
   if (P.showHCost) {
     ctx.setLineDash([9, 1]);

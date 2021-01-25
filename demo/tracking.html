@@ -14,9 +14,6 @@
     <button v-show="!info.hasStarted" @click="start">Start</button>
     <button v-show="info.isRunning" @click="stop">Stop</button>
     <button v-show="info.hasStarted && !info.isRunning" @click="reset">Reset</button>
-    <a v-if="info.hasStarted && !info.isRunning" :href="csv" :download="filename">
-      <button>Save</button>
-    </a>
   </div>
   <div id='experiments'>
 	  <button v-for="(param, idx) in params" :class="{ active: isActive(param) }" @click="load(param)">
@@ -68,7 +65,12 @@
     </table>
   </div>
   <div>
-
+   <h3>Download:</h3>
+   <div v-for="(result, idx) in results">
+    <a :href="result.csv" :alt="result.P" :download="'data' + idx + '.csv'"> 
+     Trial {{ idx + 1 }} ({{ result.duration/1000 }}s)
+    </a>
+   </div>
   </div>
 </div>
 <script>
@@ -132,6 +134,7 @@ const data = {
 
 function reset(S, I, O, P) {
   S.x = 0
+  I.r = 0
  }
 
 function update(S, I, O, P) {
@@ -139,8 +142,6 @@ function update(S, I, O, P) {
   I.r += Math.sin(2*S.time/1000*P.freq2)*P.amplitude2
   I.r += Math.sin(2*S.time/1000*P.freq3)*P.amplitude3
 
-  I.velX = I.movX/P.period*1000
-  I.movX = 0
 
   switch (P.mode) {
     case 'single': 
@@ -156,6 +157,8 @@ function update(S, I, O, P) {
    S.x = S.x + P.gamma*I.posX*(I.r - S.x) + P.beta*I.posY*(I.r - S.x)
      break;
     case 'velocity':
+  I.velX = I.movX/P.period*1000
+  I.movX = 0
    S.x = S.x + P.alpha*I.velX
      break;
    }
@@ -203,6 +206,8 @@ function draw(canvas, S, I, O, P) {
     ctx.moveTo(-w/2+I.posX+4, I.posY-h/2)
     ctx.lineTo(-w/2+I.posX, I.posY-h/2)
     ctx.lineTo(-w/2+I.posX, I.posY-h/2+4)
+   } else if(P.mode == 'velocity') 
+  {
    } else {
     ctx.moveTo(I.posX+4, I.posY-h/2)
     ctx.lineTo(I.posX, I.posY-h/2)
@@ -213,14 +218,16 @@ function draw(canvas, S, I, O, P) {
 
 function inputs(canvas, S, I, O, P, x, y) {
 
-  if (P.inputmode == 'absolute') {
-    I.posX = x - canvas.width/2
-    I.posY = canvas.height -y
-  }
-  if (P.inputmode == 'lock') {
+  //if (P.inputmode == 'lock') {
     I.movX = I.movX + x 
-    I.movY = I.movY + y
-  }
+    I.movY = I.movY - y
+  //}
+  //if (P.inputmode == 'absolute') {
+  //  I.posX = x - canvas.width/2
+  //  I.posY = canvas.height -y
+  //}
+    I.posX = I.movX
+    I.posY = I.movY
 
   if (P.mode == 'lqr') I.posX = x
 

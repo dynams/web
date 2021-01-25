@@ -21,12 +21,18 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     H: { //history
     	I: {}, O: {}, S: {}
     },
+    results: []
   },
   filters: {
   	toSeconds(val) { return (val/1000).toFixed(2) },
     toFixed(val) { return Number.isInteger(val) || typeof val == 'boolean' ? val : val.toFixed(2) }
   },
   computed: {
+    filename() {
+    	return 'data.csv'
+    }
+  },
+  methods: {
   	csv() {
     	let c = "data:text/csv;charset=utf-8,"
       for (var o in this.H.O) c += 'O.' + o + ','
@@ -42,11 +48,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
       
     	return c
     },
-    filename() {
-    	return 'data.csv'
-    }
-  },
-  methods: {
   	reset() {
       this.info.isDrawing = true
       this.info.hasStarted = false
@@ -73,6 +74,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
 
       reset_fn(this.S, this.I, this.O, this.P)
       this.tick()
+      
     },
     start() {
      // Start game
@@ -86,7 +88,12 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     	this.info.isRunning = false
      this.info.isDrawing = false
      document.exitPointerLock()
+     this.save()
     },
+   save() {
+     this.results.push({duration: this.O.time, P: JSON.stringify(this.P), 
+      csv:this.csv()})
+   },
 
     load(params) {
     	for (var p in params) {
