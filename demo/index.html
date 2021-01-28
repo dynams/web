@@ -1,0 +1,237 @@
+
+<html>
+ <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <link rel="stylesheet" href="../css/style.css"></style>
+    <script src="../js/dynam.space.js"></script> 
+  </head>
+
+  <body>
+  <div id="main">
+  <div id="buttons">
+    <button v-show="!info.hasStarted" @click="start">Start</button>
+    <button v-show="info.isRunning" @click="stop">Stop</button>
+    <button v-show="info.hasStarted && !info.isRunning" @click="reset">Reset</button>
+  </div>
+  <div id='experiments'>
+	  <button v-for="(param, idx) in params" :class="{ active: isActive(param) }" @click="load(param)">
+       {{idx}}
+    </button>
+  </div>
+  <div>
+  </div>
+  <div>
+    <canvas id="myCanvas" ref="myCanvas" width="256" height="256"></canvas>
+  </div>
+  <div>
+  {{ P.mode=='mouse'?"Your" : "Horizontal player's" }} cost: 
+  <br>
+  {{O.costx.toFixed(1)}}
+  <br>
+  <br>
+  Vertical   player's cost: 
+  <br>
+  {{O.costy.toFixed(1)}}
+  <br>
+  <br>
+  Horizontal's learning rate:
+  <br>
+  <input v-model.number="P.alpha">
+  <br>
+  <br>
+  Vertical's learning rate:
+  <br>
+  <input v-model.number="P.beta">
+  </div>
+
+  </div>
+
+<script>
+const s = (v) => Math.sin(v)
+const c = (v) => Math.cos(v)
+
+const experiments = {
+  'play': {
+    mode: 'mouse'
+   },
+  'sim': {
+    mode: 'simgrad'
+   },
+  'manual': {
+    mode: 'both'
+   }
+}
+
+
+const data = {
+  P: { //parameters
+    mode: 'mouse',
+    inputmode: 'absolute',//or absolute
+    colorx: 'red',
+    colory: '#899FEC',
+    duration: 100, //seconds
+    period: 20, //ms
+    smooth: 0.9,
+    alpha: 0.03,
+    beta: 0.03,
+    a: 2.3,
+    aa: 1,
+    b: .6,
+    c: -.15,
+    d: .7,
+    dd: 2,
+    z11: 3,
+    z12: 3,
+    z21: -3,
+    z22: -2,
+    scale: 10
+  },
+  I: { //inputs
+    posX: 0,
+    posY: 0,
+  },
+  O: { //outputs
+    time: 0,
+    costx: 0,
+    costy: 0,
+    gradx: 0,
+    grady: 0
+  },
+  S: { //state
+    time: 0,
+    x: 0,
+    y: 0,
+  },
+}
+
+function reset(S, I, O, P) {
+  S.x = 100
+  S.y = 100
+ }
+
+function update(S, I, O, P) {
+  var x1 = (S.x-P.z11*P.scale)
+  var y1 = (S.y-P.z12*P.scale)
+  var x2 = (S.x-P.z21*P.scale)
+  var y2 = (S.y-P.z22*P.scale)
+
+  O.costx = P.a*x1*x1/2 + P.b*x1*y1
+  O.costy = P.d*y2*y2/2 + P.c*x2*y2
+  O.costx /= P.scale
+  O.costy /= P.scale
+
+  O.gradx = P.a*x1 + P.b*y1
+  O.grady = P.c*x2 + P.d*y2
+  switch (P.mode) {
+    case 'simgrad':
+     S.x = S.x - P.alpha*O.gradx
+     S.y = S.y - P.beta*O.grady
+     break;
+    case 'mouse': 
+     S.x = I.posX
+     S.y = S.y - P.beta*O.grady
+     break;
+    case 'both':
+     S.x = I.posX
+     S.y = I.posY
+     break;
+   }
+}
+
+function draw(canvas, S, I, O, P) {
+  let ctx = canvas.getContext('2d')
+  let w = canvas.width
+  let h = canvas.height
+
+  ctx.strokeStyle = 'white'
+  ctx.fillStyle = 'white'
+  ctx.lineWidth = 3
+
+  ctx.strokeRect(-w/2, -h/2, w, h)
+
+  ctx.beginPath();
+  ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
+  ctx.fill()
+
+  ctx.strokeStyle = P.colorx
+  r1 = (P.a+P.aa)/2 + Math.sqrt((P.a - P.aa)/2+P.b*P.b)
+  r2 = (P.a+P.aa)/2 - Math.sqrt((P.a - P.aa)/2+P.b*P.b)
+  t = Math.atan2(r1-P.a, P.b)
+  for (var i=0; i<5; i++) {
+  ctx.beginPath();
+  ctx.ellipse(P.z11*P.scale, P.z12*P.scale, r2*i*P.scale, r1*i*P.scale, t, 0, 2*Math.PI)
+  ctx.stroke()
+   }
+  ctx.beginPath();
+  ctx.arc(P.z11*P.scale, P.z12*P.scale, 1, 0, 2*Math.PI)
+  ctx.fill()
+
+
+  ctx.strokeStyle = P.colory
+  r1 = (P.d+P.dd)/2 + Math.sqrt((P.dd - P.d)/2+P.c*P.c)
+  r2 = (P.d+P.dd)/2 - Math.sqrt((P.dd - P.d)/2+P.c*P.c)
+  t = Math.atan2(r1-P.d, P.c)
+  for (var i=0; i<5; i++) {
+  ctx.beginPath();
+  ctx.ellipse(P.z21*P.scale, P.z22*P.scale, r1*i*P.scale, r2*i*P.scale, -t, 0, 2*Math.PI)
+
+  ctx.stroke()
+   }
+  ctx.beginPath();
+  ctx.arc(P.z21*P.scale, P.z22*P.scale, 1, 0, 2*Math.PI)
+  ctx.fill()
+
+  ctx.lineWidth = 10;
+  if (P.mode == 'both') {
+    x = I.posX
+    y = I.posY
+   } else if (P.mode == 'mouse') {
+     x = I.posX
+     y = S.y
+   } else if (P.mode == 'simgrad') {
+     x = S.x
+     y = S.y
+    }
+
+  ctx.lineWidth = 10
+  ctx.strokeStyle = P.colorx
+  ctx.beginPath();
+   ctx.moveTo(x-5, -h/2)
+   ctx.lineTo(x+5, -h/2)
+  ctx.stroke()
+
+  ctx.strokeStyle = P.colory
+   ctx.beginPath();
+   ctx.moveTo(w/2, y-5) 
+   ctx.lineTo(w/2, y+5)
+   ctx.stroke()
+ }
+
+function inputs(canvas, S, I, O, P, x, y) {
+
+  if (P.inputmode == 'lock') {
+    I.movX = I.movX + x 
+    I.movY = I.movY - y
+  //}
+  //if (P.inputmode == 'absolute') {
+  //  I.posX = x - canvas.width/2
+  //  I.posY = canvas.height -y
+  //}
+    I.posX = I.movX
+    I.posY = I.movY
+   } else {
+    I.posX = x - canvas.width/2
+    I.posY = canvas.height/2 -y
+    }
+
+  if (P.mode == 'lqr') I.posX = x
+
+}
+
+DynamSpace(update, draw, inputs, reset, data, experiments)
+
+	</script>
+</body>
+</html>

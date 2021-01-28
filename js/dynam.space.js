@@ -81,13 +81,16 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     	 this.info.hasStarted = true      
     	 this.info.isRunning = true
       this.info.startTime = Date.now()
-      
+     if(this.P.inputmode == 'lock')  {
      this.canvas.requestPointerLock()
+     }
     },
     stop() {
     	this.info.isRunning = false
      this.info.isDrawing = false
+     if(this.P.inputmode == 'lock') {
      document.exitPointerLock()
+     }
      this.save()
     },
    save() {
@@ -173,7 +176,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
      let y = 0
         if (this.P.inputmode == 'absolute') {
         x = e.clientX - rect.left
-        y = e.clientX - rect.left
+        y = e.clientY - rect.top
         }
      else if (this.P.inputmode == 'lock') {
         x = e.movementX
@@ -208,7 +211,9 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
 
-//   this.canvas.addEventListener('mousemove', this.input)
+   if (this.P.inputmode == 'absolute') {
+   this.canvas.addEventListener('mousemove', this.input)
+   }
 
    this.canvas.addEventListener('mousedown', (e) => {
     if(!this.info.hasStarted && !this.info.isRunning) {
