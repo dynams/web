@@ -151,9 +151,6 @@ function draw(canvas, S, I, O, P) {
 
   ctx.strokeRect(-w/2, -h/2, w, h)
 
-  ctx.beginPath();
-  ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
-  ctx.fill()
 
   ctx.strokeStyle = P.colorx
   r1 = (P.a+P.aa)/2 + Math.sqrt((P.a - P.aa)/2+P.b*P.b)
@@ -207,6 +204,10 @@ function draw(canvas, S, I, O, P) {
    ctx.moveTo(w/2, y-5) 
    ctx.lineTo(w/2, y+5)
    ctx.stroke()
+
+  ctx.beginPath();
+  ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
+  ctx.fill()
  }
 
 function inputs(canvas, S, I, O, P, x, y) {
