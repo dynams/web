@@ -26,6 +26,11 @@
     <canvas id="myCanvas" ref="myCanvas" width="300" height="300"></canvas>
   </div>
   <div>
+   <br>
+   Plot learning dynamics:
+          <input type='checkbox' v-model="P.history">
+          <br>
+          <br>
   {{ P.mode=='mouse'?"Your" : "Horizontal player's" }} cost: 
   <br>
   {{O.costx.toFixed(1)}}
@@ -91,7 +96,8 @@ const data = {
     z21: -3,
     z22: -2,
     scale: 20,
-    lvlset: 1
+    lvlset: 1,
+    history: false
   },
   I: { //inputs
     posX: 0,
@@ -112,7 +118,7 @@ const data = {
 }
 
 function reset(S, I, O, P) {
-  S.x = 100
+  S.x = -100
   S.y = 100
  }
 
@@ -145,7 +151,7 @@ function update(S, I, O, P) {
    }
 }
 
-function draw(canvas, S, I, O, P) {
+function draw(canvas, S, I, O, P, H) {
   let ctx = canvas.getContext('2d')
   let w = canvas.width
   let h = canvas.height
@@ -155,6 +161,8 @@ function draw(canvas, S, I, O, P) {
   ctx.lineWidth = 3
 
   ctx.strokeRect(-w/2, -h/2, w, h)
+
+
 
 
   ctx.strokeStyle = P.colorx
@@ -213,6 +221,17 @@ function draw(canvas, S, I, O, P) {
   ctx.beginPath();
   ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
   ctx.fill()
+
+  ctx.lineWidth = 2
+  if (P.history && H.S.x.length >= 1) {
+  ctx.strokeStyle = "white"
+   ctx.beginPath();
+   ctx.moveTo(H.S.x[0], H.S.y[0]) 
+    for (var i =0; i< H.S.x.length; i+= 2) {
+ctx.lineTo(H.S.x[i], H.S.y[i])
+     }
+   ctx.stroke()
+   }
  }
 
 function inputs(canvas, S, I, O, P, x, y) {

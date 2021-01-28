@@ -87,7 +87,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     },
     stop() {
     	this.info.isRunning = false
-     this.info.isDrawing = false
+     this.info.isDrawing = true//false
      if(this.P.inputmode == 'lock') {
      document.exitPointerLock()
      }
@@ -134,7 +134,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
       this.info.prevT = this.O.time
     },
   	tick() {
-      if (this.info.hasStarted) {
+      if (this.info.hasStarted && this.info.isRunning) {
     	   this.O.time = Date.now() - this.info.startTime
         this.S.time += this.P.period
         this.update()
@@ -168,7 +168,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
       ctx.transform(1, 0, 0, -1, this.canvas.width / 2, this.canvas.height / 2)
 
-      draw_fn(this.canvas, this.S, this.I, this.O, this.P);
+      draw_fn(this.canvas, this.S, this.I, this.O, this.P, this.H);
     },
     input(e) {
         const rect = this.canvas.getBoundingClientRect();
