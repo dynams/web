@@ -30,6 +30,9 @@
    Plot learning dynamics:
           <input type='checkbox' v-model="P.history">
           <br>
+   Show more info:
+          <input type='checkbox' v-model="P.showinfo">
+          <br>
           <br>
   {{ P.mode=='mouse'?"Your" : "Horizontal player's" }} cost: 
   <br>
@@ -56,6 +59,7 @@
   </div>
   <div></div>
   <div>
+   <template v-if="P.showinfo">
    <br>
    <br>
    Continous game:
@@ -114,6 +118,7 @@
    and 
    arXiv:<a href="https://arxiv.org/abs/2011.05562">2011.05562</a> 
    
+   </template>
   </div>
 
   </div>
@@ -158,7 +163,8 @@ const data = {
     z22: -2,
     scale: 20,
     lvlset: 1,
-    history: false
+    history: false,
+    showInfo: false
   },
   I: { //inputs
     posX: 0,
