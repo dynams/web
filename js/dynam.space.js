@@ -144,7 +144,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
         this.draw()
       }
 
-      if(this.S.time >= this.P.duration*1000) {
+      if(this.S.time >= this.P.duration*1000 && this.isRunning) {
         this.stop()
       }
 
