@@ -91,10 +91,11 @@
    <br>
    Gradients:
    <br>
-   g1(x,y) = ax + by 
+   g1(x,y) = ax + by = {{(O.gradx/P.scale).toFixed(2)}}
    <br>
-   g2(x,y) = cx + dy
+   g2(x,y) = cx + dy = {{(O.grady/P.scale).toFixed(2)}}
    <br>
+   <!-- gstack1(x,y) = {{(O.gradstackx/P.scale).toFixed(2)}} -->
    <br>
    Learning Dynamics:
    <br>
@@ -151,10 +152,10 @@ const data = {
     smooth: 0.9,
     alpha: 0.03,
     beta: 0.03,
-    a: 2.3,
+    a: 1.8,
     aa: 1,
-    b: .6,
-    c: -.15,
+    b: -.15,
+    c: .15,
     d: .7,
     dd: 2,
     z11: 3,
@@ -164,7 +165,9 @@ const data = {
     scale: 20,
     lvlset: 1,
     history: false,
-    showInfo: false
+    showInfo: false,
+    nash1: null,
+    nash2: null,
   },
   I: { //inputs
     posX: 0,
@@ -175,7 +178,8 @@ const data = {
     costx: 0,
     costy: 0,
     gradx: 0,
-    grady: 0
+    grady: 0,
+    gradstackx: 0
   },
   S: { //state
     time: 0,
@@ -187,6 +191,41 @@ const data = {
 function reset(S, I, O, P) {
   S.x = -100
   S.y = 100
+  const A = P.a
+  const C = P.d
+  const B1 = P.b
+  const B2 = P.c
+  const H = P.aa
+  const E = P.dd
+  const e1 = -A*P.z11-B1*P.z12
+  const h1 = -H*P.z12-B1*P.z11
+  const e2 = -E*P.z21-B2*P.z22
+  const h2 = -C*P.z22-B2*P.z21
+
+  const det = A*C-B1*B2
+  const Jinv11 = C/det
+  const Jinv12 = -B1/det
+  const Jinv21 = -B2/det
+  const Jinv22 = A/det
+
+  const S1 = A-B1*B2/C
+  const S2 = C-B2*B1/A
+
+  const detstack = S1*C
+  const Jstackinv11 = C/detstack
+  const Jstackinv12 = 0
+  const Jstackinv21 = -B2/detstack
+  const Jstackinv22 = A/detstack
+
+  P.nash1 = -Jinv11*e1-Jinv12*h2
+  P.nash2 = -Jinv21*e1-Jinv22*h2
+  
+  P.stack1 = -Jstackinv11*(e1-h2/C)
+  P.stack2 = -Jstackinv21*(e1-h2/C)-Jstackinv22*(h2)
+
+  console.log(P.nash1)
+  console.log(P.nash2)
+
  }
 
 function update(S, I, O, P) {
@@ -197,11 +236,12 @@ function update(S, I, O, P) {
 
   O.costx = P.a*x1*x1/2 + P.b*x1*y1 + P.aa*y1*y1/2
   O.costy = P.d*y2*y2/2 + P.c*x2*y2 + P.dd*x2*x2/2
-  O.costx /= P.scale
-  O.costy /= P.scale
+  O.costx /= P.scale**2
+  O.costy /= P.scale**2
 
   O.gradx = P.a*x1 + P.b*y1
   O.grady = P.c*x2 + P.d*y2
+  O.gradstackx = (P.a - P.b*P.c/P.d)*x1
   switch (P.mode) {
     case 'simgrad':
      S.x = S.x - P.alpha*O.gradx
@@ -223,12 +263,12 @@ function draw(canvas, S, I, O, P, H) {
   let w = canvas.width
   let h = canvas.height
 
+
   ctx.strokeStyle = 'white'
   ctx.fillStyle = 'white'
   ctx.lineWidth = 3
 
   ctx.strokeRect(-w/2, -h/2, w, h)
-
 
 
 
@@ -299,6 +339,19 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
      }
    ctx.stroke()
    }
+
+  
+  if(P.showinfo){
+  ctx.fillStyle = 'navajowhite'
+  ctx.beginPath();
+  ctx.arc(P.nash1*P.scale, P.nash2*P.scale, 5, 0, 2*Math.PI)
+  ctx.fill()
+   }
+
+  //ctx.fillStyle = 'salmon'
+  //ctx.beginPath();
+  //ctx.arc(P.stack1*P.scale, P.stack2*P.scale, 3, 0, 2*Math.PI)
+  //ctx.fill()
  }
 
 function inputs(canvas, S, I, O, P, x, y) {
