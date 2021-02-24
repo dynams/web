@@ -1,4 +1,3 @@
-
 <html>
  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
@@ -30,6 +29,9 @@
    Plot learning dynamics:
           <input type='checkbox' v-model="P.history">
           <br>
+   Machine play stack:
+          <input type='checkbox' v-model="P.playstack">
+          <br>
    Show more info:
           <input type='checkbox' v-model="P.showinfo">
           <br>
@@ -55,6 +57,36 @@
   Vertical's learning rate:
   <br>
   <input v-model.number="P.beta">
+  </template>
+
+  <template v-if="P.showinfo">
+   <br>
+   <br>
+   nash: 
+   <br>
+   <input v-model.number="P.xnash">
+   <input v-model.number="P.ynash">
+          <br>
+   stack: 
+   <br>
+   <input v-model.number="P.xstack">
+    <input v-model.number="P.ystack">
+          <br>
+   conj: 
+          <br>
+   <input v-model.number="P.xconj">
+    <input v-model.number="P.yconj">
+          <br>
+          <br>
+   a: <input v-model.number="P.a">
+          <br>
+   b: <input v-model.number="P.b">
+          <br>
+   d: <input v-model.number="P.d">
+          <br>
+   e: <input v-model.number="P.dd">
+          <br>
+          <br>
   </template>
   </div>
   <div></div>
@@ -84,9 +116,9 @@
   <br>
    Costs:
    <br>
-   f1(x,y) = ax<sup>2</sup>/2 + bxy + ry<sup>2</sup>/2
+   f1(x,y) = ax<sup>2</sup>/2 + bxy + hy<sup>2</sup>/2
    <br>
-   f2(x,y) = sx<sup>2</sup>/2 + cxy + dy<sup>2</sup>/2
+   f2(x,y) = ex<sup>2</sup>/2 + cxy + dy<sup>2</sup>/2
    <br>
    <br>
    Gradients:
@@ -95,7 +127,10 @@
    <br>
    g2(x,y) = cx + dy = {{(O.grady/P.scale).toFixed(2)}}
    <br>
-   <!-- gstack1(x,y) = {{(O.gradstackx/P.scale).toFixed(2)}} -->
+   gstack1(x,y) = {{(O.gradstackx/P.scale).toFixed(2)}}
+   <br>
+   gstack1(x,y) = {{(O.gradstacky/P.scale).toFixed(2)}}
+   <br>
    <br>
    Learning Dynamics:
    <br>
@@ -150,14 +185,26 @@ const data = {
     duration: 100, //seconds
     period: 20, //ms
     smooth: 0.9,
+    playstack: false,
     alpha: 0.03,
     beta: 0.03,
+    xnash: -1,
+    ynash: -1,
+    xstack: 1,
+    ystack: 1,
+    xconj: 1.3,
+    yconj: .3,
+    x1: 0,
+    x2: 0,
+    y1: 0,
+    y2: -2,
     a: 1.8,
     aa: 1,
     b: -.15,
     c: .15,
     d: .7,
-    dd: 2,
+    dd: 3,
+    h: 1,
     z11: 3,
     z12: 3,
     z21: -3,
@@ -165,7 +212,7 @@ const data = {
     scale: 20,
     lvlset: 1,
     history: false,
-    showInfo: false,
+    showinfo: true,
     nash1: null,
     nash2: null,
   },
@@ -179,7 +226,8 @@ const data = {
     costy: 0,
     gradx: 0,
     grady: 0,
-    gradstackx: 0
+    gradstackx: 0,
+    gradstacky: 0
   },
   S: { //state
     time: 0,
@@ -188,44 +236,52 @@ const data = {
   },
 }
 
+ function recompute(P) {
+
+  const xnash = P.xnash
+  const ynash = P.ynash
+  const xstack = P.xstack
+  const ystack = P.ystack
+  const xconj = P.xconj
+  const yconj = P.yconj
+  const y2 = P.y2
+  const a = P.a
+  const c = P.d
+  const b1 = P.b
+  const h = P.aa
+  const e = P.dd
+
+  // NASH STACK
+  P.x1 = -((a*(b1*(xnash - xstack)*(xnash - xstack) + h*xnash*(ynash - ystack)) + 
+     b1*(b1*(xnash - 2*xstack) + h*(ynash - ystack))*(ynash - 
+        ystack))/((b1*b1 - a*h)*(ynash - ystack)));
+  P.x2 =(xnash*y2 - xstack*y2 + xstack*ynash - xnash*ystack)/(ynash - ystack);
+  P.y1 = (a*a*(xnash - xstack)*(xnash - xstack) + b1*b1*ynash*(ynash - ystack) - 
+   a*(ynash - ystack)*(-2*b1*xnash + 2*b1*xstack + h*ystack))/((b1*b1 -
+      a*h)*(ynash - ystack));
+  P.c = (c*(-ynash + ystack))/(xnash - xstack)
+
+  // NASH STACK CONJ
+  P.x1 = (a*xnash*(xconj - xstack) + b1*xstack*(yconj - ynash) + b1*xconj*(ynash - ystack))/(a*(xconj - xstack) + b1*(yconj - ystack))
+  P.x2 = (-a*c*(xnash - xstack)*(xstack*(-yconj + ynash) + xnash*(yconj - ystack) + xconj*(-ynash + ystack)) + b1*(e*xconj*(xnash - xstack)*(xnash-xstack) + c*(ynash - ystack)*(xstack*(yconj - ynash) + xnash*(-yconj + ystack))))/(b1*(e*(xnash - xstack)*(xnash-xstack) - c*(ynash - ystack)*(ynash-ystack)))
+  P.y1 = (b1*ynash*(yconj - ystack) + a*(-xstack*yconj + xnash*(yconj - ystack) + xconj*ystack))/(a*(xconj - xstack) + b1*(yconj - ystack));
+
+  P.y2 = (-a*c*(ynash - ystack)*(xstack*(-yconj + ynash) + xnash*(yconj - ystack) + xconj*(-ynash + ystack)) + b1*(-c*yconj*(ynash - ystack)*(ynash-ystack) + e*(xnash - xstack)*(-xstack*ynash + xconj*(ynash - ystack) + xnash*ystack)))/(b1*(e*(xnash - xstack)*(xnash - xstack) - c*(ynash - ystack)*(ynash-ystack)))
+
+  P.c = (c*(-ynash + ystack))/(xnash - xstack)
+  P.aa = (a*(xconj - xstack)*(xnash - xstack) - b1*(xstack*(yconj + ynash - 2*ystack) + xnash*(-yconj + ystack) + xconj*(-ynash + ystack)))/((yconj - ystack)*(-ynash + ystack))
+
+
+  P.z11 = P.x1
+  P.z12 = P.y1
+  P.z21 = P.x2
+  P.z22 = P.y2
+  }
+
 function reset(S, I, O, P) {
   S.x = -100
   S.y = 100
-  const A = P.a
-  const C = P.d
-  const B1 = P.b
-  const B2 = P.c
-  const H = P.aa
-  const E = P.dd
-  const e1 = -A*P.z11-B1*P.z12
-  const h1 = -H*P.z12-B1*P.z11
-  const e2 = -E*P.z21-B2*P.z22
-  const h2 = -C*P.z22-B2*P.z21
-
-  const det = A*C-B1*B2
-  const Jinv11 = C/det
-  const Jinv12 = -B1/det
-  const Jinv21 = -B2/det
-  const Jinv22 = A/det
-
-  const S1 = A-B1*B2/C
-  const S2 = C-B2*B1/A
-
-  const detstack = S1*C
-  const Jstackinv11 = C/detstack
-  const Jstackinv12 = 0
-  const Jstackinv21 = -B2/detstack
-  const Jstackinv22 = A/detstack
-
-  P.nash1 = -Jinv11*e1-Jinv12*h2
-  P.nash2 = -Jinv21*e1-Jinv22*h2
-  
-  P.stack1 = -Jstackinv11*(e1-h2/C)
-  P.stack2 = -Jstackinv21*(e1-h2/C)-Jstackinv22*(h2)
-
-  console.log(P.nash1)
-  console.log(P.nash2)
-
+  recompute(P)
  }
 
 function update(S, I, O, P) {
@@ -241,15 +297,17 @@ function update(S, I, O, P) {
 
   O.gradx = P.a*x1 + P.b*y1
   O.grady = P.c*x2 + P.d*y2
-  O.gradstackx = (P.a - P.b*P.c/P.d)*x1
+  O.gradstackx = O.gradx - (P.c*(P.b*x1+P.aa*y1))/P.d
+  O.gradstacky = O.grady - (P.b*(P.c*y2+P.dd*x2))/P.a
+  const gradm = P.playstack ? O.gradstacky : O.grady
   switch (P.mode) {
     case 'simgrad':
      S.x = S.x - P.alpha*O.gradx
-     S.y = S.y - P.beta*O.grady
+     S.y = S.y - P.beta*gradm
      break;
     case 'mouse': 
      S.x = I.posX
-     S.y = S.y - P.beta*O.grady
+     S.y = S.y - P.beta*gradm
      break;
     case 'both':
      S.x = I.posX
@@ -263,6 +321,7 @@ function draw(canvas, S, I, O, P, H) {
   let w = canvas.width
   let h = canvas.height
 
+  recompute(P)
 
   ctx.strokeStyle = 'white'
   ctx.fillStyle = 'white'
@@ -344,14 +403,19 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   if(P.showinfo){
   ctx.fillStyle = 'navajowhite'
   ctx.beginPath();
-  ctx.arc(P.nash1*P.scale, P.nash2*P.scale, 5, 0, 2*Math.PI)
+  ctx.arc(P.xnash*P.scale, P.ynash*P.scale, 5, 0, 2*Math.PI)
+  ctx.fill()
+
+  ctx.fillStyle = 'salmon'
+  ctx.beginPath();
+  ctx.arc(P.xstack*P.scale, P.ystack*P.scale, 3, 0, 2*Math.PI)
+  ctx.fill()
+
+  ctx.fillStyle = 'green'
+  ctx.beginPath();
+  ctx.arc(P.xconj*P.scale, P.yconj*P.scale, 3, 0, 2*Math.PI)
   ctx.fill()
    }
-
-  //ctx.fillStyle = 'salmon'
-  //ctx.beginPath();
-  //ctx.arc(P.stack1*P.scale, P.stack2*P.scale, 3, 0, 2*Math.PI)
-  //ctx.fill()
  }
 
 function inputs(canvas, S, I, O, P, x, y) {
