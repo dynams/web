@@ -30,8 +30,15 @@
           <input type='checkbox' v-model="P.history">
           <br>
    Machine play stack:
-          <input type='checkbox' v-model="P.playstack">
+          <input type='checkbox' v-model="P.playstacky">
           <br>
+  <template v-if="P.mode!='both'">
+  <template v-if="P.mode!='mouse'">
+   Other play stack:
+          <input type='checkbox' v-model="P.playstackx">
+          <br>
+  </template>
+  </template>
    Show more info:
           <input type='checkbox' v-model="P.showinfo">
           <br>
@@ -64,27 +71,41 @@
    <br>
    nash: 
    <br>
-   <input v-model.number="P.xnash">
-   <input v-model.number="P.ynash">
-          <br>
-   stack: 
+   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xnash">
+   {{P.xnash}}
    <br>
-   <input v-model.number="P.xstack">
-    <input v-model.number="P.ystack">
+   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.ynash">
+   {{P.ynash}}
           <br>
-   conj: 
+   stack (p1 leader): 
+   <br>
+   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xstack1">
+   {{P.xstack1}}
+   <br>
+    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.ystack1">
+   {{P.ystack1}}
+   <br>
+   stack (p2 leader): 
+   <br>
+   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xstack2">
+   {{P.xstack2}}
+   <br>
+    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.ystack2">
+   {{P.ystack2}}
+   <br>
           <br>
-   <input v-model.number="P.xconj">
-    <input v-model.number="P.yconj">
+   conj:  (p1 and p2 leaders)
+          <br>
+          <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xconj">
+          {{P.xconj}}
+   <br>
+    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.yconj">
+    {{P.yconj}}
           <br>
           <br>
    a: <input v-model.number="P.a">
           <br>
-   b: <input v-model.number="P.b">
-          <br>
    d: <input v-model.number="P.d">
-          <br>
-   e: <input v-model.number="P.dd">
           <br>
           <br>
   </template>
@@ -123,13 +144,21 @@
    <br>
    Gradients:
    <br>
+   <span :style="Math.abs(O.gradstackx) >= Math.abs(O.gradx)? 'color:green' : ''">
    g1(x,y) = ax + by = {{(O.gradx/P.scale).toFixed(2)}}
+   </span>
    <br>
-   g2(x,y) = cx + dy = {{(O.grady/P.scale).toFixed(2)}}
-   <br>
+   <span :style="Math.abs(O.gradstackx) < Math.abs(O.gradx)? 'color:green' : ''">
    gstack1(x,y) = {{(O.gradstackx/P.scale).toFixed(2)}}
+   </span>
    <br>
-   gstack1(x,y) = {{(O.gradstacky/P.scale).toFixed(2)}}
+   <span :style="Math.abs(O.gradstacky) >= Math.abs(O.grady)? 'color:green' : ''">
+   g2(x,y) = cx + dy = {{(O.grady/P.scale).toFixed(2)}}
+   </span>
+   <br>
+   <span :style="Math.abs(O.gradstacky) < Math.abs(O.grady)? 'color:green' : ''">
+   gstack2(x,y) = {{(O.gradstacky/P.scale).toFixed(2)}}
+   </span>
    <br>
    <br>
    Learning Dynamics:
@@ -141,9 +170,9 @@
    <br>
    Game Jacobian:
    <br>
-   J(x,y) = ⎡a  b⎤
+   J(x,y) = ⎡a  b⎤ = ⎡{{P.a.toFixed(1)}}  {{P.b.toFixed(1)}}⎤ 
    <br>
-   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ⎣c  d⎦
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ⎣c  d⎦ = ⎣{{P.c.toFixed(1)}} {{P.d.toFixed(1)}}⎦
    <br>
    
    <br>
@@ -185,13 +214,16 @@ const data = {
     duration: 100, //seconds
     period: 20, //ms
     smooth: 0.9,
-    playstack: false,
+    playstackx: false,
+    playstacky: false,
     alpha: 0.03,
     beta: 0.03,
     xnash: -1,
     ynash: -1,
-    xstack: 1,
-    ystack: 1,
+    xstack1: 1,
+    ystack1: 1,
+    xstack2: .1,
+    ystack2: .8,
     xconj: 1.3,
     yconj: .3,
     x1: 0,
@@ -199,20 +231,16 @@ const data = {
     y1: 0,
     y2: -2,
     a: 1.8,
-    aa: 1,
+    h: 1,
     b: -.15,
     c: .15,
     d: .7,
-    dd: 3,
+    e: 3,
     h: 1,
-    z11: 3,
-    z12: 3,
-    z21: -3,
-    z22: -2,
-    scale: 20,
+    scale: 40,
     lvlset: 1,
     history: false,
-    showinfo: true,
+    showinfo: false,
     nash1: null,
     nash2: null,
   },
@@ -238,44 +266,39 @@ const data = {
 
  function recompute(P) {
 
-  const xnash = P.xnash
-  const ynash = P.ynash
-  const xstack = P.xstack
-  const ystack = P.ystack
-  const xconj = P.xconj
-  const yconj = P.yconj
-  const y2 = P.y2
+  const xn = P.xnash
+  const yn = P.ynash
+  const xs1 = P.xstack1
+  const ys1 = P.ystack1
+  const xs2 = P.xstack2
+  const ys2 = P.ystack2
+  const xc = P.xconj
+  const yc = P.yconj
   const a = P.a
   const c = P.d
-  const b1 = P.b
-  const h = P.aa
-  const e = P.dd
+  const h = P.h
+  const e = P.e
 
-  // NASH STACK
-  P.x1 = -((a*(b1*(xnash - xstack)*(xnash - xstack) + h*xnash*(ynash - ystack)) + 
-     b1*(b1*(xnash - 2*xstack) + h*(ynash - ystack))*(ynash - 
-        ystack))/((b1*b1 - a*h)*(ynash - ystack)));
-  P.x2 =(xnash*y2 - xstack*y2 + xstack*ynash - xnash*ystack)/(ynash - ystack);
-  P.y1 = (a*a*(xnash - xstack)*(xnash - xstack) + b1*b1*ynash*(ynash - ystack) - 
-   a*(ynash - ystack)*(-2*b1*xnash + 2*b1*xstack + h*ystack))/((b1*b1 -
-      a*h)*(ynash - ystack));
-  P.c = (c*(-ynash + ystack))/(xnash - xstack)
-
-  // NASH STACK CONJ
-  P.x1 = (a*xnash*(xconj - xstack) + b1*xstack*(yconj - ynash) + b1*xconj*(ynash - ystack))/(a*(xconj - xstack) + b1*(yconj - ystack))
-  P.x2 = (-a*c*(xnash - xstack)*(xstack*(-yconj + ynash) + xnash*(yconj - ystack) + xconj*(-ynash + ystack)) + b1*(e*xconj*(xnash - xstack)*(xnash-xstack) + c*(ynash - ystack)*(xstack*(yconj - ynash) + xnash*(-yconj + ystack))))/(b1*(e*(xnash - xstack)*(xnash-xstack) - c*(ynash - ystack)*(ynash-ystack)))
-  P.y1 = (b1*ynash*(yconj - ystack) + a*(-xstack*yconj + xnash*(yconj - ystack) + xconj*ystack))/(a*(xconj - xstack) + b1*(yconj - ystack));
-
-  P.y2 = (-a*c*(ynash - ystack)*(xstack*(-yconj + ynash) + xnash*(yconj - ystack) + xconj*(-ynash + ystack)) + b1*(-c*yconj*(ynash - ystack)*(ynash-ystack) + e*(xnash - xstack)*(-xstack*ynash + xconj*(ynash - ystack) + xnash*ystack)))/(b1*(e*(xnash - xstack)*(xnash - xstack) - c*(ynash - ystack)*(ynash-ystack)))
-
-  P.c = (c*(-ynash + ystack))/(xnash - xstack)
-  P.aa = (a*(xconj - xstack)*(xnash - xstack) - b1*(xstack*(yconj + ynash - 2*ystack) + xnash*(-yconj + ystack) + xconj*(-ynash + ystack)))/((yconj - ystack)*(-ynash + ystack))
+  P.x1 = (xn*xs1*yc - xs1*xs2*yc - xc*xs2*yn + xs1*xs2*yn - xc*xn*ys1 + xc*xs2*ys1 + xc*xn*ys2 - xn*xs1*ys2)/
+    (xn*yc - xs2*yc - xc*yn + xs1*yn - xn*ys1 + xs2*ys1 + xc*ys2 - xs1*ys2)
+  P.x2 = (xn*xs2*yc - xs1*xs2*yc - xc*xs1*yn + xs1*xs2*yn + xc*xn*ys1 - xn*xs2*ys1 - xc*xn*ys2 + xc*xs1*ys2)/
+    (xn*yc - xs1*yc - xc*yn + xs2*yn + xc*ys1 - xs2*ys1 - xn*ys2 + xs1*ys2) 
+  P.y1 = (xs1*yc*yn - xs2*yc*yn - xc*yn*ys1 + xs2*yn*ys1 + xn*yc*ys2 - xs1*yc*ys2 + xc*ys1*ys2 - xn*ys1*ys2)/
+    (xn*yc - xs2*yc - xc*yn + xs1*yn - xn*ys1 + xs2*ys1 + xc*ys2 - xs1*ys2)
+  P.y2 = (-xs1*yc*yn + xs2*yc*yn + xn*yc*ys1 - xs2*yc*ys1 - xc*yn*ys2 + xs1*yn*ys2 + xc*ys1*ys2 - xn*ys1*ys2)/
+    (xn*yc - xs1*yc - xc*yn + xs2*yn + xc*ys1 - xs2*ys1 - xn*ys2 + xs1*ys2)
+  P.b = (-a*xn + a*xs2)/(yn - ys2)
+  P.c = (-c*yn + c*ys1)/(xn - xs1) 
+  P.e = (c*(xs1*yc*yn - xs2*yc*yn + xc*yn*yn - xs2*yn*yn - xn*yc*ys1 + xs2*yc*ys1 - xc*yn*ys1 + xs2*yn*ys1 + xn*yc*ys2 - xs1*yc*ys2 - 
+     xc*yn*ys2 - xs1*yn*ys2 + 2*xs2*yn*ys2 + xc*ys1*ys2 + xn*ys1*ys2 - 2*xs2*ys1*ys2 - xn*ys2*ys2 + xs1*ys2*ys2))/((xn - 
+     xs1)*(xc - xs2)*(xn - xs2))
+  P.h = (a*(xn*xn*yc - xn*xs1*yc - xn*xs2*yc + xs1*xs2*yc + xc*xs1*yn -
+     xs1*xs1*yn - xc*xs2*yn + xs1*xs2*yn - xc*xn*ys1 - xn*xn*ys1 +
+     2*xn*xs1*ys1 + xc*xs2*ys1 + xn*xs2*ys1 - 2*xs1*xs2*ys1 +
+     xc*xn*ys2 - xc*xs1*ys2 - xn*xs1*ys2 + xs1*xs1*ys2))/((yc -
+     ys1)*(yn - ys1)*(yn - ys2))
 
 
-  P.z11 = P.x1
-  P.z12 = P.y1
-  P.z21 = P.x2
-  P.z22 = P.y2
   }
 
 function reset(S, I, O, P) {
@@ -285,29 +308,30 @@ function reset(S, I, O, P) {
  }
 
 function update(S, I, O, P) {
-  var x1 = (S.x-P.z11*P.scale)
-  var y1 = (S.y-P.z12*P.scale)
-  var x2 = (S.x-P.z21*P.scale)
-  var y2 = (S.y-P.z22*P.scale)
+  var xx1 = (S.x-P.x1*P.scale)
+  var yy1 = (S.y-P.y1*P.scale)
+  var xx2 = (S.x-P.x2*P.scale)
+  var yy2 = (S.y-P.y2*P.scale)
 
-  O.costx = P.a*x1*x1/2 + P.b*x1*y1 + P.aa*y1*y1/2
-  O.costy = P.d*y2*y2/2 + P.c*x2*y2 + P.dd*x2*x2/2
+  O.costx = P.a*xx1*xx1/2 + P.b*xx1*yy1 + P.h*yy1*yy1/2
+  O.costy = P.d*yy2*yy2/2 + P.c*xx2*yy2 + P.e*xx2*xx2/2
   O.costx /= P.scale**2
   O.costy /= P.scale**2
 
-  O.gradx = P.a*x1 + P.b*y1
-  O.grady = P.c*x2 + P.d*y2
-  O.gradstackx = O.gradx - (P.c*(P.b*x1+P.aa*y1))/P.d
-  O.gradstacky = O.grady - (P.b*(P.c*y2+P.dd*x2))/P.a
-  const gradm = P.playstack ? O.gradstacky : O.grady
+  O.gradx = P.a*xx1 + P.b*yy1
+  O.grady = P.c*xx2 + P.d*yy2
+  O.gradstackx = O.gradx - (P.c*(P.b*xx1+P.h*yy1))/P.d
+  O.gradstacky = O.grady - (P.b*(P.c*yy2+P.e*xx2))/P.a
+  const grady = P.playstacky ? O.gradstacky : O.grady
+  const gradx = P.playstackx ? O.gradstackx : O.gradx
   switch (P.mode) {
     case 'simgrad':
-     S.x = S.x - P.alpha*O.gradx
-     S.y = S.y - P.beta*gradm
+     S.x = S.x - P.alpha*gradx
+     S.y = S.y - P.beta*grady
      break;
     case 'mouse': 
      S.x = I.posX
-     S.y = S.y - P.beta*gradm
+     S.y = S.y - P.beta*grady
      break;
     case 'both':
      S.x = I.posX
@@ -329,34 +353,32 @@ function draw(canvas, S, I, O, P, H) {
 
   ctx.strokeRect(-w/2, -h/2, w, h)
 
-
-
   ctx.strokeStyle = P.colorx
-  r1 = (P.a+P.aa)/2 + Math.sqrt((P.a - P.aa)**2/4+P.b*P.b)
-  r2 = (P.a+P.aa)/2 - Math.sqrt((P.a - P.aa)**2/4+P.b*P.b)
+  r1 = (P.a+P.h)/2 + Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
+  r2 = (P.a+P.h)/2 - Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
   t = Math.atan2(r1-P.a, P.b)
   for (var i=0; i<5; i++) {
   ctx.beginPath();
-  ctx.ellipse(P.z11*P.scale, P.z12*P.scale, Math.sqrt(r2)*i*P.scale*P.lvlset, Math.sqrt(r1)*i*P.scale*P.lvlset, t, 0, 2*Math.PI)
+  ctx.ellipse(P.x1*P.scale, P.y1*P.scale, Math.sqrt(r2)*i*P.scale*P.lvlset, Math.sqrt(r1)*i*P.scale*P.lvlset, t, 0, 2*Math.PI)
   ctx.stroke()
    }
   ctx.beginPath();
-  ctx.arc(P.z11*P.scale, P.z12*P.scale, 1, 0, 2*Math.PI)
+  ctx.arc(P.x1*P.scale, P.y1*P.scale, 1, 0, 2*Math.PI)
   ctx.fill()
 
 
   ctx.strokeStyle = P.colory
-  r1 = (P.d+P.dd)/2 + Math.sqrt((P.dd - P.d)**2/4+P.c*P.c)
-  r2 = (P.d+P.dd)/2 - Math.sqrt((P.dd - P.d)**2/4+P.c*P.c)
-  t = Math.atan2(r1-P.dd, P.c)
+  r1 = (P.d+P.e)/2 + Math.sqrt((P.e - P.d)**2/4+P.c*P.c)
+  r2 = (P.d+P.e)/2 - Math.sqrt((P.e - P.d)**2/4+P.c*P.c)
+  t = Math.atan2(r1-P.e, P.c)
   for (var i=0; i<5; i++) {
   ctx.beginPath();
-  ctx.ellipse(P.z21*P.scale, P.z22*P.scale, Math.sqrt(r2)*i*P.scale*P.lvlset, Math.sqrt(r1)*i*P.scale*P.lvlset, t, 0, 2*Math.PI)
+  ctx.ellipse(P.x2*P.scale, P.y2*P.scale, Math.sqrt(r2)*i*P.scale*P.lvlset, Math.sqrt(r1)*i*P.scale*P.lvlset, t, 0, 2*Math.PI)
 
   ctx.stroke()
    }
   ctx.beginPath();
-  ctx.arc(P.z21*P.scale, P.z22*P.scale, 1, 0, 2*Math.PI)
+  ctx.arc(P.x2*P.scale, P.y2*P.scale, 1, 0, 2*Math.PI)
   ctx.fill()
 
   ctx.lineWidth = 20;
@@ -408,7 +430,12 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
 
   ctx.fillStyle = 'salmon'
   ctx.beginPath();
-  ctx.arc(P.xstack*P.scale, P.ystack*P.scale, 3, 0, 2*Math.PI)
+  ctx.arc(P.xstack1*P.scale, P.ystack1*P.scale, 3, 0, 2*Math.PI)
+  ctx.fill()
+
+  ctx.fillStyle = 'red'
+  ctx.beginPath();
+  ctx.arc(P.xstack2*P.scale, P.ystack2*P.scale, 3, 0, 2*Math.PI)
   ctx.fill()
 
   ctx.fillStyle = 'green'
