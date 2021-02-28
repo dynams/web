@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+<script src="https://d3js.org/d3.v4.js"></script>
+<title></title>
+<style>
+tr {
+ text-align:center;
+ vertical-align:middle
+}
+ td {
+ width: 25px;
+ height: 25px;
+ text-align:center;
+ vertical-align: middle;
+}
+table{
+ text-align: center;
+ vertical-align: middle;
+ border: 2px solid gray;
+ display: inline-block;
+}
+table .matrix{
+ width: 120px;
+ height: 120px;
+}
+table.vector{
+ width: 30px;
+ height: 120px;
+}
+
+
+.container {
+ display: grid;
+ grid-template-columns: 1fr 4fr;
+ grid-template-rows: 1fr 1fr 1fr;
+ grid-template-areas: "panel ptop"
+                     "panel pcen"
+                     "panel pbot";
+}
+.item:nth-child(1) {
+ grid-area: ptop; 
+}
+
+.item:nth-child(2) {
+ grid-area: pcen;
+}
+
+.item:nth-child(3) {
+ position: fixed;
+ grid-area: panel;
+}
+
+</style>
+</head>
+<body>
+<div class="container" id="app">
+ <div class="item" id="myplot"></div>
+ <div class="item">
+  <template v-if="is2x2">
+   <table class="vector">
+    <tr><td></td></tr>
+    <tr><td>&#7819;</td></tr>
+    <tr><td>&#7823;</td></tr>
+   </table>
+   =
+   <table class="matrix">
+    <tr><td></td></tr>
+    <tr>
+     <td></td>
+     <td>a</td>
+     <td v-if="isdecoupled"></td>
+     <td v-else>b</td>
+     <td></td>
+    </tr>
+    <tr>
+     <td></td>
+     <td v-if="isdecoupled"></td>
+     <td v-else-if="iszs">-b</td>
+     <td v-else-if="ispot">b</td>
+     <td v-else="ispot">c</td>
+     <td>d</td>
+     <td></td>
+    </tr>
+    <tr>
+     <td></td>
+    </tr>
+   </table>
+   <table class="vector">
+    <tr><td></td></tr>
+    <tr><td>x</td></tr>
+    <tr><td>y</td></tr>
+   </table>
+   =
+   </table>
+   <table class="matrix">
+    <tr><td></td></tr>
+    <tr><td></td>
+     <td>{{m+f}}</td>
+   <td>{{p+z}}</td></tr>
+    <tr><td></td>
+    <td>{{p-z}}</td>
+   <td>{{m-f}}</td>
+   <td></td>
+   </tr>
+    <tr><td></td></tr>
+   </table>
+   <table class="vector">
+    <tr><td></td></tr>
+    <tr><td>x</td></tr>
+    <tr><td>y</td></tr>
+   </table>
+  </template>
+   <br>
+
+  <template v-if="is4x4">
+   <table class="vector">
+    <tr><td>&#7819;<sub>1</sub></td></tr>
+    <tr><td>&#7819;<sub>2</sub></td></tr>
+    <tr><td>&#7823;<sub>1</sub></td></tr>
+    <tr><td>&#7823;<sub>2</sub></td></tr>
+   </table>
+  <table class="matrix">
+    <tr>
+      <td>a<sub>1</sub></td>
+      <td></td>
+      <td v-if="isdecoupled"></td>
+      <td v-else>b<sub>11</sub></td>
+      <td v-if="isdecoupled"></td>
+      <td v-else>b<sub>12</sub></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>a<sub>2</sub></td>
+      <td v-if="isdecoupled"></td>
+     <td v-else>b<sub>21</sub></td>
+     <td v-if="isdecoupled"></td>
+    <td v-else>b<sub>22</sub></td>
+    </tr>
+    <tr>
+     <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>11</sub></td>
+      <td v-else-if="ispot">b<sub>11</sub></td>
+     <td v-else>c<sub>11</sub></td>
+     <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>21</sub></td>
+      <td v-else-if="ispot">b<sub>21</sub></td>
+     <td v-else>c<sub>12</sub></td>
+     <td>d<sub>1</sub></td>
+     <td></td>
+    </tr>
+    <tr>
+      <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>12</sub></td>
+      <td v-else-if="ispot">b<sub>12</sub></td>
+      <td v-else>c<sub>21</sub></td>
+      <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>22</sub></td>
+      <td v-else-if="ispot">b<sub>22</sub></td>
+      <td v-else>c<sub>22</sub></td>
+      <td></td>
+      <td>d<sub>2</sub></td>
+    </tr>
+  </table>
+   <table class="vector">
+    <tr><td>x<sub>1</sub></td></tr>
+    <tr><td>x<sub>2</sub></td></tr>
+    <tr><td>y<sub>1</sub></td></tr>
+    <tr><td>y<sub>2</sub></td></tr>
+   </table>
+  =
+    <table class="matrix">
+    <tr>
+      <td>{{a1}}</td>
+      <td>0</td>
+      <td>{{b11}}</td>
+      <td>{{b12}}</td>
+    </tr>
+    <tr>
+      <td>0</td>
+      <td>{{a2}}</td>
+      <td>{{b21}}</td>
+      <td>{{b22}}</td>
+    </tr>
+    <tr>
+      <td>{{c11}}</td>
+      <td>{{c12}}</td>
+      <td>{{d1}}</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>{{c21}}</td>
+      <td>{{c22}}</td>
+      <td>0</td>
+      <td>{{d2}}</td>
+    </tr>
+  </table>
+   <table class="vector">
+    <tr><td>x<sub>1</sub></td></tr>
+    <tr><td>x<sub>2</sub></td></tr>
+    <tr><td>x<sub>3</sub></td></tr>
+    <tr><td>x<sub>4</sub></td></tr>
+   </table>
+  <br>
+  </template>
+</div>
+
+  <div class="item">
+  <table>
+   <tr><td @click="m=-1">m</td><td>
+     <input type="range" min="-10" max="-1" v-model.number='m'>
+    </td></tr><tr><td @click="f=0">f</td><td>
+  <input type="range" min="-10" max="10" v-model.number='f'>
+    </td></tr>
+    <tr><td @click="z=0">z</td><td>
+    <input type="range" min="-10" max="10" v-model.number='z'>
+    </td></tr>
+    <tr><td @click="p=0">p</td><td>
+  <input type="range" min="-10" max="10" v-model.number='p'>
+     </td></tr>
+    <tr><td @click="da=0">da</td><td>
+  <input type="range" min="-10" max="10" v-model.number='da'>
+     </td></tr>
+    <tr><td @click="dd=0">dd</td><td>
+  <input type="range" min="-10" max="10" v-model.number='dd'>
+     </td>
+     <tr><td @click="dz=0">dz</td><td>
+  <input type="range" min="-10" max="10" v-model.number='dz'>
+      </td></tr>
+      <tr><td @click="dp=0">dp
+      </td><td>
+  <input type="range" min="-10" max="10" v-model.number='dp'>
+      </td>
+    </tr>
+    <template v-if="is4x4">
+    <tr><td>eig1</td><td>{{eigs[0][0].toFixed(1)}}+{{eigs[0][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig2</td><td>{{eigs[1][0].toFixed(1)}}+{{eigs[1][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig3</td><td>{{eigs[2][0].toFixed(1)}}+{{eigs[2][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig4</td><td>{{eigs[3][0].toFixed(1)}}+{{eigs[3][1].toFixed(1)}}i</td></tr>
+    </template>
+    <template v-if="is2x2">
+    <tr><td>eig1</td><td>{{eigs[0][0].toFixed(1)}}+{{eigs[0][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig2</td><td>{{eigs[3][0].toFixed(1)}}+{{eigs[3][1].toFixed(1)}}i</td></tr>
+    </template>
+    <tr><td>||Z||</td><td>{{normZ.toFixed(1)}}</td></tr>
+    <tr><td>||P||</td><td>{{normP.toFixed(1)}}</td></tr>
+    <template v-if="false">
+    <tr><td>ddm</td><td>{{ddm.toFixed(1)}}</td></tr>
+    <tr><td>ddp</td><td>{{ddp.toFixed(1)}}</td></tr>
+    <tr><td>lm</td><td>{{lm}}</td></tr>
+    <tr><td>lp</td><td>{{lp}}</td></tr>
+    <tr><td>l1m</td><td>{{l1m}}</td></tr>
+    <tr><td>l1p</td><td>{{l1p}}</td></tr>
+    <tr><td>l2m</td><td>{{l2m}}</td></tr>
+    <tr><td>l2p</td><td>{{l2p}}</td></tr>
+    </template>
+    
+  </table>
+  </div>
+  
+</div>
+
+
+   <script>
+
+new Vue({
+  el: "#app",
+  data: {
+    m:-1,
+    f:0,
+    p:0,
+    z:0,
+    da:0,
+    dd:0,
+    dp:0,
+    dz:0,
+    tp:0,
+    tz:0,
+    svg:null,
+    x:null,
+    y:null
+  },
+  computed: {
+  is2x2() { return this.da==0 && this.dd==0 && this.dp==0 && this.dz==0 && this.tp==0 && this.tz==0 },
+  is4x4() { return !this.is2x2 },
+  iszs() { return this.p == 0 && this.dp==0 },
+  ispot() { return this.z == 0 && this.dz==0 },
+  isgs() { return (this.z != 0 || this.dz != 0) && (this.p != 0 || this.dp != 0)},
+  isdecoupled() { return (this.z == 0 && this.p == 0 && this.dp == 0 && this.dz == 0) },
+  a1() { return this.m + this.f + this.da },
+  a2() { return this.m + this.f - this.da },
+  d1() { return this.m - this.f + this.dd },
+  d2() { return this.m - this.f - this.dd },
+  b1() { return this.p + this.dp + this.z + this.dz },
+  b2() { return this.p - this.dp + this.z - this.dz },
+  c1() { return this.p + this.dp - (this.z + this.dz) },
+  c2() { return this.p - this.dp - (this.z - this.dz) },
+  b11() { return this.b1 },
+	 b12() { return 0 },
+  b21() { return 0 },
+  b22() { return this.b2 },
+  c11() { return this.c1 },
+  c12() { return 0 },
+  c21() { return 0 },
+  c22() { return this.c2 },
+  l1p() { return Math.max(this.a1, this.a2)},
+  l1m() { return Math.min(this.a1, this.a2)},
+  l2p() { return Math.max(this.d1, this.d2)},
+  l2m() { return Math.min(this.d1, this.d2)},
+  lp() { return Math.max(this.l1p, this.l2p) },
+  lm() { return Math.min(this.l1m, this.l2m) },
+  lt() { return (this.l1p+this.l2p)/2 },
+  lb() { return (this.l1m+this.l2m)/2 },
+  normZ() { return Math.sqrt((this.z+this.dz)**2+(this.z-this.dz)**2) },
+  normP() { return Math.sqrt((this.p+this.dp)**2+(this.p-this.dp)**2) },
+  ddp() { 
+       P = this.normP
+       d = P*Math.tan(0.5*Math.atan(2*P/Math.abs(this.l1p-this.l2p)))
+       return d?d:0
+      },
+  ddm() { P = this.normP
+       d = P*Math.tan(0.5*Math.atan(2*P/Math.abs(this.l1m-this.l2m)))
+       return d?d:0
+      },
+
+  M() { 
+       m =  [[this.a1, 0, this.b11, this.b12],
+                [0, this.a2, this.b21, this.b22],
+                [this.c11, this.c12, this.d1, 0],
+                [this.c21, this.c22, 0, this.d2]]
+       return m
+      },
+  eigs() {
+      //M = mul(0.01, rand(4,4))
+       var e = numeric.eig(this.M).lambda
+      const ee =  numeric.transpose([e.x, e.y?e.y:[0,0,0,0]])
+       ee.sort(function (a,b){
+            if (Math.abs(a[0] - b[0])<0.01) {
+                 return a[1] > b[1] ? -1: 1
+                }
+            return a[0] < b[0] ? -1 : 1
+           })
+       return ee
+      }
+  },
+  watch: {
+    eigs() {
+  // Add dots
+  console.log(this.x(1))
+  self=this
+  circ = this.svg.selectAll("circle")
+          .data(this.eigs)
+  circ.transition().ease(d3.easeLinear)
+      .attr("cx", function (d) { return self.x(d[0]); } )
+      .attr("cy", function (d) { return self.y(d[1]); } )
+
+  const eps = 2
+  this.svg.select("#regionA").transition().ease(d3.easeLinear)
+         .attr("x", self.x(Math.min(this.a1, this.a2))-eps)
+         .attr("width", Math.abs(self.x(this.a2)-self.x(this.a1))+eps*2)
+
+  this.svg.select("#regionD").transition().ease(d3.easeLinear)
+         .attr("x", self.x(Math.min(this.d1, this.d2))-eps)
+         .attr("width", Math.abs(self.x(this.d2)-self.x(this.d1))+eps*2)
+
+  if(this.ispot) {
+  this.svg.select("#regionPm").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lm-this.ddm))
+       .attr("width", -self.x(this.lm-this.ddm) + self.x(this.lm))
+
+  this.svg.select("#regionPp").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lp))
+       .attr("width", -self.x(this.lp) + self.x(this.lp+this.ddp))
+      }
+         else
+         {
+  this.svg.select("#regionPm").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lm))
+       .attr("width", 0)
+
+  this.svg.select("#regionPp").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lp))
+       .attr("width", 0)
+             }
+
+         if(this.iszs && !this.isdecoupled) {
+  this.svg.select("#regionZi").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lb)-eps)
+       .attr("width", self.x(this.lt) - self.x(this.lb)+eps*2)
+       .attr("y", self.y(this.normZ))
+       .attr("height", -self.y(this.normZ)+self.y(-this.normZ))
+
+  this.svg.select("#regionZr").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lm))
+       .attr("width", self.x(this.lp) - self.x(this.lm))
+             } else {
+  this.svg.select("#regionZi").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.m))
+       .attr("width", 0)
+  this.svg.select("#regionZr").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.m))
+       .attr("width", 0)
+                 }
+    }
+
+  },
+  mounted() {
+
+    var margin = {top: 10, right: 30, bottom: 30, left: 60},
+        width = 460 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+    this.svg = d3.select("#myplot")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+   // Add X axis
+   this.x= d3.scaleLinear()
+     .domain([-20, 5])
+     .range([ 0, width ]);
+   // Add Y axis
+   this.y = d3.scaleLinear()
+     .domain([-10,10])
+     .range([ height, 0]);
+
+  this.svg.append('rect').attr('x',this.x(0))
+       .attr('y', this.y(15))
+       .attr('height', 1000)
+       .attr('width', this.y(3))
+       .style("fill", "#fcc")
+
+  this.svg.append('rect')
+       .attr('id', 'regionPm')
+       .attr("x", this.x(this.lm-this.ddm))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y', this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#cca")
+
+  this.svg.append('rect')
+       .attr('id', 'regionPp')
+       .attr("x", this.x(this.lp))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y', this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#cca")
+
+  this.svg.append('rect')
+       .attr('id', 'regionZr')
+       .attr("x", this.x(this.lm))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y', this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#cca")
+
+  this.svg.append('rect')
+       .attr('id', 'regionZi')
+       .attr('x',this.x(this.m))
+       .attr('height', 0)
+       .attr('y',this.y(5))
+       .attr('width', 0)
+       .style("fill", "#cca")
+
+  this.svg.append('rect')
+       .attr('id', 'regionA')
+       .attr("x", this.x(Math.min(this.a1, this.a2)))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y',this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#aaf")
+
+  this.svg.append('rect')
+       .attr('id', 'regionD')
+       .attr("x", this.x(Math.min(this.d1, this.d2)))
+       .attr('height', this.y(-.3)-this.y(.3))
+       .attr('y',this.y(.3))
+       .attr('width', 0)
+       .style("fill", "#afa")
+
+   this.svg.append("g")
+     .attr("transform", "translate(0," + height/2 + ")")
+     .call(d3.axisBottom(this.x));
+
+
+   this.svg.append("g")
+     .call(d3.axisLeft(this.y));
+
+  self = this
+  this.svg.append('g')
+    .selectAll("dot")
+     .data([[0,0],[0,0],[0,0],[0,0]])
+    .enter()
+    .append("circle")
+      .attr("cx", function (d) { return self.x(d[0]); } )
+      .attr("cy", function (d) { return self.y(d[1]); } )
+      .attr("r", 3)
+      .style("fill", "#000") 
+  this.svg.append('line').attr('x1',this.x(0))
+       .attr('x2', this.x(0))
+       .attr('y1', this.y(-20))
+       .attr('y2', this.y(20))
+       .style("stroke", "#000")
+  }
+})
+    // set the dimensions and margins of the graph
+
+// append the svg object to the body of the page
+//Read the data
+
+
+
+   </script>
+</body>
+
+</html>
