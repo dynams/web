@@ -87,7 +87,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     },
     stop() {
     	this.info.isRunning = false
-     this.info.isDrawing = false//true
+     this.info.isDrawing = true
      if(this.P.inputmode == 'lock') {
      document.exitPointerLock()
      }
