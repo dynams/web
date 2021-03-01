@@ -75,8 +75,12 @@ div {
 
   <template v-if="P.showinfo">
    <br>
+   costs
+   <input type="checkbox" v-model="P.showcost">
    <br>
-   nash: 
+   <br>
+   nash 
+   <input type='checkbox' v-model="P.showg">: 
    <br>
    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xnash">
    {{P.xnash}}
@@ -85,6 +89,7 @@ div {
    {{P.ynash}}
           <br>
    stack (p1 leader): 
+   <input type='checkbox' v-model="P.showgstack1">: 
    <br>
    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xstack1">
    {{P.xstack1}}
@@ -93,6 +98,7 @@ div {
    {{P.ystack1}}
    <br>
    stack (p2 leader): 
+   <input type='checkbox' v-model="P.showgstack2">: 
    <br>
    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xstack2">
    {{P.xstack2}}
@@ -102,6 +108,7 @@ div {
    <br>
           <br>
    conj:  (p1 and p2 leaders)
+   <input type='checkbox' v-model="P.showgconj">: 
           <br>
           <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xconj">
           {{P.xconj}}
@@ -109,6 +116,9 @@ div {
     <input type="range" min="-3" max="3" step="0.1" v-model.number="P.yconj">
     {{P.yconj}}
           <br>
+          <br>
+          conj2: (p1 conj, p2 stack)
+          <input type='checkbox' v-model="P.showgstacktwo">
           <br>
    a: <input v-model.number="P.a">
           <br>
@@ -121,7 +131,7 @@ div {
   <div>
    <template v-if="P.showinfo">
    <br>
-   {{ S.x/P.scale }},{{ S.y/P.scale }}
+   {{ (S.x/P.scale).toFixed(2) }},{{ (S.y/P.scale).toFixed(2) }}
    <br>
    Continous game:
    <br>
@@ -249,6 +259,12 @@ const data = {
     lvlset: 1,
     history: false,
     showinfo: false,
+    showcost: true,
+    showg: true,
+    showgstack1: false,
+    showgstack2: false,
+    showgconj: false,
+    showgstacktwo: false,
     nash1: null,
     nash2: null,
   },
@@ -280,6 +296,11 @@ const data = {
   const ys1 = P.ystack1
   const xs2 = P.xstack2
   const ys2 = P.ystack2
+
+  const xr = xs1
+  const yr = ys1
+  const xs = xs2
+  const ys = ys2
   const xc = P.xconj
   const yc = P.yconj
   const a = P.a
@@ -305,6 +326,59 @@ const data = {
      2*xn*xs1*ys1 + xc*xs2*ys1 + xn*xs2*ys1 - 2*xs1*xs2*ys1 +
      xc*xn*ys2 - xc*xs1*ys2 - xn*xs1*ys2 + xs1*xs1*ys2))/((yc -
      ys1)*(yn - ys1)*(yn - ys2))
+
+
+   P.xstacktwo = (xn**2*xs*(yc - yr)*(yc - ys)**2 + xc*xr**2*(yc - ys)**2*(-yn + ys) - 
+      xs*(yn - yr)*(xs**2*(yc - yn)*(yc - yr) + 
+      2*xc*xs*(yc - yr)*(yn - ys) + 
+           xc**2*(yn*yr + yc*(-yn + yr) - 2*yr*ys + ys**2)) - 
+      xn*(yc - ys)*(xs**2*(yc - yr)*(yc - 2*yn + yr) + 
+      2*xc*xs*(yc - yr)*(yn - ys) + 
+           xc**2*(yr - ys)**2 + 
+      xr*(yc - ys)*(xs*(yc - yr) + xc*(-yr + ys))) + 
+      xr*(yc - ys)*(xs**2*(yc - yn)*(yc - yr) + 
+      xc**2*(yn - ys)*(yr - ys) - 
+      xc*xs*(2*yn*yr + yn*ys - 3*yr*ys + yc*(-3*yn + yr + 2*ys))))/ ((xn)**2*(yc - yr)*(yc - ys)**2 + xr*(xs*(yc + yn - 2*yr) + xc*(yn - ys))*(yc - ys)**2 + 
+        xr**2*(yc - ys)**2*(-yn + ys) 
+        + (yn - yr)*(
+          (-(xs)*(xs))*(yc - yr)*
+          (2*yc - yn - ys) + 
+           xc**2*(yc - yr)*(yn - ys) + 
+      xc*xs*(yc**2 + 2*yn*yr - 2*yc*(yn + yr - ys) - ys**2)) - 
+      xn*(yc - ys)*(xs*(yc - yr)*(yc - 2*yn + 2*yr - ys) + 
+      xr*(yc - ys)*(yc - 2*yr + ys) - 
+      xc*(2*yn*yr - 2*yr**2 + yr*ys - ys**2 + yc*(-2*yn + yr + ys))))
+
+   P.ystacktwo = ((-xc)*xn*yc**2*yr**2 + xn**2*yc**3*ys - 2*xc*xn*yc**2*yn*ys +
+   xc**2*yc*yn**2*ys +
+      3*xc*xn*yc**2*yr*ys - xn**2*yc**2*yr*ys - xc**2*yc*yn*yr*ys +
+   2*xc*xn*yc*yn*yr*ys -
+      xc**2*yn**2*yr*ys + xc**2*yn*yr**2*ys - 2*xn**2*yc**2*ys**2 -
+   xc**2*yc*yn*ys**2 +
+      2*xc*xn*yc*yn*ys**2 + xc**2*yc*yr*ys**2 - 4*xc*xn*yc*yr*ys**2 +
+   2*xn**2*yc*yr*ys**2 +
+      xc**2*yn*yr*ys**2 - 2*xc*xn*yn*yr*ys**2 - xc**2*yr**2*ys**2 +
+   xc*xn*yr**2*ys**2 +
+      xn**2*yc*ys**3 + xc*xn*yr*ys**3 - xn**2*yr*ys**3 +
+   xr**2*yc*(yc - ys)**2*(-yn + ys) +
+      xs**2*(yc - yr)*(-yn + yr)*(yc**2 - yn*ys) -
+   xn*xs*(yc - yr)*(yc - ys)*
+        (yc*yr + (-2*yn + yr)*ys) -
+   xc*xs*(yn - yr)*(yc**2*(yr - 2*ys) + 2*yc*yn*ys +
+           yr*ys*(-2*yn + ys)) +
+   xr*(yc - ys)**2*(xs*(2*yc*yn - yc*yr - yn*yr) +
+           xc*yr*(yn - ys) + xn*(yc*yr - 2*yc*ys + yr*ys)))/
+   (xn**2*(yc - yr)*(yc - ys)**2 +
+   xr*(xs*(yc + yn - 2*yr) + xc*(yn - ys))*(yc - ys)**2 +
+      xr**2*(yc - ys)**2*(-yn + ys) + (yn -
+      yr)*((-xs*xs)*(yc - yr)*(2*yc - yn - ys) +
+           xc**2*(yc - yr)*(yn - ys) +
+      xc*xs*(yc**2 + 2*yn*yr - 2*yc*(yn + yr - ys) - ys**2)) -
+      xn*(yc - ys)*(xs*(yc - yr)*(yc - 2*yn + 2*yr - ys) +
+      xr*(yc - ys)*(yc - 2*yr + ys) -
+
+      xc*(2*yn*yr - 2*yr**2 + yr*ys - ys**2 + yc*(-2*yn + yr + ys))))
+
 
 
   }
@@ -359,8 +433,15 @@ function draw(canvas, S, I, O, P, H) {
   ctx.fillStyle = 'black'
   ctx.lineWidth = 3
 
-  ctx.strokeRect(-w/2, -h/2, w, h)
+  ctx.font = '36px Unknown Font, sans-serif'
+  ctx.save();
+  ctx.setTransform(1,0,0,1,0,0)
+  ctx.fillText(O.costx.toFixed(2), 0, 40)
+  ctx.restore();
 
+  //ctx.strokeRect(-w/2, -h/2, w, h)
+
+  if(P.showinfo && P.showcost){
   ctx.strokeStyle = P.colorx
   r1 = (P.a+P.h)/2 + Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
   r2 = (P.a+P.h)/2 - Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
@@ -388,6 +469,7 @@ function draw(canvas, S, I, O, P, H) {
   ctx.beginPath();
   ctx.arc(P.x2*P.scale, P.y2*P.scale, 1, 0, 2*Math.PI)
   ctx.fill()
+   }
 
   ctx.lineWidth = 20;
   if (P.mode == 'both') {
@@ -404,8 +486,8 @@ function draw(canvas, S, I, O, P, H) {
   ctx.lineWidth = 20
   ctx.strokeStyle = P.colorx
   ctx.beginPath();
-   ctx.moveTo(x-5, -h/2)
-   ctx.lineTo(x+5, -h/2)
+   ctx.moveTo(x-5, h/2)
+   ctx.lineTo(x+5, h/2)
   ctx.stroke()
 
   if (P.mode != 'mouse') {
@@ -416,9 +498,6 @@ function draw(canvas, S, I, O, P, H) {
    ctx.stroke()
    }
 
-  ctx.beginPath();
-  ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
-  ctx.fill()
 
   ctx.lineWidth = 2
   if (P.history && H.S.x.length >= 1) {
@@ -433,26 +512,87 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
 
   
   if(P.showinfo){
-  ctx.fillStyle = 'navajowhite'
-  ctx.beginPath();
-  ctx.arc(P.xnash*P.scale, P.ynash*P.scale, 5, 0, 2*Math.PI)
-  ctx.fill()
 
-  ctx.fillStyle = 'salmon'
-  ctx.beginPath();
-  ctx.arc(P.xstack1*P.scale, P.ystack1*P.scale, 3, 0, 2*Math.PI)
-  ctx.fill()
 
-  ctx.fillStyle = 'red'
+  if(P.showgstacktwo){
+  ctx.fillStyle = 'yellow'
   ctx.beginPath();
-  ctx.arc(P.xstack2*P.scale, P.ystack2*P.scale, 3, 0, 2*Math.PI)
-  ctx.fill()
-
-  ctx.fillStyle = 'green'
-  ctx.beginPath();
-  ctx.arc(P.xconj*P.scale, P.yconj*P.scale, 3, 0, 2*Math.PI)
+  ctx.arc(P.xstacktwo*P.scale, P.ystacktwo*P.scale, 10, 0, 2*Math.PI)
   ctx.fill()
    }
+
+  if(P.showg) {
+  ctx.fillStyle = 'navajowhite'
+  ctx.strokeStyle = 'navajowhite'
+  // g1
+  ctx.beginPath();
+  y=-500;ctx.moveTo(P.b*(P.y1*P.scale-y)/P.a+P.x1*P.scale,y)
+  y=500; ctx.lineTo(P.b*(P.y1*P.scale-y)/P.a+P.x1*P.scale,y)
+  ctx.stroke();
+
+  // g2
+  ctx.beginPath();
+  x=-500;ctx.moveTo(x,P.c*(P.x2*P.scale-x)/P.d+P.y2*P.scale)
+  x=500; ctx.lineTo(x,P.c*(P.x2*P.scale-x)/P.d+P.y2*P.scale)
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(P.xnash*P.scale, P.ynash*P.scale, 10, 0, 2*Math.PI)
+  ctx.fill()
+   }
+
+  ctx.fillStyle = 'salmon'
+  ctx.strokeStyle = 'salmon'
+    if(P.showgstack1){
+  ctx.beginPath();
+  ctx.arc(P.xstack1*P.scale, P.ystack1*P.scale, 10, 0, 2*Math.PI)
+  ctx.fill()
+  // gstack1
+  ctx.beginPath();
+  y=-500;ctx.moveTo((P.c*P.h-P.b*P.d)*(P.y1*P.scale-y)/(P.b*P.c-P.a*P.d)+P.x1*P.scale,y)
+  y=500; ctx.lineTo((P.c*P.h-P.b*P.d)*(P.y1*P.scale-y)/(P.b*P.c-P.a*P.d)+P.x1*P.scale,y)
+  ctx.stroke();
+     }
+
+    if(P.showgstack2){
+  // gstack2
+  ctx.beginPath();
+  x=-500;ctx.moveTo(x,(P.a*P.c-P.b*P.e)*(P.x2*P.scale-x)/(P.a*P.d-P.b*P.c)+P.y2*P.scale);
+  x=500; ctx.lineTo(x,(P.a*P.c-P.b*P.e)*(P.x2*P.scale-x)/(P.a*P.d-P.b*P.c)+P.y2*P.scale);
+  ctx.stroke();
+  ctx.fillStyle = 'red'
+  ctx.strokeStyle = 'red'
+  ctx.beginPath();
+  ctx.arc(P.xstack2*P.scale, P.ystack2*P.scale, 10, 0, 2*Math.PI)
+  ctx.fill()
+     }
+
+    if(P.showgstacktwo){
+  ctx.strokeStyle = 'yellow'
+  // gstack1
+  ctx.beginPath();
+  const dx = (P.x1-P.xstacktwo)*100
+  const dy = (P.y1-P.ystacktwo)*100
+  ctx.moveTo(P.x1*P.scale-dx*P.scale,P.y1*P.scale-dy*P.scale)
+  ctx.lineTo(P.x1*P.scale+dx*P.scale,P.y1*P.scale+dy*P.scale)
+  ctx.stroke();
+     }
+
+
+    if(P.showgconj){
+  ctx.fillStyle = 'green'
+  ctx.beginPath();
+  ctx.arc(P.xconj*P.scale, P.yconj*P.scale, 10, 0, 2*Math.PI)
+  ctx.fill()
+     }
+
+  ctx.fillStyle = 'black'
+  ctx.beginPath();
+  ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
+  ctx.fill()
+   }
+
+  
+
  }
 
 function inputs(canvas, S, I, O, P, x, y) {
