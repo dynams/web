@@ -10,6 +10,9 @@ div {
  background-color: white;
  color: black;
 }
+body{
+ background-color: white;
+}
 
 </style>
   </head>
@@ -76,7 +79,8 @@ div {
   <template v-if="P.showinfo">
    <br>
    costs
-   <input type="checkbox" v-model="P.showcost">
+   <input type="checkbox" v-model="P.showcostx">
+   <input type="checkbox" v-model="P.showcosty">
    <br>
    <br>
    nash 
@@ -227,8 +231,13 @@ const data = {
   P: { //parameters
     mode: 'mouse',
     inputmode: 'absolute',//or absolute
-    colorx: 'red',
-    colory: '#899FEC',
+    colorx: '#00287D',
+    colory: '#FD5A5D',
+    colornash: '#227739',
+    colorstack1: '#185DA3',
+    colorstack2: '#92299F',
+    colorstacktwo: '#80AB00',
+    colorconj: '#8F5400',
     duration: 100, //seconds
     period: 20, //ms
     smooth: 0.9,
@@ -259,8 +268,9 @@ const data = {
     lvlset: 1,
     history: false,
     showinfo: false,
-    showcost: true,
-    showg: true,
+    showcostx: true,
+    showcosty: false,
+    showg: false,
     showgstack1: false,
     showgstack2: false,
     showgconj: false,
@@ -441,7 +451,7 @@ function draw(canvas, S, I, O, P, H) {
 
   //ctx.strokeRect(-w/2, -h/2, w, h)
 
-  if(P.showinfo && P.showcost){
+  if(P.showinfo && P.showcostx){
   ctx.strokeStyle = P.colorx
   r1 = (P.a+P.h)/2 + Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
   r2 = (P.a+P.h)/2 - Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
@@ -455,7 +465,9 @@ function draw(canvas, S, I, O, P, H) {
   ctx.arc(P.x1*P.scale, P.y1*P.scale, 1, 0, 2*Math.PI)
   ctx.fill()
 
+   }
 
+  if(P.showinfo && P.showcosty){
   ctx.strokeStyle = P.colory
   r1 = (P.d+P.e)/2 + Math.sqrt((P.e - P.d)**2/4+P.c*P.c)
   r2 = (P.d+P.e)/2 - Math.sqrt((P.e - P.d)**2/4+P.c*P.c)
@@ -490,7 +502,7 @@ function draw(canvas, S, I, O, P, H) {
    ctx.lineTo(x+5, h/2)
   ctx.stroke()
 
-  if (P.mode != 'mouse') {
+  if (P.mode != 'mouse' || P.showinfo) {
   ctx.strokeStyle = P.colory
    ctx.beginPath();
    ctx.moveTo(w/2, y-5) 
@@ -515,34 +527,48 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
 
 
   if(P.showgstacktwo){
-  ctx.fillStyle = 'yellow'
+  ctx.fillStyle = P.colorstacktwo
   ctx.beginPath();
   ctx.arc(P.xstacktwo*P.scale, P.ystacktwo*P.scale, 10, 0, 2*Math.PI)
   ctx.fill()
+  ctx.strokeStyle = P.colorstacktwo
+  // gstack1
+  ctx.beginPath();
+  const dx = (P.x1-P.xstacktwo)*100
+  const dy = (P.y1-P.ystacktwo)*100
+  ctx.moveTo(P.x1*P.scale-dx*P.scale,P.y1*P.scale-dy*P.scale)
+  ctx.lineTo(P.x1*P.scale+dx*P.scale,P.y1*P.scale+dy*P.scale)
+  ctx.stroke();
    }
 
   if(P.showg) {
-  ctx.fillStyle = 'navajowhite'
-  ctx.strokeStyle = 'navajowhite'
+  ctx.fillStyle = P.colornash
+  ctx.strokeStyle = P.colornash
+    if(P.showcostx){
   // g1
   ctx.beginPath();
   y=-500;ctx.moveTo(P.b*(P.y1*P.scale-y)/P.a+P.x1*P.scale,y)
   y=500; ctx.lineTo(P.b*(P.y1*P.scale-y)/P.a+P.x1*P.scale,y)
   ctx.stroke();
+     }
 
+    if(P.showcosty) {
   // g2
   ctx.beginPath();
   x=-500;ctx.moveTo(x,P.c*(P.x2*P.scale-x)/P.d+P.y2*P.scale)
   x=500; ctx.lineTo(x,P.c*(P.x2*P.scale-x)/P.d+P.y2*P.scale)
   ctx.stroke();
+   }
+    if(P.showcostx && P.showcosty){
   ctx.beginPath();
   ctx.arc(P.xnash*P.scale, P.ynash*P.scale, 10, 0, 2*Math.PI)
   ctx.fill()
    }
+   }
 
-  ctx.fillStyle = 'salmon'
-  ctx.strokeStyle = 'salmon'
     if(P.showgstack1){
+  ctx.fillStyle = P.colorstack1
+  ctx.strokeStyle = P.colorstack1
   ctx.beginPath();
   ctx.arc(P.xstack1*P.scale, P.ystack1*P.scale, 10, 0, 2*Math.PI)
   ctx.fill()
@@ -554,32 +580,24 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
      }
 
     if(P.showgstack2){
+  ctx.fillStyle = P.colorstack2
+  ctx.strokeStyle = P.colorstack2
   // gstack2
+      if(P.machinestack) ctx.lineWidth=4
   ctx.beginPath();
   x=-500;ctx.moveTo(x,(P.a*P.c-P.b*P.e)*(P.x2*P.scale-x)/(P.a*P.d-P.b*P.c)+P.y2*P.scale);
   x=500; ctx.lineTo(x,(P.a*P.c-P.b*P.e)*(P.x2*P.scale-x)/(P.a*P.d-P.b*P.c)+P.y2*P.scale);
   ctx.stroke();
-  ctx.fillStyle = 'red'
-  ctx.strokeStyle = 'red'
   ctx.beginPath();
   ctx.arc(P.xstack2*P.scale, P.ystack2*P.scale, 10, 0, 2*Math.PI)
   ctx.fill()
+      ctx.lineWidth=2
      }
 
-    if(P.showgstacktwo){
-  ctx.strokeStyle = 'yellow'
-  // gstack1
-  ctx.beginPath();
-  const dx = (P.x1-P.xstacktwo)*100
-  const dy = (P.y1-P.ystacktwo)*100
-  ctx.moveTo(P.x1*P.scale-dx*P.scale,P.y1*P.scale-dy*P.scale)
-  ctx.lineTo(P.x1*P.scale+dx*P.scale,P.y1*P.scale+dy*P.scale)
-  ctx.stroke();
-     }
 
 
     if(P.showgconj){
-  ctx.fillStyle = 'green'
+  ctx.fillStyle = P.colorconj
   ctx.beginPath();
   ctx.arc(P.xconj*P.scale, P.yconj*P.scale, 10, 0, 2*Math.PI)
   ctx.fill()
