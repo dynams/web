@@ -119,6 +119,7 @@ table.vector{
     <tr><td>reset</td><td>
       <button @click="H.push([]);Sx1=0;Sx2=0;">x</button>
       <button @click="H.push([]);Sy1=0;Sy2=0;">y</button>
+      <button @click="H.push([]);Sx1=0;Sx2=0;Sy1=0;Sy2=0;">x, y</button>
      </td></tr>
     <template v-if="false">
     <tr><td></td><td></td></tr>
@@ -286,6 +287,20 @@ table.vector{
     
 
   <div class='item'>
+   <template>
+    <div v-show='is2x2'>
+    <table><tr><td>y<sub v-if='is4x4'>1</sub></td><td>
+   <canvas id='canvasx' width='200' height='200'></canvas>
+      </td>
+     </tr>
+     <tr><td></td><td>x<sub v-if='is4x4'>1</sub></td></tr></table>
+   <br>
+   <br>
+   <br>
+    </div>
+   </template>
+   <template>
+    <div v-show='is4x4'>
    <table>
    <tr>
     <td>
@@ -313,8 +328,9 @@ table.vector{
      <td>x<sub>1</sub></td>
      <td>y<sub>1</sub></td>
     </tr>
-
    </table>
+    </div>
+   </template>
   </div>
   
 </div>
@@ -338,19 +354,31 @@ new Vue({
     svg:null,
     x:null,
     y:null,
-    Sx1: 10,
-    Sx2: 10,
-    Sy1: 10,
-    Sy2: 10,
+    Sx1: 0,
+    Sx2: 0,
+    Sy1: 0,
+    Sy2: 0,
     H: []
   },
   computed: {
   is2x2() { return this.da==0 && this.dd==0 && this.dp==0 && this.dz==0 && this.tp==0 && this.tz==0 },
   is4x4() { return !this.is2x2 },
-  iszs() { return this.p == 0 && this.dp==0 },
-  ispot() { return this.z == 0 && this.dz==0 },
-  isgs() { return (this.z != 0 || this.dz != 0) && (this.p != 0 || this.dp != 0)},
+  iszs() { return (this.p == 0 && this.dp==0) && (this.z != 0 || this.zp != 0) },
+  ispot() { return (this.z == 0 && this.dz==0) && (this.p != 0 || this.dp != 0) },
+  isgs() { return (this.z != 0 || this.dz != 0) && (this.p != 0 || this.dp != 0) },
   isdecoupled() { return (this.z == 0 && this.p == 0 && this.dp == 0 && this.dz == 0) },
+       textgameclass() { 
+            if(this.isdecoupled) {
+                 return "."
+                }
+             if(this.iszs) { 
+                 return "zero-sum" 
+            } else if(this.ispot) { 
+                 return "potential" 
+            } else if(this.isgs) { 
+                 return "general" 
+            } 
+      },
   a1() { return this.m + this.f + this.da },
   a2() { return this.m + this.f - this.da },
   d1() { return this.m - this.f + this.dd },
@@ -375,6 +403,10 @@ new Vue({
   lm() { return Math.min(this.l1m, this.l2m) },
   lt() { return (this.l1p+this.l2p)/2 },
   lb() { return (this.l1m+this.l2m)/2 },
+  gersa1() { return Math.abs(this.b11)+Math.abs(this.b12) },
+  gersa2() { return Math.abs(this.b21)+Math.abs(this.b22) },
+  gersd1() { return Math.abs(this.c11)+Math.abs(this.c12) },
+  gersd2() { return Math.abs(this.c21)+Math.abs(this.c22) },
   normZ() { return Math.sqrt((this.z+this.dz)**2+(this.z-this.dz)**2) },
   normP() { return Math.sqrt((this.p+this.dp)**2+(this.p-this.dp)**2) },
   ddp() { 
@@ -464,6 +496,61 @@ new Vue({
        .attr("x", self.x(this.m))
        .attr("width", 0)
                  }
+
+         if(this.isgs) {
+
+  this.svg.select('#gersa1').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.a1))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersa1)-this.x(0))
+       .attr('ry', this.y(this.gersa1)-this.y(0))
+
+  this.svg.select('#gersa2').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.a2))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersa2)-this.x(0))
+       .attr('ry', this.y(this.gersa2)-this.y(0))
+
+  this.svg.select('#gersd1').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.d1))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersd1)-this.x(0))
+       .attr('ry', this.y(this.gersd1)-this.y(0))
+
+  this.svg.select('#gersd2').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.d2))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersd2)-this.x(0))
+       .attr('ry', this.y(this.gersd2)-this.y(0))
+             }
+         else {
+  this.svg.select('#gersa1')
+       .attr('cx', this.x(this.a1))
+       .attr('cy', this.y(0))
+       .attr('rx', 0)
+       .attr('ry', 0)
+
+  this.svg.select('#gersa2')
+       .attr('cx', this.x(this.a2))
+       .attr('cy', this.y(0))
+       .attr('rx', 0)
+       .attr('ry', 0)
+
+  this.svg.select('#gersd1')
+       .attr('cx', this.x(this.d1))
+       .attr('cy', this.y(0))
+       .attr('rx', 0)
+       .attr('ry', 0)
+
+  this.svg.select('#gersd2')
+       .attr('cx', this.x(this.d2))
+       .attr('cy', this.y(0))
+       .attr('rx', 0)
+       .attr('ry', 0)
+             }
+
+         this.svg.select('#textgameclass')
+         .text(this.textgameclass)
     }
 
   },
@@ -489,11 +576,21 @@ new Vue({
                gyx2_fn = (x1, y2) => 
                { return this.d2*y2+this.c21*x1+this.c22*this.Sx2; }
 
+
+               g1_fn = (x1, y1) =>
+               { return this.a1*x1 + this.b11*y1 + this.b12*this.Sy2; }
+               g2_fn = (x1, y1) =>
+               { return this.d1*y1 + this.c11*x1 + this.c12*this.Sx2; }
+
+               this.draw_vectorfield(this.canvasx, g1_fn, g2_fn)
+               this.draw_point(this.canvasx, this.Sx1, this.Sy1, true)
+               this.draw_history(this.canvasx, 0, 2)
+
+
                this.draw_vectorfield(this.canvasxx, gx1_fn, gx2_fn)
                this.draw_point(this.canvasxx, this.Sx1, this.Sx2, true)
                this.draw_vectorfield(this.canvasyy, gy1_fn, gy2_fn)
                this.draw_point(this.canvasyy, this.Sy1, this.Sy2, true)
-
 
                this.canvasxy.getContext('2d').strokeStyle = 'gray'
                this.canvasyx.getContext('2d').strokeStyle = 'gray'
@@ -726,10 +823,6 @@ new Vue({
                          }
                ctx.stroke();
                       this.drawArrow(ctx,z1_,z2_,z1p,z2p,1,1)
-                      ////ctx.lineTo(z1p-3*(g1+g2), z2p-3*(g1+g2))
-                      //ctx.moveTo(z1p, z2p)
-                      //ctx.lineTo(z1p-3*(g2+g1), z2p-3*(g2+g1))
-
 
                     }
                }
@@ -752,6 +845,7 @@ new Vue({
       this.canvasxy = document.getElementById('canvasxy')
       this.canvasyx = document.getElementById('canvasyx')
       this.canvasyy = document.getElementById('canvasyy')
+      this.canvasx = document.getElementById('canvasx')
 
        self = this
        this.canvasxx.addEventListener('click', function(event) {
@@ -773,6 +867,17 @@ new Vue({
             
             self.Sy1=x-self.canvasyy.width/2
             self.Sy2=-y+self.canvasyy.height/2
+
+            self.H.push([])
+           }
+            )
+       this.canvasx.addEventListener('click', function(event) {
+            const rect = self.canvasx.getBoundingClientRect()
+            var x = event.clientX -rect.left;
+            var y = event.clientY -rect.top;
+            
+            self.Sx1=x-self.canvasx.width/2
+            self.Sy1=-y+self.canvasx.height/2
 
             self.H.push([])
            }
@@ -813,7 +918,7 @@ new Vue({
        .attr('height', this.y(-.5)-this.y(.5))
        .attr('y', this.y(.5))
        .attr('width', 0)
-       .style("fill", "#cca")
+       .style("fill", "#d5d7d0")
 
   this.svg.append('rect')
        .attr('id', 'regionPp')
@@ -821,7 +926,7 @@ new Vue({
        .attr('height', this.y(-.5)-this.y(.5))
        .attr('y', this.y(.5))
        .attr('width', 0)
-       .style("fill", "#cca")
+       .style("fill", "#d5d7d0")
 
   this.svg.append('rect')
        .attr('id', 'regionZr')
@@ -829,7 +934,7 @@ new Vue({
        .attr('height', this.y(-.5)-this.y(.5))
        .attr('y', this.y(.5))
        .attr('width', 0)
-       .style("fill", "#cca")
+       .style("fill", "#d5d7d0")
 
   this.svg.append('rect')
        .attr('id', 'regionZi')
@@ -837,7 +942,39 @@ new Vue({
        .attr('height', 0)
        .attr('y',this.y(5))
        .attr('width', 0)
-       .style("fill", "#cca")
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('ellipse')
+       .attr('id', 'gersa1')
+       .attr('cx', this.x(this.a1))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersa1)-this.x(0))
+       .attr('ry', this.y(this.gersa1)-this.y(0))
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('ellipse')
+       .attr('id', 'gersa2')
+       .attr('cx', this.x(this.a2))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersa2)-this.x(0))
+       .attr('ry', this.y(this.gersa2)-this.y(0))
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('ellipse')
+       .attr('id', 'gersd1')
+       .attr('cx', this.x(this.d1))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersd1)-this.x(0))
+       .attr('ry', this.y(this.gersd1)-this.y(0))
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('ellipse')
+       .attr('id', 'gersd2')
+       .attr('cx', this.x(this.d2))
+       .attr('cy', this.y(0))
+       .attr('rx', this.x(this.gersd2)-this.x(0))
+       .attr('ry', this.y(this.gersd2)-this.y(0))
+       .style("fill", "#d5d7d0")
 
   this.svg.append('rect')
        .attr('id', 'regionA')
@@ -854,6 +991,12 @@ new Vue({
        .attr('y',this.y(.3))
        .attr('width', 0)
        .style("fill", "#afa")
+
+  this.svg.append('text')
+       .attr("id", "textgameclass")
+       .attr("x", this.x(-18))
+       .attr("y", this.y(8))
+       .text(this.textgameclass)
 
    this.svg.append("g")
      .attr("transform", "translate(0," + height/2 + ")")
