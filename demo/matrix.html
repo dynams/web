@@ -358,7 +358,8 @@ new Vue({
     Sx2: 0,
     Sy1: 0,
     Sy2: 0,
-    H: []
+    H: [],
+    textstable: '',
   },
   computed: {
   is2x2() { return this.da==0 && this.dd==0 && this.dp==0 && this.dz==0 && this.tp==0 && this.tz==0 },
@@ -436,6 +437,17 @@ new Vue({
                 }
             return a[0] < b[0] ? -1 : 1
            })
+       var stable = true;
+       for (var i=0; i<4; i++) {
+            if (ee[i][0] > 0) stable = false
+       }
+       if(stable){
+            this.textstable= 'stable'
+           }
+            else {
+                 this.textstable='unstable'}
+       
+
        return ee
       }
   },
@@ -559,6 +571,9 @@ new Vue({
 
          this.svg.select('#textgameclass')
          .text(this.textgameclass)
+
+         this.svg.select('#textstable')
+         .text(this.textstable)
     }
 
   },
@@ -1007,8 +1022,14 @@ new Vue({
   this.svg.append('text')
        .attr("id", "textgameclass")
        .attr("x", this.x(-18))
-       .attr("y", this.y(8))
+       .attr("y", this.y(7))
        .text(this.textgameclass)
+
+  this.svg.append('text')
+       .attr("id", "textstable")
+       .attr("x", this.x(-18))
+       .attr("y", this.y(8))
+       .text(this.textstable)
 
    this.svg.append("g")
      .attr("transform", "translate(0," + height/2 + ")")
