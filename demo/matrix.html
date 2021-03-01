@@ -8,28 +8,33 @@
 <title></title>
 <style>
 tr {
- text-align:center;
- vertical-align:middle
+ padding: 0;
+ margin: 0;
+ text-align: center;
+ vertical-align: middle;
 }
  td {
- width: 30px;
- height: 30px;
- text-align:center;
+ width: 32px;
+ height: 32px;
+ margin: 1px;
+ padding: 1px;
+ text-align: center;
  vertical-align: middle;
 }
 table{
  text-align: center;
  vertical-align: middle;
- border: 2px solid gray;
  display: inline-block;
 }
-table .matrix{
+table.matrix{
  width: 150px;
  height: 150px;
+ border: 1px solid gray;
 }
 table.vector{
  width: 30px;
  height: 150px;
+ border: 1px solid gray;
 }
 
 
@@ -104,8 +109,17 @@ table.vector{
     </template>
     <tr><td>||Z||</td><td>{{normZ.toFixed(1)}}</td></tr>
     <tr><td>||P||</td><td>{{normP.toFixed(1)}}</td></tr>
-    <tr><td>Sx</td><td>{{this.Sx1.toFixed(1)}},{{this.Sx2.toFixed(1)}}</td></tr>
-    <tr><td>Sy</td><td>{{this.Sy1.toFixed(1)}},{{this.Sy2.toFixed(1)}}</td></tr>
+    <!--<tr><td>||PZ'+ZP'||</td><td></td></tr>-->
+    <tr><td>x</td><td>[{{this.Sx1.toFixed(1)}}, {{this.Sx2.toFixed(1)}}]</td></tr>
+    <tr><td>y</td><td>[{{this.Sy1.toFixed(1)}}, {{this.Sy2.toFixed(1)}}]</td></tr>
+    <tr><td>perturb</td><td>
+      <button @click="H.push([]);Sx1=(Math.random()-0.5)*200;Sx2=(Math.random()-0.5)*100;">x</button>
+      <button @click="H.push([]);Sy1=(Math.random()-0.5)*200;Sy2=(Math.random()-0.5)*100;">y</button>
+     </td></tr>
+    <tr><td>reset</td><td>
+      <button @click="H.push([]);Sx1=0;Sx2=0;">x</button>
+      <button @click="H.push([]);Sy1=0;Sy2=0;">y</button>
+     </td></tr>
     <template v-if="false">
     <tr><td></td><td></td></tr>
     <tr><td>ddm</td><td>{{ddm.toFixed(1)}}</td></tr>
@@ -272,11 +286,35 @@ table.vector{
     
 
   <div class='item'>
+   <table>
+   <tr>
+    <td>
+   x<sub>2</sub>
+    </td>
+    <td>
    <canvas id='canvasxx' width='200' height='200'></canvas>
+    </td>
+    <td>
    <canvas id='canvasxy' width='200' height='200'></canvas>
-   <br>
+    </td>
+   </tr>
+    <td>
+   y<sub>2</sub>
+    </td>
+    <td>
    <canvas id='canvasyx' width='200' height='200'></canvas>
+    </td>
+    <td>
    <canvas id='canvasyy' width='200' height='200'></canvas>
+    </td>
+    </tr>
+    <tr>
+     <td></td>
+     <td>x<sub>1</sub></td>
+     <td>y<sub>1</sub></td>
+    </tr>
+
+   </table>
   </div>
   
 </div>
@@ -304,6 +342,7 @@ new Vue({
     Sx2: 10,
     Sy1: 10,
     Sy2: 10,
+    H: []
   },
   computed: {
   is2x2() { return this.da==0 && this.dd==0 && this.dp==0 && this.dz==0 && this.tp==0 && this.tz==0 },
@@ -452,12 +491,26 @@ new Vue({
 
                this.draw_vectorfield(this.canvasxx, gx1_fn, gx2_fn)
                this.draw_point(this.canvasxx, this.Sx1, this.Sx2, true)
-               this.draw_vectorfield(this.canvasxy, gxy1_fn, gxy2_fn)
-               this.draw_point(this.canvasxy, this.Sy1, this.Sx2 )
-               this.draw_vectorfield(this.canvasyx, gyx1_fn, gyx2_fn)
-               this.draw_point(this.canvasyx, this.Sx1, this.Sy2)
                this.draw_vectorfield(this.canvasyy, gy1_fn, gy2_fn)
                this.draw_point(this.canvasyy, this.Sy1, this.Sy2, true)
+
+
+               this.canvasxy.getContext('2d').strokeStyle = 'gray'
+               this.canvasyx.getContext('2d').strokeStyle = 'gray'
+               this.draw_vectorfield(this.canvasxy, gxy1_fn, gxy2_fn)
+               this.draw_vectorfield(this.canvasyx, gyx1_fn, gyx2_fn)
+
+               this.draw_point(this.canvasxy, this.Sy1, this.Sx2 )
+               this.draw_point(this.canvasyx, this.Sx1, this.Sy2)
+
+               this.draw_history(this.canvasxx, 0, 1)
+               this.draw_history(this.canvasyy, 2, 3)
+               this.draw_history(this.canvasxy, 2, 1)
+               this.draw_history(this.canvasyx, 0, 3)
+               this.H.push([this.Sx1,this.Sx2,this.Sy1,this.Sy2])
+               if(this.H.length > 32) {
+                    this.H.shift();
+                   }
 
                Sx1 = gx1_fn(this.Sx1, this.Sx2)
                Sx2 = gx2_fn(this.Sx1, this.Sx2)
@@ -470,8 +523,25 @@ new Vue({
 
                window.setTimeout(this.draw, 100)
               },
+          draw_history(canvas, i, j) {
+               ctx = canvas.getContext('2d')
+               if (this.H.length == 0 ) return
+               ctx.beginPath()
+               ctx.moveTo(this.H[0][i], this.H[0][j])
+               for (var k=0; k<this.H.length; k++) {
+                    if(this.H[k].length == 0){
+                         if (k+1<this.H.length)
+                          ctx.moveTo(this.H[k+1][i], this.H[k+1][j])
+                        }
+                    else {
+                         ctx.lineTo(this.H[k][i], this.H[k][j])
+                        }
+
+                   }
+               ctx.stroke()
+              },
           draw_point(canvas, x, y, isfill) {
-               ctx.canvas.getContext('2d')
+               ctx = canvas.getContext('2d')
                ctx.beginPath()
                ctx.arc(x, y, 3, 0, 2*Math.PI, true);
                if(isfill) {
@@ -685,19 +755,26 @@ new Vue({
 
        self = this
        this.canvasxx.addEventListener('click', function(event) {
-            var x = event.pageX- self.canvasxx.offsetLeft - self.canvasxx.clientLeft;
-             y=event.pageY - self.canvasxx.offsetTop - self.canvasxx.clientTop;
+            const rect = self.canvasxx.getBoundingClientRect()
+            var x = event.clientX -rect.left;
+            var y = event.clientY -rect.top;
+            console.log(x)
+            console.log(y)
             
             self.Sx1=x-self.canvasxx.width/2
-            self.Sx2=-y+self.canvasyy.height/2
+            self.Sx2=-y+self.canvasxx.height/2
+            self.H.push([])
            }
             )
        this.canvasyy.addEventListener('click', function(event) {
-            var x = event.pageX- self.canvasyy.offsetLeft - self.canvasyy.clientLeft;
-             y=event.pageY - self.canvasyy.offsetTop - self.canvasyy.clientTop;
+            const rect = self.canvasyy.getBoundingClientRect()
+            var x = event.clientX -rect.left;
+            var y = event.clientY -rect.top;
             
             self.Sy1=x-self.canvasyy.width/2
             self.Sy2=-y+self.canvasyy.height/2
+
+            self.H.push([])
            }
             )
 
