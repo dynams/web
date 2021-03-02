@@ -52,6 +52,9 @@ body{
    Show more info:
           <input type='checkbox' v-model="P.showinfo">
           <br>
+   Show cost difference:
+          <input type='checkbox' v-model="P.showcostdiff">
+          <br>
           <br>
   {{ P.mode=='mouse'?"Your" : "Horizontal player's" }} cost: 
   <br>
@@ -86,43 +89,30 @@ body{
    nash 
    <input type='checkbox' v-model="P.showg">: 
    <br>
-   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xnash">
-   {{P.xnash}}
+   ({{P.xnash}},{{P.ynash}}) <br>
    <br>
-   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.ynash">
-   {{P.ynash}}
-          <br>
-   stack (p1 leader): 
+   stack (p1 leader) 
    <input type='checkbox' v-model="P.showgstack1">: 
    <br>
-   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xstack1">
-   {{P.xstack1}}
+   ({{P.xstack1}},{{P.ystack1}}) <br>
    <br>
-    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.ystack1">
-   {{P.ystack1}}
-   <br>
-   stack (p2 leader): 
+   stack (p2 leader) 
    <input type='checkbox' v-model="P.showgstack2">: 
    <br>
-   <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xstack2">
-   {{P.xstack2}}
+   ({{P.xstack2}}, {{P.ystack2}}) <br>
    <br>
-    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.ystack2">
-   {{P.ystack2}}
-   <br>
-          <br>
-   conj:  (p1 and p2 leaders)
+   conj  (p1 and p2 leaders)
    <input type='checkbox' v-model="P.showgconj">: 
-          <br>
-          <input type="range" min="-3" max="3" step="0.1" v-model.number="P.xconj">
-          {{P.xconj}}
    <br>
-    <input type="range" min="-3" max="3" step="0.1" v-model.number="P.yconj">
-    {{P.yconj}}
+   ({{P.xconj}}, {{P.yconj}})<br>
+   <br>
+          conj2 (p1 conj, p2 stack)
+          <input type='checkbox' v-model="P.showgstacktwo">:
           <br>
-          <br>
-          conj2: (p1 conj, p2 stack)
-          <input type='checkbox' v-model="P.showgstacktwo">
+          ({{P.xstacktwo.toFixed(1)}},{{P.ystacktwo.toFixed(1)}})
+   <br>
+
+
           <br>
    a: <input v-model.number="P.a">
           <br>
@@ -256,7 +246,7 @@ const data = {
     colorconj: '#8F5400',
     duration: 100, //seconds
     period: 20, //ms
-    smooth: 0.9,
+    smooth: 0.95,
     playstackx: false,
     playstacky: false,
     alpha: 0.03,
@@ -274,13 +264,13 @@ const data = {
     y1: 0,
     y2: -2,
     a: 1.8,
-    h: 1,
     b: -.15,
     c: .15,
     d: .7,
     e: 3,
     h: 1,
     scale: 40,
+    scalecost: 50,
     lvlset: 1,
     history: false,
     showinfo: false,
@@ -291,6 +281,7 @@ const data = {
     showgstack2: false,
     showgconj: false,
     showgstacktwo: false,
+    showcostdiff: false,
     pointradius: 10,
     nash1: null,
     nash2: null,
@@ -312,6 +303,7 @@ const data = {
     time: 0,
     x: 0,
     y: 0,
+    xcostsmoothed: 0,
   },
 }
 
@@ -421,6 +413,7 @@ const data = {
 function reset(S, I, O, P) {
   S.x = -100
   S.y = 100
+  S.xcostsmoothed = null
   P.draggables = 
    [{x: P.xnash*P.scale, y:P.ynash*P.scale, isDragging: false},
     {x: P.xstack1*P.scale, y:P.ystack1*P.scale, isDragging: false},
@@ -440,6 +433,14 @@ function update(S, I, O, P) {
   O.costy = P.d*yy2*yy2/2 + P.c*xx2*yy2 + P.e*xx2*xx2/2
   O.costx /= P.scale**2
   O.costy /= P.scale**2
+  
+  if(S.xcostsmoothed === null) {
+    S.xcostsmoothed = O.costx
+   }
+  else
+  {
+    S.xcostsmoothed = P.smooth*S.xcostsmoothed + (1-P.smooth)*O.costx
+   }
 
   O.gradx = P.a*xx1 + P.b*yy1
   O.grady = P.c*xx2 + P.d*yy2
@@ -476,8 +477,19 @@ function draw(canvas, S, I, O, P, H) {
 
   ctx.font = '36px Unknown Font, sans-serif'
   ctx.save();
+  ctx.lineWidth = 20
+  ctx.strokeStyle = 'black'
   ctx.setTransform(1,0,0,1,0,0)
-  ctx.fillText(O.costx.toFixed(2), 0, 40)
+  ctx.fillText(O.costx.toFixed(2), 20, 40)
+  if (P.showcostdiff) {
+  ctx.beginPath();
+  ctx.moveTo(0, 30);
+  dcost = S.xcostsmoothed-O.costx
+  if (dcost<0) ctx.strokeStyle = '#882143'
+  if (dcost>0) ctx.strokeStyle = '#007e00'
+  ctx.lineTo(0, 30+dcost*P.scalecost);
+  ctx.stroke();
+   }
   ctx.restore();
 
   //ctx.strokeRect(-w/2, -h/2, w, h)
