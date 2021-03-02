@@ -211,17 +211,87 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
 
+   self = this
    if (this.P.inputmode == 'absolute') {
-   this.canvas.addEventListener('mousemove', this.input)
+     this.canvas.addEventListener('mousemove', function (e) {
+    if(!self.P.edit) {
+      self.input(e)
+    } else{
+     if(self.info.dragok) {
+      e.preventDefault();
+      e.stopPropagation()
+      const rect = self.canvas.getBoundingClientRect();
+      mx = e.clientX - rect.left
+      my = e.clientY - rect.top
+      mx = mx-self.canvas.width/2
+      my = -my+self.canvas.height/2
+
+      var dx = mx - self.info.startX
+      var dy = my - self.info.startY
+
+      for (var i = 0; i < self.P.draggables.length; i++){
+       var r = self.P.draggables[i];
+       if (r.isDragging) {
+        console.log(dx)
+        console.log(dy)
+        r.x += dx
+        r.y += dy
+       }
+
+       self.info.startX = mx;
+       self.info.startY = my;
+
+    }
+     }
+     }
+   })
    }
 
    this.canvas.addEventListener('mousedown', (e) => {
+    if(!self.P.edit) {
     if(!this.info.hasStarted && !this.info.isRunning) {
      this.start()
     } else if(this.info.hasStarted && this.info.isRunning) {
      this.stop()
     } else if(this.info.hasStarted && !this.info.isRunning) {
      this.reset()
+    }
+    } else {
+     console.log('drag: mousedown')
+     e.preventDefault();
+     e.stopPropagation();
+
+     const rect = self.canvas.getBoundingClientRect();
+     mx = e.clientX - rect.left
+     my = e.clientY - rect.top
+     mx = mx-self.canvas.width/2
+     my = -my+self.canvas.height/2
+
+     for (var i = 0; i < self.P.draggables.length; i++) {
+      var r = self.P.draggables[i];
+      var dist = (mx - r.x)**2+(my - r.y)**2 
+
+      if(dist <= self.P.pointradius**2) {
+       console.log('dragging')
+       self.info.dragok = true
+       r.isDragging = true;
+      }
+      self.info.startX = mx
+      self.info.startY = my
+     }
+
+    }
+   })
+   this.canvas.addEventListener('mouseup', (e) => {
+    if(self.P.edit) {
+     console.log('drag: mouseup')
+      e.preventDefault()
+     e.stopPropagation()
+
+     self.info.dragok = false
+     for (var i = 0; i < self.P.draggables.length; i++) {
+      self.P.draggables[i].isDragging = false
+     }
     }
    })
 

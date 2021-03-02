@@ -216,13 +216,28 @@ const c = (v) => Math.cos(v)
 
 const experiments = {
   'play': {
-    mode: 'mouse'
+    mode: 'mouse',
+    edit: false
    },
   'sim': {
-    mode: 'simgrad'
+    mode: 'simgrad',
    },
   'manual': {
-    mode: 'both'
+    mode: 'both',
+    edit: false
+   },
+  'edit': {
+    edit: true,
+   },
+  'show all': {
+    showinfo: true,
+    showcostx: true,
+    showcosty: true,
+    showinfo: true,
+    showg: true,
+    showgstack1: true,
+    showgstack2: true,
+    showgconj: true,
    }
 }
 
@@ -230,6 +245,7 @@ const experiments = {
 const data = {
   P: { //parameters
     mode: 'mouse',
+    edit: false,
     inputmode: 'absolute',//or absolute
     colorx: '#00287D',
     colory: '#FD5A5D',
@@ -275,6 +291,7 @@ const data = {
     showgstack2: false,
     showgconj: false,
     showgstacktwo: false,
+    pointradius: 10,
     nash1: null,
     nash2: null,
   },
@@ -299,6 +316,14 @@ const data = {
 }
 
  function recompute(P) {
+  P.xnash = P.draggables[0].x/P.scale
+  P.ynash = P.draggables[0].y/P.scale
+  P.xstack1 = P.draggables[1].x/P.scale
+  P.ystack1 = P.draggables[1].y/P.scale
+  P.xstack2 = P.draggables[2].x/P.scale
+  P.ystack2 = P.draggables[2].y/P.scale
+  P.xconj = P.draggables[3].x/P.scale
+  P.yconj = P.draggables[3].y/P.scale
 
   const xn = P.xnash
   const yn = P.ynash
@@ -396,6 +421,12 @@ const data = {
 function reset(S, I, O, P) {
   S.x = -100
   S.y = 100
+  P.draggables = 
+   [{x: P.xnash*P.scale, y:P.ynash*P.scale, isDragging: false},
+    {x: P.xstack1*P.scale, y:P.ystack1*P.scale, isDragging: false},
+    {x: P.xstack2*P.scale, y:P.ystack2*P.scale, isDragging: false},
+    {x: P.xconj*P.scale, y:P.yconj*P.scale, isDragging: false}]
+  
   recompute(P)
  }
 
@@ -529,7 +560,7 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   if(P.showgstacktwo){
   ctx.fillStyle = P.colorstacktwo
   ctx.beginPath();
-  ctx.arc(P.xstacktwo*P.scale, P.ystacktwo*P.scale, 10, 0, 2*Math.PI)
+  ctx.arc(P.xstacktwo*P.scale, P.ystacktwo*P.scale, P.pointradius, 0, 2*Math.PI)
   ctx.fill()
   ctx.strokeStyle = P.colorstacktwo
   // gstack1
@@ -561,7 +592,7 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
    }
     if(P.showcostx && P.showcosty){
   ctx.beginPath();
-  ctx.arc(P.xnash*P.scale, P.ynash*P.scale, 10, 0, 2*Math.PI)
+  ctx.arc(P.xnash*P.scale, P.ynash*P.scale, P.pointradius, 0, 2*Math.PI)
   ctx.fill()
    }
    }
@@ -570,7 +601,7 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   ctx.fillStyle = P.colorstack1
   ctx.strokeStyle = P.colorstack1
   ctx.beginPath();
-  ctx.arc(P.xstack1*P.scale, P.ystack1*P.scale, 10, 0, 2*Math.PI)
+  ctx.arc(P.xstack1*P.scale, P.ystack1*P.scale, P.pointradius, 0, 2*Math.PI)
   ctx.fill()
   // gstack1
   ctx.beginPath();
@@ -589,7 +620,7 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   x=500; ctx.lineTo(x,(P.a*P.c-P.b*P.e)*(P.x2*P.scale-x)/(P.a*P.d-P.b*P.c)+P.y2*P.scale);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(P.xstack2*P.scale, P.ystack2*P.scale, 10, 0, 2*Math.PI)
+  ctx.arc(P.xstack2*P.scale, P.ystack2*P.scale, P.pointradius, 0, 2*Math.PI)
   ctx.fill()
       ctx.lineWidth=2
      }
@@ -599,7 +630,7 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
     if(P.showgconj){
   ctx.fillStyle = P.colorconj
   ctx.beginPath();
-  ctx.arc(P.xconj*P.scale, P.yconj*P.scale, 10, 0, 2*Math.PI)
+  ctx.arc(P.xconj*P.scale, P.yconj*P.scale, P.pointradius, 0, 2*Math.PI)
   ctx.fill()
      }
 
