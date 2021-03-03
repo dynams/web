@@ -1,4 +1,4 @@
-<html>
+/
  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <head>
@@ -38,6 +38,12 @@ body{
    <br>
    Machine play stack:
           <input type='checkbox' v-model="P.playstacky">
+          <br>
+   Random initialization:
+          <input type='checkbox' v-model="P.userandominit">
+          <br>
+   Noise: 
+          <input type='checkbox' v-model="P.usenoise">
           <br>
   <template v-if="P.mode!='both'">
   <template v-if="P.mode!='mouse'">
@@ -82,18 +88,24 @@ body{
   <br>
   <template v-if="P.mode!='both'">
   <template v-if="P.mode!='mouse'">
-  Horizontal's learning rate:
+  Learning rate (x):
   <br>
   <input v-model.number="P.alpha">
   <br>
   <br>
   </template>
-  Vertical's learning rate:
+  Learning rate (machine):
   <br>
   <input v-model.number="P.beta">
   </template>
 
   <template v-if="P.showinfo">
+   <br>
+   <br>
+   More info:
+   <br>
+   (x,y) = ({{ (S.x/P.scale).toFixed(2) }},{{ (S.y/P.scale).toFixed(2) }})
+   <br>
    <br>
    costs
    <input type="checkbox" v-model="P.showcostx">
@@ -132,6 +144,10 @@ body{
           <br>
    d: <input v-model.number="P.d">
           <br>
+   noise (x): <input v-model.number="P.noisestdx">
+          <br>
+   noise (y): <input v-model.number="P.noisestdy">
+          <br>
           <br>
   </template>
   </div>
@@ -139,7 +155,6 @@ body{
   <div>
    <template v-if="P.showinfo">
    <br>
-   {{ (S.x/P.scale).toFixed(2) }},{{ (S.y/P.scale).toFixed(2) }}
    <br>
    Continous game:
    <br>
@@ -263,8 +278,8 @@ const data = {
     smooth: 0.95,
     playstackx: false,
     playstacky: false,
-    alpha: 0.03,
-    beta: 0.03,
+    alpha: 0.001,
+    beta: 0.001,
     xnash: -1,
     ynash: -1,
     xstack1: 1,
@@ -296,8 +311,12 @@ const data = {
     showgconj: false,
     showgstacktwo: false,
     showcostdiff: false,
-    showcostgradient: true,
-    showcostcurvature: true,
+    showcostgradient: false,
+    showcostcurvature: false,
+    userandominit: false,
+    usenoise: false,
+    noisestdx: 10,
+    noisestdy: 10,
     pointradius: 10,
     nash1: null,
     nash2: null,
@@ -427,8 +446,14 @@ const data = {
   }
 
 function reset(S, I, O, P) {
-  S.x = -100
-  S.y = 100
+  if(P.userandominit) {
+  S.x = (Math.random()-0.5)*400
+  S.y = (Math.random()-0.5)*400 
+   }
+  else {
+    S.x = 0
+    S.y = -150
+   }
   S.xcostsmoothed = null
   P.draggables = 
    [{x: P.xnash*P.scale, y:P.ynash*P.scale, isDragging: false},
@@ -460,8 +485,15 @@ function update(S, I, O, P) {
 
   O.gradx = P.a*xx1 + P.b*yy1
   O.grady = P.c*xx2 + P.d*yy2
+  
   O.gradstackx = O.gradx - (P.c*(P.b*xx1+P.h*yy1))/P.d
   O.gradstacky = O.grady - (P.b*(P.c*yy2+P.e*xx2))/P.a
+  if (P.usenoise) {
+    O.gradx += 2*(Math.random()-0.5)*P.noisestdx**2
+    O.grady += 2*(Math.random()-0.5)*P.noisestdy**2
+    O.gradstackx += 2*(Math.random()-0.5)*P.noisestdx**2
+    O.gradstacky += 2*(Math.random()-0.5)*P.noisestdy**2
+   }
   const grady = P.playstacky ? O.gradstacky : O.grady
   const gradx = P.playstackx ? O.gradstackx : O.gradx
   switch (P.mode) {
@@ -567,15 +599,6 @@ function draw(canvas, S, I, O, P, H) {
     const scalegrad = 1/100
   ctx.lineWidth = 6
 
-  if (P.showcostgradient) {
-    ctx.beginPath();
-    ctx.strokeStyle = "#6C8CF1"
-    ctx.moveTo(x-mg, -mg*gradx*scalegrad+shifty)
-    for(var dx = -mg; dx < mg; dx+=1) {
-      ctx.lineTo(x+dx, dx*gradx*scalegrad+shifty)
-     }
-    ctx.stroke()
-   } 
   if (P.showcostcurvature) {
   ctx.beginPath();
     ctx.strokeStyle = "#3855A7"
@@ -585,12 +608,12 @@ function draw(canvas, S, I, O, P, H) {
    }
   ctx.stroke()
    }
-  if (P.showcoststackgradient) {
+  if (P.showcostgradient) {
     ctx.beginPath();
-    ctx.strokeStyle = "#40CDD2"
-    ctx.moveTo(x-mg, -mg*gradstackx*scalegrad+shifty)
+    ctx.strokeStyle = "#6C8CF1"
+    ctx.moveTo(x-mg, -mg*gradx*scalegrad+shifty)
     for(var dx = -mg; dx < mg; dx+=1) {
-      ctx.lineTo(x+dx, dx*gradstackx*scalegrad+shifty)
+      ctx.lineTo(x+dx, dx*gradx*scalegrad+shifty)
      }
     ctx.stroke()
    } 
@@ -603,6 +626,15 @@ function draw(canvas, S, I, O, P, H) {
    }
   ctx.stroke()
    }
+  if (P.showcoststackgradient) {
+    ctx.beginPath();
+    ctx.strokeStyle = "#40CDD2"
+    ctx.moveTo(x-mg, -mg*gradstackx*scalegrad+shifty)
+    for(var dx = -mg; dx < mg; dx+=1) {
+      ctx.lineTo(x+dx, dx*gradstackx*scalegrad+shifty)
+     }
+    ctx.stroke()
+   } 
   if(P.showcostgradient || P.showcostcurvature) {
   ctx.beginPath();
   ctx.strokeStyle = P.colorx
