@@ -299,7 +299,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     e.preventDefault();
     e.stopPropagation();
     var touch = e.touches[0];
-    var mouseEvent = new MouseEvent("mousemove", {
+    var mouseEvent = new MouseEvent("mousedown", {
      clientX: touch.clientX,
      clientY: touch.clientY
     });
