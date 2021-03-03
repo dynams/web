@@ -36,9 +36,6 @@ body{
   </div>
   <div>
    <br>
-   Plot learning dynamics:
-          <input type='checkbox' v-model="P.history">
-          <br>
    Machine play stack:
           <input type='checkbox' v-model="P.playstacky">
           <br>
@@ -49,14 +46,31 @@ body{
           <br>
   </template>
   </template>
+          <br>
+   Show gradient:
+          <input type='checkbox' v-model="P.showcostgradient">
+          <br>
+   Show curvature:
+          <input type='checkbox' v-model="P.showcostcurvature">
+          <br>
+   Show stack gradient:
+          <input type='checkbox' v-model="P.showcoststackgradient">
+          <br>
+   Show stack curvature:
+          <input type='checkbox' v-model="P.showcoststackcurvature">
+          <br>
+   Show average difference:
+          <input type='checkbox' v-model="P.showcostdiff">
+          <br>
+   Plot learning dynamics:
+          <input type='checkbox' v-model="P.history">
+          <br>
+          <br>
    Show more info:
           <input type='checkbox' v-model="P.showinfo">
           <br>
-   Show cost difference:
-          <input type='checkbox' v-model="P.showcostdiff">
           <br>
-          <br>
-  {{ P.mode=='mouse'?"Your" : "Horizontal player's" }} cost: 
+  {{ P.mode=='mouse'?"Minimize your" : "Horizontal player's" }} cost: 
   <br>
   {{O.costx.toFixed(1)}}
   <br>
@@ -282,6 +296,8 @@ const data = {
     showgconj: false,
     showgstacktwo: false,
     showcostdiff: false,
+    showcostgradient: true,
+    showcostcurvature: true,
     pointradius: 10,
     nash1: null,
     nash2: null,
@@ -538,12 +554,71 @@ function draw(canvas, S, I, O, P, H) {
      y = S.y
     }
 
+
+    xx1 = (x-P.x1*P.scale)
+    yy1 = (y-P.y1*P.scale)
+    gradx = P.a*xx1 + P.b*yy1
+    gradstackx = gradx - P.c*(P.b*xx1+P.h*yy1)/P.d
+
+    const shifty = h/2-50
+    const mc = 200
+    const mg = 30
+    const scalecost = 1/100
+    const scalegrad = 1/100
+  ctx.lineWidth = 6
+
+  if (P.showcostgradient) {
+    ctx.beginPath();
+    ctx.strokeStyle = "#6C8CF1"
+    ctx.moveTo(x-mg, -mg*gradx*scalegrad+shifty)
+    for(var dx = -mg; dx < mg; dx+=1) {
+      ctx.lineTo(x+dx, dx*gradx*scalegrad+shifty)
+     }
+    ctx.stroke()
+   } 
+  if (P.showcostcurvature) {
+  ctx.beginPath();
+    ctx.strokeStyle = "#3855A7"
+  ctx.moveTo(x-mc, (-mc*gradx + P.a*(-mc)**2 )*scalegrad+shifty)
+  for(var dx = -mc; dx < mc; dx+=0.1) {
+    ctx.lineTo(x+dx, (dx*gradx + P.a*dx**2)*scalegrad+shifty)
+   }
+  ctx.stroke()
+   }
+  if (P.showcoststackgradient) {
+    ctx.beginPath();
+    ctx.strokeStyle = "#40CDD2"
+    ctx.moveTo(x-mg, -mg*gradstackx*scalegrad+shifty)
+    for(var dx = -mg; dx < mg; dx+=1) {
+      ctx.lineTo(x+dx, dx*gradstackx*scalegrad+shifty)
+     }
+    ctx.stroke()
+   } 
+  if (P.showcoststackcurvature) {
+  ctx.beginPath();
+    ctx.strokeStyle = "#0DAAAD"
+  ctx.moveTo(x-mc, (-mc*gradstackx + (P.a-P.b*P.c)/P.d*(-mc)**2 )*scalegrad+shifty)
+  for(var dx = -mc; dx < mc; dx+=0.1) {
+    ctx.lineTo(x+dx, (dx*gradstackx + P.a*dx**2)*scalegrad+shifty)
+   }
+  ctx.stroke()
+   }
+  if(P.showcostgradient || P.showcostcurvature) {
+  ctx.beginPath();
+  ctx.strokeStyle = P.colorx
+   ctx.moveTo(x-3, shifty)
+   ctx.lineTo(x+3, shifty)
+  ctx.stroke()
+
+
+   }else {
   ctx.lineWidth = 20
   ctx.strokeStyle = P.colorx
   ctx.beginPath();
    ctx.moveTo(x-5, h/2)
    ctx.lineTo(x+5, h/2)
   ctx.stroke()
+   }
 
   if (P.mode != 'mouse' || P.showinfo) {
   ctx.strokeStyle = P.colory
@@ -650,7 +725,13 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   ctx.beginPath();
   ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
   ctx.fill()
-   }
+
+    
+
+
+
+
+   } // end show info
 
   
 
