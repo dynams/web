@@ -1,0 +1,62 @@
+* {
+    color:white;
+    font-size: 12px;
+    background-color: black;  
+    font-family: Monaco, monospace;
+  }
+  
+  
+
+  #myCanvas {
+    touch-action:none;
+    width: 80%;
+  }
+
+  #main {
+    margin: auto;
+    width: 100vw;
+    text-align: center;
+  }
+  
+  @media screen and (max-width:600px){
+    #main {
+      grid-template-columns: auto;
+    }
+  }
+  .params {
+    font-size: 12px;
+    text-align: left;
+  }
+  .params input{
+    width: 80px;
+    border: 1px solid gray;
+  }
+  
+  body {
+    background-color: black;
+    font-family: monospace;
+  }
+  
+  th {
+    text-align: left;
+    padding-top: 2ex;
+    font-size: 16px;
+    text-decoration: underline
+  }
+  
+  button {
+    border: 1px solid white;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  
+  button.active {
+    background-color: gray;
+  }
+  
+  button:hover {  
+    border: 1px solid white;
+    background-color: #555;
+  }
+  
+  

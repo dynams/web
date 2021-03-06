@@ -1,0 +1,30 @@
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    </style>
+    <script src="../js/QuadraticGameExperiment.js" type="module"></script>
+</head>
+
+<body>
+    <div id="main">
+        <div id="buttons">
+            <button v-show="!info.acknowledgeSplash" @click="loadGame">Start</button>
+            <button v-show="info.isRunning" @click="stop">Stop</button>
+            <button v-show="info.hasStarted && !info.isRunning" @click="reset">Reset</button>
+            <button v-show="!info.hasStarted" @click="reset">Randomize starts</button>
+            <input type='checkbox' v-model="P.showinfo">
+        </div>
+        <div v-show="!info.acknowledgeSplash" id='splash'>
+            <p>Test splash page. Press start to begin the game</p>
+        </div>
+        <div v-show="info.acknowledgeSplash" id="canvasBoundingBox">
+            <canvas id="myCanvas" ref="myCanvas" width="100%" height="auto"></canvas>
+        </div>
+    </div>
+</body>
+
+</html>
