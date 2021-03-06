@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+<script src="https://d3js.org/d3.v4.js"></script>
+<title></title>
+<style>
+tr {
+ padding: 0;
+ margin: 0;
+ text-align: center;
+ vertical-align: middle;
+}
+ td {
+ width: 32px;
+ height: 32px;
+ margin: 1px;
+ padding: 1px;
+ text-align: center;
+ vertical-align: middle;
+}
+table{
+ text-align: center;
+ vertical-align: middle;
+ display: inline-block;
+}
+table.matrix{
+ width: 150px;
+ height: 150px;
+ border: 1px solid gray;
+}
+table.vector{
+ width: 30px;
+ height: 150px;
+ border: 1px solid gray;
+}
+
+
+.container {
+ display: grid;
+ grid-template-columns: 1fr 4fr;
+ grid-template-areas: "panel ptop"
+                     "panel pcen"
+                     "panel pbot";
+}
+
+.item:nth-child(1) {
+ position: fixed;
+ grid-area: panel;
+}
+
+.item:nth-child(2) {
+ grid-area: ptop; 
+}
+
+.item:nth-child(3) {
+ grid-area: pcen;
+}
+
+.item:nth-child(4) {
+ margin:10px;
+ grid-area: pbot;
+}
+
+</style>
+</head>
+<body>
+<div class="container" id="app">
+
+
+  <div class="item">
+  <table>
+   <tr><td @click="m=-1">m</td><td>
+     <input type="range" min="-10" max="-1" v-model.number='m'>
+    </td></tr><tr><td @click="f=0">f</td><td>
+  <input type="range" min="-10" max="10" v-model.number='f'>
+    </td></tr>
+    <tr><td @click="z=0">z</td><td>
+    <input type="range" min="-10" max="10" v-model.number='z'>
+    </td></tr>
+    <tr><td @click="p=0">p</td><td>
+  <input type="range" min="-10" max="10" v-model.number='p'>
+     </td></tr>
+    <tr><td @click="da=0">da</td><td>
+  <input type="range" min="-10" max="10" v-model.number='da'>
+     </td></tr>
+    <tr><td @click="dd=0">dd</td><td>
+  <input type="range" min="-10" max="10" v-model.number='dd'>
+     </td>
+     <tr><td @click="dz=0">dz</td><td>
+  <input type="range" min="-10" max="10" v-model.number='dz'>
+      </td></tr>
+      <tr><td @click="dp=0">dp
+      </td><td>
+  <input type="range" min="-10" max="10" v-model.number='dp'>
+      </td>
+    </tr>
+    <template v-if="is4x4">
+    <tr><td>eig1</td><td>{{eigs[0][0].toFixed(1)}}+{{eigs[0][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig2</td><td>{{eigs[1][0].toFixed(1)}}+{{eigs[1][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig3</td><td>{{eigs[2][0].toFixed(1)}}+{{eigs[2][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig4</td><td>{{eigs[3][0].toFixed(1)}}+{{eigs[3][1].toFixed(1)}}i</td></tr>
+    </template>
+    <template v-if="is2x2">
+    <tr><td>eig1</td><td>{{eigs[0][0].toFixed(1)}}+{{eigs[0][1].toFixed(1)}}i</td></tr>
+    <tr><td>eig2</td><td>{{eigs[3][0].toFixed(1)}}+{{eigs[3][1].toFixed(1)}}i</td></tr>
+    </template>
+    <tr><td>||Z||</td><td>{{normZ.toFixed(1)}}</td></tr>
+    <tr><td>||P||</td><td>{{normP.toFixed(1)}}</td></tr>
+    <!--<tr><td>||PZ'+ZP'||</td><td></td></tr>-->
+    <tr><td>x</td><td>[{{this.Sx1.toFixed(1)}}, {{this.Sx2.toFixed(1)}}]</td></tr>
+    <tr><td>y</td><td>[{{this.Sy1.toFixed(1)}}, {{this.Sy2.toFixed(1)}}]</td></tr>
+    <tr><td>perturb</td><td>
+      <button @click="H.push([]);Sx1=(Math.random()-0.5)*200;Sx2=(Math.random()-0.5)*100;">x</button>
+      <button @click="H.push([]);Sy1=(Math.random()-0.5)*200;Sy2=(Math.random()-0.5)*100;">y</button>
+     </td></tr>
+    <tr><td>reset</td><td>
+      <button @click="H.push([]);Sx1=0;Sx2=0;">x</button>
+      <button @click="H.push([]);Sy1=0;Sy2=0;">y</button>
+      <button @click="H.push([]);Sx1=0;Sx2=0;Sy1=0;Sy2=0;">x, y</button>
+     </td></tr>
+    <template v-if="false">
+    <tr><td></td><td></td></tr>
+    <tr><td>ddm</td><td>{{ddm.toFixed(1)}}</td></tr>
+    <tr><td>ddp</td><td>{{ddp.toFixed(1)}}</td></tr>
+    <tr><td>lm</td><td>{{lm}}</td></tr>
+    <tr><td>lp</td><td>{{lp}}</td></tr>
+    <tr><td>l1m</td><td>{{l1m}}</td></tr>
+    <tr><td>l1p</td><td>{{l1p}}</td></tr>
+    <tr><td>l2m</td><td>{{l2m}}</td></tr>
+    <tr><td>l2p</td><td>{{l2p}}</td></tr>
+    </template>
+  </table>
+  </div>
+
+ <div class="item" id="myplot"></div>
+ <div class="item">
+  <template v-if="is2x2">
+   <table class="vector">
+    <tr><td></td></tr>
+    <tr><td>&#7819;</td></tr>
+    <tr><td>&#7823;</td></tr>
+   </table>
+   =
+   <table class="matrix">
+    <tr><td></td></tr>
+    <tr>
+     <td></td>
+     <td>a</td>
+     <td v-if="isdecoupled"></td>
+     <td v-else>b</td>
+     <td></td>
+    </tr>
+    <tr>
+     <td></td>
+     <td v-if="isdecoupled"></td>
+     <td v-else-if="iszs">-b</td>
+     <td v-else-if="ispot">b</td>
+     <td v-else="ispot">c</td>
+     <td>d</td>
+     <td></td>
+    </tr>
+    <tr>
+     <td></td>
+    </tr>
+   </table>
+   <table class="vector">
+    <tr><td></td></tr>
+    <tr><td>x</td></tr>
+    <tr><td>y</td></tr>
+   </table>
+   =
+   </table>
+   <table class="matrix">
+    <tr><td></td></tr>
+    <tr><td></td>
+     <td>{{m+f}}</td>
+   <td>{{p+z}}</td></tr>
+    <tr><td></td>
+    <td>{{p-z}}</td>
+   <td>{{m-f}}</td>
+   <td></td>
+   </tr>
+    <tr><td></td></tr>
+   </table>
+   <table class="vector">
+    <tr><td></td></tr>
+    <tr><td>x</td></tr>
+    <tr><td>y</td></tr>
+   </table>
+  </template>
+   <br>
+
+  <template v-if="is4x4">
+   <table class="vector">
+    <tr><td>&#7819;<sub>1</sub></td></tr>
+    <tr><td>&#7819;<sub>2</sub></td></tr>
+    <tr><td>&#7823;<sub>1</sub></td></tr>
+    <tr><td>&#7823;<sub>2</sub></td></tr>
+   </table>
+  <table class="matrix">
+    <tr>
+      <td>a<sub>1</sub></td>
+      <td></td>
+      <td v-if="isdecoupled"></td>
+      <td v-else>b<sub>11</sub></td>
+      <td v-if="isdecoupled"></td>
+      <td v-else>b<sub>12</sub></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>a<sub>2</sub></td>
+      <td v-if="isdecoupled"></td>
+     <td v-else>b<sub>21</sub></td>
+     <td v-if="isdecoupled"></td>
+    <td v-else>b<sub>22</sub></td>
+    </tr>
+    <tr>
+     <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>11</sub></td>
+      <td v-else-if="ispot">b<sub>11</sub></td>
+     <td v-else>c<sub>11</sub></td>
+     <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>21</sub></td>
+      <td v-else-if="ispot">b<sub>21</sub></td>
+     <td v-else>c<sub>12</sub></td>
+     <td>d<sub>1</sub></td>
+     <td></td>
+    </tr>
+    <tr>
+      <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>12</sub></td>
+      <td v-else-if="ispot">b<sub>12</sub></td>
+      <td v-else>c<sub>21</sub></td>
+      <td v-if="isdecoupled"></td>
+      <td v-else-if="iszs">-b<sub>22</sub></td>
+      <td v-else-if="ispot">b<sub>22</sub></td>
+      <td v-else>c<sub>22</sub></td>
+      <td></td>
+      <td>d<sub>2</sub></td>
+    </tr>
+  </table>
+   <table class="vector">
+    <tr><td>x<sub>1</sub></td></tr>
+    <tr><td>x<sub>2</sub></td></tr>
+    <tr><td>y<sub>1</sub></td></tr>
+    <tr><td>y<sub>2</sub></td></tr>
+   </table>
+  =
+    <table class="matrix">
+    <tr>
+      <td>{{a1}}</td>
+      <td>0</td>
+      <td>{{b11}}</td>
+      <td>{{b12}}</td>
+    </tr>
+    <tr>
+      <td>0</td>
+      <td>{{a2}}</td>
+      <td>{{b21}}</td>
+      <td>{{b22}}</td>
+    </tr>
+    <tr>
+      <td>{{c11}}</td>
+      <td>{{c12}}</td>
+      <td>{{d1}}</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>{{c21}}</td>
+      <td>{{c22}}</td>
+      <td>0</td>
+      <td>{{d2}}</td>
+    </tr>
+  </table>
+   <table class="vector">
+    <tr><td>x<sub>1</sub></td></tr>
+    <tr><td>x<sub>2</sub></td></tr>
+    <tr><td>x<sub>3</sub></td></tr>
+    <tr><td>x<sub>4</sub></td></tr>
+   </table>
+  </template>
+</div>
+
+    
+
+  <div class='item'>
+   <template>
+    <div v-show='is2x2'>
+    <table><tr><td>y<sub v-if='is4x4'>1</sub></td><td>
+   <canvas id='canvasx' width='200' height='200'></canvas>
+      </td>
+     </tr>
+     <tr><td></td><td>x<sub v-if='is4x4'>1</sub></td></tr></table>
+   <br>
+   <br>
+   <br>
+    </div>
+   </template>
+   <template>
+    <div v-show='is4x4'>
+   <table>
+   <tr>
+    <td>
+   x<sub>2</sub>
+    </td>
+    <td>
+   <canvas id='canvasxx' width='200' height='200'></canvas>
+    </td>
+    <td>
+   <canvas id='canvasxy' width='200' height='200'></canvas>
+    </td>
+   </tr>
+    <td>
+   y<sub>2</sub>
+    </td>
+    <td>
+   <canvas id='canvasyx' width='200' height='200'></canvas>
+    </td>
+    <td>
+   <canvas id='canvasyy' width='200' height='200'></canvas>
+    </td>
+    </tr>
+    <tr>
+     <td></td>
+     <td>x<sub>1</sub></td>
+     <td>y<sub>1</sub></td>
+    </tr>
+   </table>
+    </div>
+   </template>
+  </div>
+  
+</div>
+
+
+   <script>
+
+new Vue({
+  el: "#app",
+  data: {
+    m:-1,
+    f:0,
+    p:0,
+    z:0,
+    da:0,
+    dd:0,
+    dp:0,
+    dz:0,
+    tp:0,
+    tz:0,
+    svg:null,
+    x:null,
+    y:null,
+    Sx1: 0,
+    Sx2: 0,
+    Sy1: 0,
+    Sy2: 0,
+    H: [],
+    textstable: '',
+  },
+  computed: {
+  is2x2() { return this.da==0 && this.dd==0 && this.dp==0 && this.dz==0 && this.tp==0 && this.tz==0 },
+  is4x4() { return !this.is2x2 },
+  iszs() { return (this.p == 0 && this.dp==0) && (this.z != 0 || this.zp != 0) },
+  ispot() { return (this.z == 0 && this.dz==0) && (this.p != 0 || this.dp != 0) },
+  isgs() { return (this.z != 0 || this.dz != 0) && (this.p != 0 || this.dp != 0) },
+  isdecoupled() { return (this.z == 0 && this.p == 0 && this.dp == 0 && this.dz == 0) },
+       textgameclass() { 
+            if(this.isdecoupled) {
+                 return "."
+                }
+             if(this.iszs) { 
+                 return "zero-sum" 
+            } else if(this.ispot) { 
+                 return "potential" 
+            } else if(this.isgs) { 
+                 return "general" 
+            } 
+      },
+  a1() { return this.m + this.f + this.da },
+  a2() { return this.m + this.f - this.da },
+  d1() { return this.m - this.f + this.dd },
+  d2() { return this.m - this.f - this.dd },
+  b1() { return this.p + this.dp + this.z + this.dz },
+  b2() { return this.p - this.dp + this.z - this.dz },
+  c1() { return this.p + this.dp - (this.z + this.dz) },
+  c2() { return this.p - this.dp - (this.z - this.dz) },
+  b11() { return this.b1 },
+	 b12() { return 0 },
+  b21() { return 0 },
+  b22() { return this.b2 },
+  c11() { return this.c1 },
+  c12() { return 0 },
+  c21() { return 0 },
+  c22() { return this.c2 },
+  l1p() { return Math.max(this.a1, this.a2)},
+  l1m() { return Math.min(this.a1, this.a2)},
+  l2p() { return Math.max(this.d1, this.d2)},
+  l2m() { return Math.min(this.d1, this.d2)},
+  lp() { return Math.max(this.l1p, this.l2p) },
+  lm() { return Math.min(this.l1m, this.l2m) },
+  lt() { return (this.l1p+this.l2p)/2 },
+  lb() { return (this.l1m+this.l2m)/2 },
+  gersa1() { return Math.abs(this.b11)+Math.abs(this.b12) },
+  gersa2() { return Math.abs(this.b21)+Math.abs(this.b22) },
+  gersd1() { return Math.abs(this.c11)+Math.abs(this.c12) },
+  gersd2() { return Math.abs(this.c21)+Math.abs(this.c22) },
+  normZ() { return Math.sqrt((this.z+this.dz)**2+(this.z-this.dz)**2) },
+  normP() { return Math.sqrt((this.p+this.dp)**2+(this.p-this.dp)**2) },
+  ddp() { 
+       P = this.normP
+       d = P*Math.tan(0.5*Math.atan(2*P/Math.abs(this.l1p-this.l2p)))
+       return d?d:0
+      },
+  ddm() { P = this.normP
+       d = P*Math.tan(0.5*Math.atan(2*P/Math.abs(this.l1m-this.l2m)))
+       return d?d:0
+      },
+
+  M() { 
+       m =  [[this.a1, 0, this.b11, this.b12],
+                [0, this.a2, this.b21, this.b22],
+                [this.c11, this.c12, this.d1, 0],
+                [this.c21, this.c22, 0, this.d2]]
+       return m
+      },
+  eigs() {
+      //M = mul(0.01, rand(4,4))
+       var e = numeric.eig(this.M).lambda
+      const ee =  numeric.transpose([e.x, e.y?e.y:[0,0,0,0]])
+       ee.sort(function (a,b){
+            if (Math.abs(a[0] - b[0])<0.01) {
+                 return a[1] > b[1] ? -1: 1
+                }
+            return a[0] < b[0] ? -1 : 1
+           })
+       var stable = true;
+       for (var i=0; i<4; i++) {
+            if (ee[i][0] > 0) stable = false
+       }
+       if(stable){
+            this.textstable= 'stable'
+           }
+            else {
+                 this.textstable='unstable'}
+       
+
+       return ee
+      }
+  },
+  watch: {
+    eigs() {
+
+  self=this
+  circ = this.svg.selectAll(".eigs")
+          .data(this.eigs)
+  circ.transition().ease(d3.easeLinear)
+      .attr("cx", function (d) { return self.x(d[0]); } )
+      .attr("cy", function (d) { return self.y(d[1]); } )
+
+  const eps = 2
+  this.svg.select("#regionA").transition().ease(d3.easeLinear)
+         .attr("x", self.x(Math.min(this.a1, this.a2))-eps)
+         .attr("width", Math.abs(self.x(this.a2)-self.x(this.a1))+eps*2)
+
+  this.svg.select("#regionD").transition().ease(d3.easeLinear)
+         .attr("x", self.x(Math.min(this.d1, this.d2))-eps)
+         .attr("width", Math.abs(self.x(this.d2)-self.x(this.d1))+eps*2)
+
+  if(this.ispot) {
+  this.svg.select("#regionPm").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lm-this.ddm))
+       .attr("width", -self.x(this.lm-this.ddm) + self.x(this.lm))
+
+  this.svg.select("#regionPp").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lp))
+       .attr("width", -self.x(this.lp) + self.x(this.lp+this.ddp))
+      }
+         else
+         {
+  this.svg.select("#regionPm").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lm))
+       .attr("width", 0)
+
+  this.svg.select("#regionPp").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lp))
+       .attr("width", 0)
+             }
+
+         if(this.iszs && !this.isdecoupled) {
+  this.svg.select("#regionZi").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lb)-eps)
+       .attr("width", self.x(this.lt) - self.x(this.lb)+eps*2)
+       .attr("y", self.y(this.normZ))
+       .attr("height", -self.y(this.normZ)+self.y(-this.normZ))
+
+  this.svg.select("#regionZr").transition().ease(d3.easeLinear)
+       .attr("x", self.x(this.lm))
+       .attr("width", self.x(this.lp) - self.x(this.lm))
+             } else {
+  this.svg.select("#regionZi").transition()
+       .attr("x", self.x(this.m))
+       .attr("width", 0)
+  this.svg.select("#regionZr").transition()
+       .attr("x", self.x(this.m))
+       .attr("width", 0)
+                 }
+
+         if(this.isgs) {
+
+  this.svg.select('#gersa1').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.a1))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersa1)-this.x(0))
+       .attr('rx', this.x(this.gersa1)-this.x(0))
+       .attr('ry', this.y(this.gersa1)-this.y(0))
+
+  this.svg.select('#gersa2').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.a2))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersa2)-this.x(0))
+       .attr('rx', this.x(this.gersa2)-this.x(0))
+       .attr('ry', this.y(this.gersa2)-this.y(0))
+
+  this.svg.select('#gersd1').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.d1))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersd1)-this.x(0))
+       .attr('rx', this.x(this.gersd1)-this.x(0))
+       .attr('ry', this.y(this.gersd1)-this.y(0))
+
+  this.svg.select('#gersd2').transition().ease(d3.easeLinear)
+       .attr('cx', this.x(this.d2))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersd2)-this.x(0))
+       .attr('rx', this.x(this.gersd2)-this.x(0))
+       .attr('ry', this.y(this.gersd2)-this.y(0))
+             }
+         else {
+  this.svg.select('#gersa1')
+       .attr('cx', this.x(this.a1))
+       .attr('cy', this.y(0))
+       .attr('r', 0)
+       .attr('rx', 0)
+       .attr('ry', 0)
+
+  this.svg.select('#gersa2')
+       .attr('cx', this.x(this.a2))
+       .attr('cy', this.y(0))
+       .attr('r', 0)
+       .attr('rx', 0)
+       .attr('ry', 0)
+
+  this.svg.select('#gersd1')
+       .attr('cx', this.x(this.d1))
+       .attr('cy', this.y(0))
+       .attr('r', 0)
+       .attr('rx', 0)
+       .attr('ry', 0)
+
+  this.svg.select('#gersd2')
+       .attr('cx', this.x(this.d2))
+       .attr('cy', this.y(0))
+       .attr('r', 0)
+       .attr('rx', 0)
+       .attr('ry', 0)
+             }
+
+         this.svg.select('#textgameclass')
+         .text(this.textgameclass)
+
+         this.svg.select('#textstable')
+         .text(this.textstable)
+    }
+
+  },
+     methods: {
+
+          draw() {
+               const gamma = 0.05
+               gx1_fn = (x1, x2) => 
+               { return this.a1*x1+this.b11*this.Sy1+this.b12*this.Sy2; }
+               gx2_fn = (x1, x2) => 
+               { return this.a2*x2+this.b21*this.Sy1+this.b22*this.Sy2; }
+               gy1_fn = (y1, y2) => 
+               { return this.d1*y1+this.c11*this.Sx1+this.c12*this.Sx2; }
+               gy2_fn = (y1, y2) => 
+               { return this.d2*y2+this.c21*this.Sx1+this.c22*this.Sx2; }
+
+               gxy1_fn = (y1, x2) => 
+               { return this.d1*y1+this.c11*this.Sx1+this.c12*x2; }
+               gxy2_fn = (y1, x2) => 
+               { return this.a2*x2+this.b21*y1+this.b22*this.Sy2; }
+               gyx1_fn = (x1, y2) => 
+               { return this.a1*x1+this.b11*this.Sy1+this.b12*y2; }
+               gyx2_fn = (x1, y2) => 
+               { return this.d2*y2+this.c21*x1+this.c22*this.Sx2; }
+
+
+               g1_fn = (x1, y1) =>
+               { return this.a1*x1 + this.b11*y1 + this.b12*this.Sy2; }
+               g2_fn = (x1, y1) =>
+               { return this.d1*y1 + this.c11*x1 + this.c12*this.Sx2; }
+
+               this.draw_vectorfield(this.canvasx, g1_fn, g2_fn)
+               this.draw_point(this.canvasx, this.Sx1, this.Sy1, true)
+               this.draw_history(this.canvasx, 0, 2)
+
+
+               this.draw_vectorfield(this.canvasxx, gx1_fn, gx2_fn)
+               this.draw_point(this.canvasxx, this.Sx1, this.Sx2, true)
+               this.draw_vectorfield(this.canvasyy, gy1_fn, gy2_fn)
+               this.draw_point(this.canvasyy, this.Sy1, this.Sy2, true)
+
+               this.canvasxy.getContext('2d').strokeStyle = 'gray'
+               this.canvasyx.getContext('2d').strokeStyle = 'gray'
+               this.draw_vectorfield(this.canvasxy, gxy1_fn, gxy2_fn)
+               this.draw_vectorfield(this.canvasyx, gyx1_fn, gyx2_fn)
+
+               this.draw_point(this.canvasxy, this.Sy1, this.Sx2 )
+               this.draw_point(this.canvasyx, this.Sx1, this.Sy2)
+
+               this.draw_history(this.canvasxx, 0, 1)
+               this.draw_history(this.canvasyy, 2, 3)
+               this.draw_history(this.canvasxy, 2, 1)
+               this.draw_history(this.canvasyx, 0, 3)
+               this.H.push([this.Sx1,this.Sx2,this.Sy1,this.Sy2])
+               if(this.H.length > 32) {
+                    this.H.shift();
+                   }
+
+               Sx1 = gx1_fn(this.Sx1, this.Sx2)
+               Sx2 = gx2_fn(this.Sx1, this.Sx2)
+               Sy1 = gy1_fn(this.Sy1, this.Sy2)
+               Sy2 = gy2_fn(this.Sy1, this.Sy2)
+               this.Sx1 = this.Sx1 + gamma*Sx1
+               this.Sx2 = this.Sx2 + gamma*Sx2
+               this.Sy1 = this.Sy1 + gamma*Sy1
+               this.Sy2 = this.Sy2 + gamma*Sy2
+
+               window.setTimeout(this.draw, 100)
+              },
+          draw_history(canvas, i, j) {
+               ctx = canvas.getContext('2d')
+               if (this.H.length == 0 ) return
+               ctx.beginPath()
+               ctx.moveTo(this.H[0][i], this.H[0][j])
+               for (var k=0; k<this.H.length; k++) {
+                    if(this.H[k].length == 0){
+                         if (k+1<this.H.length)
+                          ctx.moveTo(this.H[k+1][i], this.H[k+1][j])
+                        }
+                    else {
+                         ctx.lineTo(this.H[k][i], this.H[k][j])
+                        }
+
+                   }
+               ctx.stroke()
+              },
+          draw_point(canvas, x, y, isfill) {
+               ctx = canvas.getContext('2d')
+               ctx.beginPath()
+               ctx.arc(x, y, 3, 0, 2*Math.PI, true);
+               if(isfill) {
+               ctx.fill()
+                   } else { ctx.stroke() }
+              },
+          drawHead(ctx,x0,y0,x1,y1,x2,y2,style)
+{
+  'use strict';
+  if(typeof(x0)=='string') x0=parseInt(x0);
+  if(typeof(y0)=='string') y0=parseInt(y0);
+  if(typeof(x1)=='string') x1=parseInt(x1);
+  if(typeof(y1)=='string') y1=parseInt(y1);
+  if(typeof(x2)=='string') x2=parseInt(x2);
+  if(typeof(y2)=='string') y2=parseInt(y2);
+  var radius=3;
+  var twoPI=2*Math.PI;
+
+  // all cases do this.
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x0,y0);
+  ctx.lineTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  switch(style){
+    case 0:
+      // curved filled, add the bottom as an arcTo curve and fill
+      var backdist=Math.sqrt(((x2-x0)*(x2-x0))+((y2-y0)*(y2-y0)));
+      ctx.arcTo(x1,y1,x0,y0,.55*backdist);
+      ctx.fill();
+      break;
+    case 1:
+      // straight filled, add the bottom as a line and fill.
+      ctx.beginPath();
+      ctx.moveTo(x0,y0);
+      ctx.lineTo(x1,y1);
+      ctx.lineTo(x2,y2);
+      ctx.lineTo(x0,y0);
+      ctx.fill();
+      break;
+    case 2:
+      // unfilled head, just stroke.
+      ctx.stroke();
+      break;
+    case 3:
+      //filled head, add the bottom as a quadraticCurveTo curve and fill
+      var cpx=(x0+x1+x2)/3;
+      var cpy=(y0+y1+y2)/3;
+      ctx.quadraticCurveTo(cpx,cpy,x0,y0);
+      ctx.fill();
+      break;
+    case 4:
+      //filled head, add the bottom as a bezierCurveTo curve and fill
+      var cp1x, cp1y, cp2x, cp2y,backdist;
+      var shiftamt=5;
+      if(x2==x0){
+	// Avoid a divide by zero if x2==x0
+	backdist=y2-y0;
+	cp1x=(x1+x0)/2;
+	cp2x=(x1+x0)/2;
+	cp1y=y1+backdist/shiftamt;
+	cp2y=y1-backdist/shiftamt;
+      }else{
+	backdist=Math.sqrt(((x2-x0)*(x2-x0))+((y2-y0)*(y2-y0)));
+	var xback=(x0+x2)/2;
+	var yback=(y0+y2)/2;
+	var xmid=(xback+x1)/2;
+	var ymid=(yback+y1)/2;
+
+	var m=(y2-y0)/(x2-x0);
+	var dx=(backdist/(2*Math.sqrt(m*m+1)))/shiftamt;
+	var dy=m*dx;
+	cp1x=xmid-dx;
+	cp1y=ymid-dy;
+	cp2x=xmid+dx;
+	cp2y=ymid+dy;
+      }
+
+      ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,x0,y0);
+      ctx.fill();
+      break;
+  }
+  ctx.restore();
+},
+     drawArrow(ctx,x1,y1,x2,y2,style,which,angle,d)
+{
+  'use strict';
+  // Ceason pointed to a problem when x1 or y1 were a string, and concatenation
+  // would happen instead of addition
+  if(typeof(x1)=='string') x1=parseInt(x1);
+  if(typeof(y1)=='string') y1=parseInt(y1);
+  if(typeof(x2)=='string') x2=parseInt(x2);
+  if(typeof(y2)=='string') y2=parseInt(y2);
+  style=typeof(style)!='undefined'? style:3;
+  which=typeof(which)!='undefined'? which:1; // end point gets arrow
+  angle=typeof(angle)!='undefined'? angle:Math.PI/8;
+  d    =typeof(d)    !='undefined'? d    :10;
+  // default to using drawHead to draw the head, but if the style
+  // argument is a function, use it instead
+  var toDrawHead=typeof(style)!='function'?this.drawHead:style;
+
+  // For ends with arrow we actually want to stop before we get to the arrow
+  // so that wide lines won't put a flat end on the arrow.
+  //
+  var dist=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+  var ratio=(dist-d/3)/dist;
+  var tox, toy,fromx,fromy;
+  if(which&1){
+    tox=Math.round(x1+(x2-x1)*ratio);
+    toy=Math.round(y1+(y2-y1)*ratio);
+  }else{
+    tox=x2;
+    toy=y2;
+  }
+  if(which&2){
+    fromx=x1+(x2-x1)*(1-ratio);
+    fromy=y1+(y2-y1)*(1-ratio);
+  }else{
+    fromx=x1;
+    fromy=y1;
+  }
+
+  // Draw the shaft of the arrow
+  ctx.beginPath();
+  ctx.moveTo(fromx,fromy);
+  ctx.lineTo(tox,toy);
+  ctx.stroke();
+
+  // calculate the angle of the line
+  var lineangle=Math.atan2(y2-y1,x2-x1);
+  // h is the line length of a side of the arrow head
+  var h=Math.abs(d/Math.cos(angle))/3;
+
+  if(which&1){	// handle far end arrow head
+    var angle1=lineangle+Math.PI+angle;
+    var topx=x2+Math.cos(angle1)*h;
+    var topy=y2+Math.sin(angle1)*h;
+    var angle2=lineangle+Math.PI-angle;
+    var botx=x2+Math.cos(angle2)*h;
+    var boty=y2+Math.sin(angle2)*h;
+    toDrawHead(ctx,topx,topy,x2,y2,botx,boty,style);
+  }
+  if(which&2){ // handle near end arrow head
+    var angle1=lineangle+angle;
+    var topx=x1+Math.cos(angle1)*h;
+    var topy=y1+Math.sin(angle1)*h;
+    var angle2=lineangle-angle;
+    var botx=x1+Math.cos(angle2)*h;
+    var boty=y1+Math.sin(angle2)*h;
+    toDrawHead(ctx,topx,topy,x1,y1,botx,boty,style);
+  }
+},
+
+          draw_vectorfield(canvas, g1_fn, g2_fn) {
+               const gamma=1
+               ctx = canvas.getContext('2d')
+               ctx.resetTransform()
+               ctx.lineWidth=1
+               ctx.clearRect(0, 0, canvas.width, canvas.height)
+               ctx.beginPath();
+               ctx.rect(0, 0, canvas.width, canvas.height)
+               ctx.stroke();
+               ctx.transform(1, 0, 0, -1, canvas.width/2, canvas.height/2)
+
+               ctx.beginPath()
+               for (var z1=-100; z1<=100; z1+=20) {
+                    for (var z2=-100; z2<=100; z2+=20) {
+                         z1p = z1
+                         z2p = z2
+                         ctx.moveTo(z1, z2)
+                         for (var k=0; k<10; k++) {
+                          z1_ = z1p
+                          z2_ = z2p
+                          g1 = g1_fn(z1_, z2_)
+                          g2 = g2_fn(z1_, z2_)
+                          gn = Math.sqrt(g1**2+g2**2)
+                          g1 = g1/gn
+                          g2 = g2/gn
+                          z1p = z1_ + gamma*g1
+                          z2p = z2_ + gamma*g2
+                          ctx.lineTo(z1p, z2p)
+                         }
+               ctx.stroke();
+                      this.drawArrow(ctx,z1_,z2_,z1p,z2p,1,1)
+
+                    }
+               }
+               //for (var z1=-100; z1<100; z1+=20) {
+                    //for (var z2=-100; z2<=100; z2+=20) {
+                         //ctx.beginPath();
+                         //ctx.arc(z1,z2,1,0,2*Math.PI,true)
+                         //ctx.fill();
+                   //}
+               //}
+               
+
+
+              }
+         },
+
+
+  mounted() {
+      this.canvasxx = document.getElementById('canvasxx')
+      this.canvasxy = document.getElementById('canvasxy')
+      this.canvasyx = document.getElementById('canvasyx')
+      this.canvasyy = document.getElementById('canvasyy')
+      this.canvasx = document.getElementById('canvasx')
+
+       self = this
+       this.canvasxx.addEventListener('click', function(event) {
+            const rect = self.canvasxx.getBoundingClientRect()
+            var x = event.clientX -rect.left;
+            var y = event.clientY -rect.top;
+            console.log(x)
+            console.log(y)
+            
+            self.Sx1=x-self.canvasxx.width/2
+            self.Sx2=-y+self.canvasxx.height/2
+            self.H.push([])
+           }
+            )
+       this.canvasyy.addEventListener('click', function(event) {
+            const rect = self.canvasyy.getBoundingClientRect()
+            var x = event.clientX -rect.left;
+            var y = event.clientY -rect.top;
+            
+            self.Sy1=x-self.canvasyy.width/2
+            self.Sy2=-y+self.canvasyy.height/2
+
+            self.H.push([])
+           }
+            )
+       this.canvasx.addEventListener('click', function(event) {
+            const rect = self.canvasx.getBoundingClientRect()
+            var x = event.clientX -rect.left;
+            var y = event.clientY -rect.top;
+            
+            self.Sx1=x-self.canvasx.width/2
+            self.Sy1=-y+self.canvasx.height/2
+
+            self.H.push([])
+           }
+            )
+
+        this.draw()
+
+    var margin = {top: 10, right: 30, bottom: 30, left: 60},
+        width = 460 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+    this.svg = d3.select("#myplot")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+   // Add X axis
+   this.x= d3.scaleLinear()
+     .domain([-20, 5])
+     .range([ 0, width ]);
+   // Add Y axis
+   this.y = d3.scaleLinear()
+     .domain([-10,10])
+     .range([ height, 0]);
+
+  this.svg.append('rect').attr('x',this.x(0))
+       .attr('y', this.y(10))
+       .attr('height', this.y(-10)-this.y(10))
+       .attr('width', this.x(8)-this.x(0))
+       .style("fill", "#fcc")
+
+  this.svg.append('rect')
+       .attr('id', 'regionPm')
+       .attr("x", this.x(this.lm-this.ddm))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y', this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('rect')
+       .attr('id', 'regionPp')
+       .attr("x", this.x(this.lp))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y', this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('rect')
+       .attr('id', 'regionZr')
+       .attr("x", this.x(this.lm))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y', this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('rect')
+       .attr('id', 'regionZi')
+       .attr('x',this.x(this.m))
+       .attr('height', 0)
+       .attr('y',this.y(5))
+       .attr('width', 0)
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('circle')
+       .attr('id', 'gersa1')
+       .attr('cx', this.x(this.a1))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersa1)-this.x(0))
+       //.attr('rx', this.x(this.gersa1)-this.x(0))
+       //.attr('ry', this.y(this.gersa1)-this.y(0))
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('circle')
+       .attr('id', 'gersa2')
+       .attr('cx', this.x(this.a2))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersa2)-this.x(0))
+       //.attr('rx', this.x(this.gersa2)-this.x(0))
+       //.attr('ry', this.y(this.gersa2)-this.y(0))
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('circle')
+       .attr('id', 'gersd1')
+       .attr('cx', this.x(this.d1))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersd1)-this.x(0))
+       //.attr('rx', this.x(this.gersd1)-this.x(0))
+       //.attr('ry', this.y(this.gersd1)-this.y(0))
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('circle')
+       .attr('id', 'gersd2')
+       .attr('cx', this.x(this.d2))
+       .attr('cy', this.y(0))
+       .attr('r', this.x(this.gersd2)-this.x(0))
+       //.attr('rx', this.x(this.gersd2)-this.x(0))
+       //.attr('ry', this.y(this.gersd2)-this.y(0))
+       .style("fill", "#d5d7d0")
+
+  this.svg.append('rect')
+       .attr('id', 'regionA')
+       .attr("x", this.x(Math.min(this.a1, this.a2)))
+       .attr('height', this.y(-.5)-this.y(.5))
+       .attr('y',this.y(.5))
+       .attr('width', 0)
+       .style("fill", "#aaf")
+
+  this.svg.append('rect')
+       .attr('id', 'regionD')
+       .attr("x", this.x(Math.min(this.d1, this.d2)))
+       .attr('height', this.y(-.3)-this.y(.3))
+       .attr('y',this.y(.3))
+       .attr('width', 0)
+       .style("fill", "#afa")
+
+  this.svg.append('text')
+       .attr("id", "textgameclass")
+       .attr("x", this.x(-18))
+       .attr("y", this.y(7))
+       .text(this.textgameclass)
+
+  this.svg.append('text')
+       .attr("id", "textstable")
+       .attr("x", this.x(-18))
+       .attr("y", this.y(8))
+       .text(this.textstable)
+
+   this.svg.append("g")
+     .attr("transform", "translate(0," + height/2 + ")")
+     .call(d3.axisBottom(this.x));
+
+
+   this.svg.append("g")
+     .call(d3.axisLeft(this.y));
+
+  self = this
+  this.svg.append('g')
+    .selectAll("dot")
+     .data(this.eigs)
+    .enter()
+    .append("circle")
+      .attr("class", "eigs")
+      .attr("cx", function (d) { return self.x(d[0]); } )
+      .attr("cy", function (d) { return self.y(d[1]); } )
+      .attr("r", 3)
+      .style("fill", "#000") 
+  }
+})
+
+   </script>
+</body>
+
+</html>

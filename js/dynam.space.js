@@ -105,6 +105,31 @@ export function DynamSpace({update_fn, draw_fn, input_fn, reset_fn}, data, exper
         this.S.time = this.info.elapsed
 
         this.load_query_parameters();
+      reset_fn(this.S, this.I, this.O, this.P)
+      this.tick()
+      
+    },
+    start() {
+     // Start game
+    	 this.info.hasStarted = true      
+    	 this.info.isRunning = true
+      this.info.startTime = Date.now()
+     if(this.P.inputmode == 'lock')  {
+     this.canvas.requestPointerLock()
+     }
+    },
+    stop() {
+    	this.info.isRunning = false
+     this.info.isDrawing = true
+     if(this.P.inputmode == 'lock') {
+     document.exitPointerLock()
+     }
+     this.save()
+    },
+   save() {
+     this.results.push({duration: this.O.time, P: JSON.stringify(this.P), 
+      csv:this.csv()})
+   },
 
         for (var i in this.O) this.H.O[i] = []
         for (var i in this.I) this.H.I[i] = []
@@ -269,36 +294,100 @@ export function DynamSpace({update_fn, draw_fn, input_fn, reset_fn}, data, exper
       document.addEventListener('pointerlockchange', lockChangeAlert, false);
       document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
 
+   self = this
+   if (this.P.inputmode == 'absolute') {
+     this.canvas.addEventListener('mousemove', function (e) {
+    if(!self.P.edit) {
+      self.input(e)
+    } else{
+     if(self.info.dragok) {
+      e.preventDefault();
+      e.stopPropagation()
+      const rect = self.canvas.getBoundingClientRect();
+      mx = e.clientX - rect.left
+      my = e.clientY - rect.top
+      mx = mx-self.canvas.width/2
+      my = -my+self.canvas.height/2
 
-      if (this.P.inputmode == 'absolute') {
-        this.canvas.addEventListener('mousemove', this.input)
+      var dx = mx - self.info.startX
+      var dy = my - self.info.startY
+
+      for (var i = 0; i < self.P.draggables.length; i++){
+       var r = self.P.draggables[i];
+       if (r.isDragging) {
+        console.log(dx)
+        console.log(dy)
+        r.x += dx
+        r.y += dy
+       }
+
+       self.info.startX = mx;
+       self.info.startY = my;
+
+    }
+     }
+     }
+   })
+   }
+
+   this.canvas.addEventListener('mousedown', (e) => {
+    if(!self.P.edit) {
+    if(!this.info.hasStarted && !this.info.isRunning) {
+     this.start()
+    } else if(this.info.hasStarted && this.info.isRunning) {
+     this.stop()
+    } else if(this.info.hasStarted && !this.info.isRunning) {
+     this.reset()
+    }
+    } else {
+     console.log('drag: mousedown')
+     e.preventDefault();
+     e.stopPropagation();
+
+     const rect = self.canvas.getBoundingClientRect();
+     mx = e.clientX - rect.left
+     my = e.clientY - rect.top
+     mx = mx-self.canvas.width/2
+     my = -my+self.canvas.height/2
+
+     for (var i = 0; i < self.P.draggables.length; i++) {
+      var r = self.P.draggables[i];
+      var dist = (mx - r.x)**2+(my - r.y)**2 
+
+      if(dist <= self.P.pointradius**2) {
+       console.log('dragging')
+       self.info.dragok = true
+       r.isDragging = true;
       }
+      self.info.startX = mx
+      self.info.startY = my
+     }
 
-      this.canvas.addEventListener('mousedown', (e) => {
-        if (!this.info.hasStarted && !this.info.isRunning) {
-          this.start()
-        } else if (this.info.hasStarted && this.info.isRunning) {
-          this.stop()
-        } else if (this.info.hasStarted && !this.info.isRunning) {
-          this.reset();
-        }
-      })
+    }
+   })
+   this.canvas.addEventListener('mouseup', (e) => {
+    if(self.P.edit) {
+     console.log('drag: mouseup')
+      e.preventDefault()
+     e.stopPropagation()
 
-      this.canvas.addEventListener("touchstart", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var touch = e.touches[0];
-        var mouseEvent = new MouseEvent("mousemove", {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        self.canvas.dispatchEvent(mouseEvent);
-      }, false);
+     self.info.dragok = false
+     for (var i = 0; i < self.P.draggables.length; i++) {
+      self.P.draggables[i].isDragging = false
+     }
+    }
+   })
 
-      this.canvas.addEventListener("touchend", function (e) {
-        var mouseEvent = new MouseEvent("mouseup", {});
-        self.canvas.dispatchEvent(mouseEvent);
-      }, false);
+   this.canvas.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var touch = e.touches[0];
+    var mouseEvent = new MouseEvent("mousedown", {
+     clientX: touch.clientX,
+     clientY: touch.clientY
+    });
+    self.canvas.dispatchEvent(mouseEvent);
+   }, false);
 
       this.canvas.addEventListener("touchmove", function (e) {
         var touch = e.touches[0];

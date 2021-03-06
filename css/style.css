@@ -1,4 +1,4 @@
-* {
+/*body {
   color:white;
   font-size: 12px;
   background-color: black;  
@@ -44,6 +44,7 @@
 
 body {
   background-color: black;
+  color: white;
   font-family: monospace;
   padding: 10px
   margin: 10px
@@ -57,9 +58,16 @@ th {
 }
 
 button {
+ background-color: black;
+ color:white;
   border: 1px solid white;
   padding-top: 8px;
   padding-bottom: 8px;
+}
+
+input {
+ background-color: black;
+ color:white;
 }
 
 button.active {
