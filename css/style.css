@@ -4,12 +4,17 @@
   background-color: black;  
   font-family: Monaco, monospace;
 }
-*/
 
+#canvasBoundingBox {
+  position: relative;
+  height: 500px;
+  width: 500px;
+}
 
 #myCanvas {
   touch-action:none;
 }
+
 #main {
   display: grid;
   grid-gap: 1px;
@@ -34,6 +39,7 @@
 
 #buttons {
   text-align: left;
+  width: 20vw;
 }
 
 body {
