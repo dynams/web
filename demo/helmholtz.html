@@ -1,0 +1,271 @@
+<html>
+ <head>
+ <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+<script src="numeric.min.js"></script>
+<style>
+table.matrix{
+ display: inline-block;
+ vertical-align: middle
+}
+.container {
+ display: grid;
+ grid-template-columns: 4fr 4fr;
+.item {
+
+}
+</style>
+ </head>
+ <body>
+  <div id="app" class='container'>
+   <div class='item'>
+    <canvas id='mycanvas' width='400' height='400'>
+   </div>
+  <div class='item'>
+   J = S+A
+  <table class='matrix'>
+    <tr v-for='row in M'>
+      <td v-for="m in row"
+          style='border: 1px solid black; padding: 1px'>
+        {{m.toFixed(1)}}
+      </td>
+    </tr>
+  </table>
+  =
+  <table class='matrix'>
+    <tr v-for='row in SS'>
+      <td v-for="m in row"
+          style='border: 1px solid black; padding: 1px'>
+        {{m | toFixed}}
+      </td>
+    </tr>
+  </table>
+  +
+  <table class='matrix'>
+    <tr v-for='row in AA'>
+      <td v-for="m in row"
+          style='border: 1px solid black; padding: 1px'>
+        {{m | toFixed }}
+      </td>
+    </tr>
+  </table>
+  <br>
+  g<sub>&#955;</sub>
+  =
+  g+
+  &#955; 
+  g<sup>&#8869;</sup>
+  =
+  <table class='matrix'>
+    <tr v-for='row in glam'>
+      <td v-for="m in row"
+          style='border: 1px solid black; padding: 1px'>
+        {{m | toFixed }}
+      </td>
+    </tr>
+  </table>
+  =
+  <table class='matrix'>
+    <tr v-for='row in g'>
+      <td v-for="m in row"
+          style='border: 1px solid black; padding: 1px'>
+        {{m | toFixed }}
+      </td>
+    </tr>
+  </table>
+  +
+  &#955; 
+  <table class='matrix'>
+    <tr v-for='row in gperp'>
+      <td v-for="m in row"
+          style='border: 1px solid black; padding: 1px'>
+        {{m | toFixed }}
+      </td>
+    </tr>
+  </table>
+  <br>
+  <table>
+    <tr v-for="num,p in P">
+      <td @click='P[p]=0'>{{ p }}</td>
+      <td>
+      <input type='range' min='-10' max='10'
+       v-model.number='P[p]'></td>
+    </tr>
+    <tr v-for='e in eigs'>
+     <td> eig: </td>
+     <td>
+      {{ e[0] | toFixed }}
+     {{ e[1]>=0?'+':''}}{{ e[1] | toFixed }}i</td>
+    </tr>
+    <tr v-for='O.norms'>
+     <td> 
+    </tr>
+    <tr><td>||g||</td><td>{{ normg | toFixed }}</td></tr>
+    <tr><td>||g<sup>&#8869;</sup>||</td><td>{{ normgperp | toFixed }}</td></tr>
+    <tr><td>||g<sub>&#955;</sub>||</td><td>{{ normglam | toFixed }}</td></tr>
+    <tr><td>||SA - AS||</td><td>{{ normSAAS | toFixed }}</td></tr>
+  </table>
+  </div>
+</div>
+
+  <script>
+   s = (x) => Math.sin(x)
+c = (x) => Math.cos(x)
+
+new Vue({
+  el: "#app",
+  data: {
+  	P: {
+      m: -3,
+      f: 1,
+      b: 0,
+      d: -1,
+      p: 0,
+      z: 0,
+      tp: 0,
+      tz: 0,
+      x1: 0,
+      x2: 0,
+      y: 0,
+      lr1: 0.01,
+      lr2: 0.01,
+    },
+    S: {
+      x1: 1,
+      x2: 1,
+      y: 1,
+    }
+  },
+  filters: {
+   toFixed(v) { return v.toFixed(1) },
+  },
+  computed: {
+  	n() { return 3 },
+  	z1() { return this.P.z*s(this.P.tz)},
+  	z2() { return this.P.z*c(this.P.tz)},
+  	p1() { return this.P.p*s(this.P.tp)},
+  	p2() { return this.P.p*c(this.P.tp)},
+   g() {
+       z = numeric.transpose([[this.S.x1, this.S.x2, this.S.y]])
+       return numeric.dot(this.M, z)
+      },
+   gperp() {
+       z = numeric.transpose([[this.S.x1, this.S.x2, this.S.y]])
+       return numeric.dot(numeric.transpose(this.AA), z)
+      },
+   glam() { return numeric.add(this.g, this.gperp) },
+   normg() { return numeric.norm2(this.g) },
+   normglam() { return numeric.norm2(this.glam) },
+   normgperp() { return numeric.norm2(this.gperp) },
+   normSAAS() {
+       SA = numeric.dot(this.SS, this.AA)
+       AS = numeric.dot(this.AA, this.SS)
+       return numeric.norm2(numeric.sub(SA, AS))
+      },
+   SS() { return [[this.P.m + this.P.f, this.P.b, this.p1],
+      [this.P.b, this.P.m - this.P.f, this.p2],
+      [this.p1, this.p2, this.P.d]]
+   },
+   AA() {
+      return [[0, 0, this.z1],
+      [0, 0, this.z2],
+      [-this.z1, -this.z2, 0]]
+   },
+  	M() {
+    	return [[this.P.m+this.P.f, this.P.b, this.p1+this.z1],
+      [this.P.b, this.P.m-this.P.f, this.p2+this.z2],
+      [this.p1-this.z1, this.p2-this.z2, this.P.d]]
+   },
+  	eigs() {
+    	e = numeric.eig(this.M)
+      real = e['lambda']['x']
+      imag = e['lambda']['y']
+    	return numeric.transpose([real, imag ? imag : [0,0,0]])
+    }
+  },
+  methods: {
+    f1(x1,x2,y) {
+        return (this.P.m+this.P.f)*x1**2/2 
+         + (this.P.b)*x1*x2 + (this.P.m-this.P.f)*x2**2/2 
+        + (this.p1+this.z1)*y*x1 + (this.p2+this.z2)*y*x2
+    },
+    reset() {
+        this.S.x1 = 0
+        this.S.x2 = 0
+        this.S.y = 0
+       },
+    update() {
+        this.draw()
+
+        const g = this.g
+
+        this.S.x1 += this.P.lr1*g[0]
+        this.S.x2 += this.P.lr1*g[1]
+        this.S.y  += this.P.lr2*g[2]
+
+        window.setTimeout(this.update, 20)
+       },
+    draw() {
+
+        canvas = this.canvas
+        ctx = canvas.getContext('2d')
+        ctx.resetTransform()
+        ctx.lineWidth=1
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.beginPath();
+        ctx.rect(0, 0, canvas.width, canvas.height)
+        ctx.stroke();
+
+        var img = ctx.createImageData(canvas.width, canvas.height)
+
+        maximum = -100000
+        minimum = +100000
+        var values = new Array(canvas.width*canvas.height);
+        for (var i = 0; i < canvas.width*canvas.height; i++){
+            w = i % canvas.width;
+            h = i / canvas.width;
+            x1 = (w-canvas.width/2)
+            x2 = (h-canvas.height/2)
+            values[i] = this.f1(x1, x2, this.S.y)
+            maximum = Math.max(values[i], maximum)
+            minimum = Math.min(values[i], minimum)
+        }
+
+        norm = maximum - minimum
+        for (var i = 0; i < img.data.length; i += 4) {
+            v = values[i/4]
+            img.data[i] = 255-Math.floor((v - minimum)/norm*255)
+            img.data[i+1] = 255-Math.floor((v - minimum)/norm*255)
+            img.data[i+2] = Math.floor((v - minimum)/norm*255)
+            img.data[i+3] = 255;
+           }
+        
+
+        ctx.putImageData(img, 0, 0)
+
+
+    }
+  },
+  mounted() {
+    this.canvas = document.getElementById('mycanvas')
+    this.canvas.getContext('2d')
+
+      self= this
+       this.canvas.addEventListener('mousemove', function(event) {
+            const rect = self.canvas.getBoundingClientRect()
+            var x = event.clientX -rect.left;
+            var y = event.clientY -rect.top;
+            
+            self.S.x1=x-self.canvas.width/2
+            self.S.x2=-y+self.canvas.height/2
+
+           }
+            )
+    this.update()
+  }
+})
+  </script>
+ </body>
+
+
+</html>
