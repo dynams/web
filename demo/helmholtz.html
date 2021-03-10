@@ -100,6 +100,9 @@ table.matrix{
     <tr v-for='O.norms'>
      <td> 
     </tr>
+    <tr><td>adjustment</td><td><input type='checkbox' v-model='P.useadj'></td></tr>
+    <tr><td>manual</td><td><input type='checkbox' v-model='P.usemanual'></td></tr>
+    <tr><td>cost</td><td>{{ f1(S.x1, S.x2, S.y) }}</td></tr>
     <tr><td>||g||</td><td>{{ normg | toFixed }}</td></tr>
     <tr><td>||g<sup>&#8869;</sup>||</td><td>{{ normgperp | toFixed }}</td></tr>
     <tr><td>||g<sub>&#955;</sub>||</td><td>{{ normglam | toFixed }}</td></tr>
@@ -121,14 +124,16 @@ new Vue({
       b: 0,
       d: -1,
       p: 0,
-      z: 0,
+      z: 2,
       tp: 0,
       tz: 0,
       x1: 0,
       x2: 0,
       y: 0,
-      lr1: 0.01,
-      lr2: 0.01,
+      useadj: false,
+      usemanual: false,
+      lr1: 0.05,
+      lr2: 0.05,
     },
     S: {
       x1: 1,
@@ -197,10 +202,12 @@ new Vue({
     update() {
         this.draw()
 
-        const g = this.g
+        const g = this.P.useadj?this.glam : this.g
 
+        if (!this.P.usemanual) {
         this.S.x1 += this.P.lr1*g[0]
         this.S.x2 += this.P.lr1*g[1]
+           }
         this.S.y  += this.P.lr2*g[2]
 
         window.setTimeout(this.update, 20)
