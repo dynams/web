@@ -5,6 +5,7 @@ export const DEFAULT_GAME_PARAMETERS = {
         colorx: 'red',
         colory: '#899FEC',
         duration: 100, //seconds
+        edit: false,
         period: 20, //ms
         smooth: 0.9,
         playstackx: false,
@@ -60,6 +61,10 @@ export const DEFAULT_GAME_PARAMETERS = {
 const s = (v) => Math.sin(v)
 const c = (v) => Math.cos(v)
 
+/**
+ * 
+ * This function randomizes the equilibra points of a given game within a range of [-3, 3] 
+ */
 function randomizeStartingConditions(P) {
     let conditions = [];
     for (let i = 0; i < 8; i++) {
@@ -103,6 +108,9 @@ function randomizeStartingConditions(P) {
     P.yconj = yconj;
 }
 
+/**
+ * Given a set of desired equilibria, this function generates the appropriate cost function 
+ */
 function recompute(P) {
 
     const xn = P.xnash
@@ -136,10 +144,12 @@ function recompute(P) {
         2 * xn * xs1 * ys1 + xc * xs2 * ys1 + xn * xs2 * ys1 - 2 * xs1 * xs2 * ys1 +
         xc * xn * ys2 - xc * xs1 * ys2 - xn * xs1 * ys2 + xs1 * xs1 * ys2)) / ((yc -
             ys1) * (yn - ys1) * (yn - ys2))
-
-
 }
 
+
+/**
+ * Resets the game state and randomizes equilibria.
+ */
 function reset(S, I, O, P) {
     S.x = -100
     S.y = 100
@@ -148,6 +158,10 @@ function reset(S, I, O, P) {
     recompute(P)
 }
 
+/**
+ * Updates the costs associated with each player given their actions, and updates
+ * the actions of non-human players according to the chosen strategy.
+ */
 function update(S, I, O, P) {
     var xx1 = (S.x - P.x1 * P.scale)
     var yy1 = (S.y - P.y1 * P.scale)
@@ -181,6 +195,9 @@ function update(S, I, O, P) {
     }
 }
 
+/**
+ * 
+ */
 function draw(canvas, S, I, O, P, H, game_info) {
     let ctx = canvas.getContext('2d')
     let w = canvas.width

@@ -1,4 +1,4 @@
-import {DynamSpace} from "./dynam.space.js"
+import {ExperimentController} from "./ExperimentController"
 import {QuadraticGameController, DEFAULT_GAME_PARAMETERS} from "./QuadraticGameController.js"
 import {experiment1, experiment2, experiment3, experiment4, experiment5, experiment6} from "./QuadraticGameExperimentParameters.js"
 
@@ -21,6 +21,6 @@ let experimentParams = [
 
 console.log(experiment1)
 
-let gameController = DynamSpace(QuadraticGameController, DEFAULT_GAME_PARAMETERS, mode);
+let gameController = ExperimentController(QuadraticGameController, DEFAULT_GAME_PARAMETERS, mode);
 
 gameController.runExperiments(experimentParams, GAME_PERIOD)
