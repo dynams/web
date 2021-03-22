@@ -1,7 +1,5 @@
 
 function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) {
-
-
  var vue = new Vue({
 	el: "#main",
   data: { 
