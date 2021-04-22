@@ -1,0 +1,26 @@
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    </style>
+    <script src="../js/App.js" type="module"></script>
+</head>
+
+<body>
+    <canvas id="game-canvas" ref="myCanvas" width="100%" height="auto"></canvas>
+    <div id="main">
+        <div id="buttons">
+            <button v-show="!controllerState.meta_info.acknowledgeSplash" @click="loadGame">Start</button>
+        </div>
+        <div v-show="!controllerState.meta_info.acknowledgeSplash" id='splash'>
+            <p>Test splash page. Press start to begin the game</p>
+        </div>
+        <div v-show="controllerState.meta_info.acknowledgeSplash" id="canvasBoundingBox">
+        </div>
+    </div>
+</body>
+
+</html>

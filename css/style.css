@@ -1,15 +1,20 @@
-/*body {
+/* body {
   color:white;
   font-size: 12px;
   background-color: black;  
   font-family: Monaco, monospace;
+} */
+
+#canvasBoundingBox {
+  position: relative;
+  height: 500px;
+  width: 500px;
 }
-*/
 
-
-#myCanvas {
+#game-canvas {
   touch-action:none;
 }
+
 #main {
   display: grid;
   grid-gap: 1px;
@@ -34,13 +39,14 @@
 
 #buttons {
   text-align: left;
+  width: 20vw;
 }
 
 body {
   background-color: black;
   color: white;
   font-family: monospace;
-  padding: 10px
+  padding: 10px;
   margin: 10px
 }
 
