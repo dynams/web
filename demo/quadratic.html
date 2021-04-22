@@ -133,6 +133,11 @@ body{
    <br>
    ({{P.xconj}}, {{P.yconj}})<br>
    <br>
+   all iterative conjectures
+   <input type='checkbox' v-model="P.showgallconj">: 
+   <br>
+   ({{P.xstack2}}, {{P.ystack2}}) <br>
+   <br>
    <br>
           
    conj11g1 (p1 conj, p2 stack)
@@ -203,6 +208,8 @@ body{
    <br>
    f2(x,y) = ex<sup>2</sup>/2 + cxy + dy<sup>2</sup>/2
    <br>
+   <br>
+   with a:{{P.a.toFixed(4)}}, b:{{P.b.toFixed(4)}}, c:{{P.c.toFixed(4)}}, d:{{P.d.toFixed(4)}}, e:{{P.e.toFixed(4)}}, h:{{P.h.toFixed(4)}},x1:{{P.x1.toFixed(4)}}, y1:{{P.y1.toFixed(4)}}, x2:{{P.x2.toFixed(4)}}, y2:{{P.y2.toFixed(4)}}.
    <br>
    Gradients:
    <br>
@@ -343,6 +350,7 @@ const data = {
     showgstacktwo1: false,
     showgstackthree1: false,
     showgstackfour1: false,
+    showgallconj: true,
     showcostdiff: false,
     showcostgradient: false,
     showcostcurvature: false,
@@ -1158,10 +1166,69 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   ctx.fill()
 
     
+  ctx.beginPath();
+    ctx.stroke()
+    if(P.showgallconj){
+      ctx.lineWidth = 1
+      k = 0
+      l = 0
+      for (var i=0; i <= 30; i++) {
+        if (i % 2 == 0) {
+        k = -(P.c+P.e*l)/(P.d+P.c*l)
+         }
+        else{
+        l = -(P.b+P.h*k)/(P.a+P.b*k)
+         }
+  ctx.strokeStyle = 'orange'
+  ctx.beginPath();
+  y=-500;ctx.moveTo((P.b+P.h*k)/(P.a+P.b*k)*(P.y1*P.scale-y)+P.x1*P.scale,y);
+  y=500;ctx.lineTo((P.b+P.h*k)/(P.a+P.b*k)*(P.y1*P.scale-y)+P.x1*P.scale,y);
+  ctx.stroke();
+  ctx.strokeStyle = 'yellow'
+  ctx.beginPath();
+  x=-500;ctx.moveTo(x, (P.c+P.e*l)*(P.x2*P.scale-x)/(P.d+P.c*l)+P.y2*P.scale)
+  x=500;ctx.lineTo(x, (P.c+P.e*l)*(P.x2*P.scale-x)/(P.d+P.c*l)+P.y2*P.scale)
+  ctx.stroke();
+       }
+
+  ctx.fillStyle = P.colorstacktwo
+  ctx.strokeStyle = P.colorstacktwo
 
 
+      for (i=-1; i<=1; i+=2) {
+       l= -((P.a*P.d - P.h*P.e +i*
+     Math.sqrt(4*(P.b*P.d - P.c*P.h)*((-P.a)*P.c + P.b*P.e) + (P.a*P.d - 
+          P.h*P.e)**2))/(2*P.a*P.c - 
+     2*P.b*P.e)), 
+
+      k=
+       -((P.a*P.d - P.h*P.e +i*
+     Math.sqrt(4*(P.b*P.d - P.c*P.h)*((-P.a)*P.c + P.b*P.e) + (P.a*P.d -
+          P.h*P.e)**2))/(2*P.b*P.d - 2*P.c*P.h))
+
+   xallconj =  (P.a*(P.d + P.c*l)*P.x1 +
+   P.b*(P.d*(k*P.x1 + P.y1 - P.y2) + P.c*(k*l*P.x1 - P.x2 + l*P.y1 - l*P.y2) -
+      l*P.x2*P.e) -
+      P.h*k*(P.d*(-P.y1 + P.y2) + P.c*(P.x2 + l*(-P.y1 + P.y2)) +
+      l*P.x2*P.e))/
+   (P.a*(P.d + P.c*l) + P.b*(P.d*k + P.c*(-1 + k*l) - l*P.e) -
+   P.h*k*(P.c + l*P.e))
+
+   yallconj =  ((-P.h)*k*P.y1*(P.c + l*P.e) +
+   P.a*(P.d*P.y2 + P.c*(-P.x1 + P.x2 + l*P.y2) + l*(-P.x1 + P.x2)*P.e) +
+      P.b*((-P.c)*P.y1 + P.d*k*P.y2 + P.c*k*(-P.x1 + P.x2 + l*P.y2) -
+      l*(k*(P.x1 - P.x2) + P.y1)*P.e))/
+   (P.a*(P.d + P.c*l) + P.b*(P.d*k + P.c*(-1 + k*l) - l*P.e) -
+   P.h*k*(P.c + l*P.e))
+
+  ctx.fillStyle = 'pink'
+  ctx.beginPath();
+  ctx.arc(xallconj*P.scale, yallconj*P.scale, 8, 0, 2*Math.PI)
+  ctx.fill()
+       }
 
 
+     }
    } // end show info
 
   

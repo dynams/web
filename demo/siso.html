@@ -1,0 +1,100 @@
+<html>
+ <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html,body {
+  width: 100%;
+  height: 100%;
+  font-family: sans-serif;
+  font-variant: small-caps;
+  margin: 0; 
+  padding: 0;
+}
+
+rect {
+  background-color: #000000;
+
+}
+#main {
+  display: block;
+  touch-action: none;
+}
+.color1 {
+  fill: white;
+}
+.color2 {
+  fill: black;
+}
+
+</style>
+ </head>
+ <body>
+<svg id="main" width="100%" height="100%">
+  <rect id="costbar" width="50%" height="10%" x="25%" y="70%">
+  </rect>
+  <text x="50%" y="75%" dominant-baseline="middle" text-anchor="middle" class="color1">make this small</text>
+  <svg id="inputdiamond"x="50%" y="90%" overflow="visible"> 
+  <polygon points="0,-10 10,0 0,10 -10,0" fill="black" transform="scale(2)">
+  </svg>
+  <svg  x="50%" y="90%" overflow="visible"> 
+  <polygon points="0,-10 10,0 0,10 -10,0" stroke-dasharray="1,1" fill="none" stroke="black" transform="scale(2)">
+  </svg>
+</svg>
+<!--<div>
+ move 
+ <svg overflow="visible" width="40" height="40" viewbox="-20 -20 40 40" >
+  <polygon points="0,-10 10,0 0,10 -10,0" fill="black" transform="scale(2)">
+  </svg>
+  to
+  fill
+-->
+ <svg overflow="visible" width="40" height="40" viewbox="-20 -20 40 40" >
+  <polygon points="0,-10 10,0 0,10 -10,0" stroke-dasharray="1,1" fill="none" stroke="black" transform="scale(2)">
+  </svg>
+</div>
+    <script>
+costbar = document.querySelector("#costbar")
+inputdiamond = document.querySelector("#inputdiamond")
+val = 1
+inp = -1
+
+bot = 80
+mid = 70
+tot = 10
+
+
+function setCost(val) {
+ if (val < 0) val = 0
+ val = Math.atan(val)*2/Math.PI
+ h = val*(mid-tot) +bot-mid
+ y = (1-val) * (mid-tot) + tot
+
+ costbar.setAttribute('height',h+'%')
+ costbar.setAttribute('y', y+'%')
+}
+
+function setCursor(inp, tot) {
+    x = inp/tot*100
+    inputdiamond.setAttribute('x', x+'%')
+    inputdiamond.setAttribute('transform-origin', x+'% 85%')
+}
+
+function move(x){
+      setCursor(x, window.innerWidth)
+      setCost(10*(x/window.innerWidth*2-1)**2)
+}
+
+function mousemove(e) {
+      move(e.clientX)
+     }
+function touchmove(e) {
+      move(e.touches[0].clientX)
+}
+
+window.onmousemove = mousemove
+window.ontouchmove = touchmove
+    </script>
+ </body>
+</html>
