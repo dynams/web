@@ -1,0 +1,186 @@
+body {
+  background-color: var(--bg-color);
+  color: var(--font-color);
+
+  font-family: Verdana, sans-serif;
+
+}
+
+h1,h2,h3,p {
+  color:  var(--head-color);
+  font-family: Helvetica, sans-serif;
+}
+
+h1 {
+  font-size: 16pt;
+}
+
+h2 {
+  font-size: 14pt;
+}
+
+p {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+b {
+  font-weight: bold;
+}
+
+#cover {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background: var(--bg-color);
+  z-index: 9999;
+}
+.container {
+  padding-left: 1em;
+}
+
+.header {
+  text-align: right;
+}
+
+.paragraph {
+  text-align: left; 
+  display: inline-block;
+}
+
+a {
+  color: var(--pri-color);
+}
+
+a:hover {
+  text-shadow: 0px 0px 1px black;
+  cursor: cell;
+}
+
+ul {
+  margin-left:10px
+}
+
+.footer {
+  background-color: var(--foot-color);
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  text-align: left;
+  padding: 1ex;
+
+  font-size: 8pt;
+}
+
+.footer-1 {
+  float: left;
+}
+.footer-2 {
+  overflow: hidden;
+}
+.footer-3 {
+  float: right;
+  padding-right: 2em;
+}
+
+
+/* SLIDER */
+
+ /* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 12px;
+  font-size: 6pt;
+  color: black;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 8px;
+  width: 8px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  opacity: 0.5;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(8px);
+  -ms-transform: translateX(8px);
+  transform: translateX(8px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+} 
+
+.hidden {
+  visibility: hidden;
+}
+
+
+
+/* Color themes
+   Primary, secondary, font, background, heading colors
+   */
+
+:root {
+    --pri-color: #001711; 
+    --sec-color: #536390;
+    --font-color: #424242;
+    --bg-color: #fff;
+    --head-color: #000000;
+    --foot-color: #ddd;
+}
+
+[data-theme="dark"] {
+    --pri-color: #9A97F3;
+    --sec-color: #818cab;
+    --font-color: rgb(90.47% 89.74% 89.21%);
+    --bg-color: rgb(0% 3.65% 4.04%);
+    --head-color: rgb(90.47% 89.74% 89.21%);
+    --foot-color: rgb(9.09% 10.18% 10.88%);
+}
+
+

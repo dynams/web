@@ -35,33 +35,40 @@
     <h1>dynam<span style="opacity:50%">ic</span>space</h1>
   </div>
   <div class="container">
-    <h2>welcome</h2>
+
     <ul>
       <li>
-      <a href="/study/quadgame.html"> demo </a>
+      <label for="rid"></label>
+        Join room: 
+        <input list="_rid" id="rid" />
+        <datalist id="_rid">
+          <option value="test-quadgame-001">
+          <option value="test-reftrack-001">
+        </datalist>
+      </li>
+      <li>
+        Create new room
       </li>
     </ul>
 
-    <div class="footer">
-      <div class="footer-1">
-      Status
+  </div>
+  <div class="footer">
+    <div class="footer-1">
+    Status
 
-      </div>
-      <div class="footer-2">
-      </div>
+    </div>
+    <div class="footer-2">
+    </div>
 
-      <div class="footer-3">
-        <label class="switch">
-          <input type="checkbox" id="darkmode" onclick="setDarkMode()" value="true">
-          <span class="slider">dark</span>
-        </label>
-      </div>
+    <div class="footer-3">
+      Config:
+      <label class="switch">
+        <input type="checkbox" id="darkmode" onclick="setDarkMode()" value="true">
+        <span class="slider">Dark Mode</span>
+      </label>
     </div>
   </div>
-    
 
-<script>
-</script>
 <script src="/js/scripts.js"></script>
 </body>
 </html>

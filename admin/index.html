@@ -35,10 +35,41 @@
     <h1>dynam<span style="opacity:50%">ic</span>space</h1>
   </div>
   <div class="container">
-    <h2>welcome</h2>
+
+    <h2>admin panel</h2>
     <ul>
-      <li>
-      <a href="/study/quadgame.html"> demo </a>
+      <li> 
+        <a href="/room"> Room</a>
+        <ul>
+          <li> 
+            Create new study
+          </li> 
+          <li> 
+            Join study
+          </li>
+        </ul>
+      </li> 
+      <li> 
+      <a href="/study">Study</a>
+        <ul class="nested"> 
+          <li> 
+            Create new user
+          </li>
+          <li>
+            Use existing user
+          </li>
+        </ul>
+      </li>
+      <li> 
+        Users 
+        <ul class="nested"> 
+          <li> 
+            Create new user
+          </li>
+          <li>
+            View user
+          </li>
+        </ul>
       </li>
     </ul>
 
@@ -51,9 +82,10 @@
       </div>
 
       <div class="footer-3">
+        Config:
         <label class="switch">
           <input type="checkbox" id="darkmode" onclick="setDarkMode()" value="true">
-          <span class="slider">dark</span>
+          <span class="slider">Dark Mode</span>
         </label>
       </div>
     </div>

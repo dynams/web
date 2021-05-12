@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/dist/papaparse.min.js"></script>
+  <script type="module" src="/js/ds.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html,body {
+  width: 100%;
+  height: 100%;
+  margin: 0; 
+  padding: 0;
+  background-color: var(--bg-color);
+}
+
+body {
+  overflow: hidden;
+}
+
+text {
+  font-family: sans-serif;
+}
+
+rect {
+  background-color: var(--fg-color);
+}
+
+.screen {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.text {
+  vertical-align: middle;
+  text-align: center;
+  padding-top: 20%;
+}
+.text > svg{
+  vertical-align: middle;
+  padding: 0 1ex 0 1ex;
+}
+
+.main {
+  display: block;
+  touch-action: none;
+  height: 100%;
+  cursor: crosshair;
+}
+.fg-fill {
+  fill: var(--fg-color);
+}
+.bg-fill {
+  fill: var(--bg-color);
+}
+.fg-stroke {
+  stroke: var(--fg-color);
+}
+
+:root {
+  --bg-color: rgb(90.47% 89.74% 89.21%);
+  --fg-color: rgb(9.09% 10.18% 10.88%);
+}
+
+</style>
+ </head>
+<body>
+
+<div id="cover"></div>
+
+<!-- Welcome screen -->
+<div id="welcome" class="screen text">
+  <div class="paragraph">
+    <p>
+  Thank you for participating in this test study.
+  
+  <h2>Instructions:</h2>
+  <p>
+    &bullet; move cursor horizontally  &#8596
+  <p>
+    &bullet; make rectangle small   &#8595
+  <p>
+  Click anywhere to start
+</div>
+</div>
+
+<!-- Main study graphics -->
+<div id="study_out" class="screen main">
+  <svg width="100%" height="100%">
+    <rect id="output" class="fg-fill" width="50%" height="10%" x="25%" y="70%"></rect>
+    <text x="50%" y="75%" dominant-baseline="middle" text-anchor="middle" class="bg-fill"> 
+      Make this small
+    </text>
+  </svg>
+</div>
+
+<div id="study_in" class="screen">
+  <svg width="100%" height="100%">
+    <svg id="input" x="50%" y="90%" overflow="visible"> 
+      <polygon class="fg-fill" transform="scale(2)"
+      points="0,-10 10,0 0,10 -10,0">
+    </svg>
+  </svg>
+</div>
+
+<div id="study_target" class="screen">
+  <svg width="100%" height="100%">
+    <svg id="target" x="50%" y="90%" overflow="visible"> 
+      <polygon class="fg-stroke" stroke-dasharray="1,1" fill="none" transform="scale(2)"
+      points="0,-10 10,0 0,10 -10,0">
+    </svg>
+  </svg>
+</div>
+
+<div id="intro" class="screen text" style="text-align:center">
+  move 
+  <svg overflow="visible" width="40" height="40" viewbox="-20 -20 40 40" >
+    <polygon  fill="black" transform="scale(2)"
+    points="0,-10 10,0 0,10 -10,0">
+  </svg>
+  to fill
+  <svg overflow="visible" width="40" height="40" viewBox="-20 -20 40 40">
+    <polygon  stroke-dasharray="1,1" fill="none" stroke="black" transform="scale(2)"
+    points="0,-10 10,0 0,10 -10,0">
+    </polygon>
+  </svg>
+</div>
+
+<div id="break" class="screen text">
+  <div class="paragraph">
+    <p>Trial: # 1 of 10
+    <p>Time remaining: 10min
+  </div>
+</div>
+<br>
+<br>
+<div class="footer">
+  <div class="footer-1">
+    <a class="setScreen" title="welcome"> Welcome</a> | 
+    <a class="setScreen" title="intro study_in study_target"> Instructions</a> |
+    <a class="setScreen" title="study_in study_out"> Start Study</a> |
+    <a class="setScreen" title="break"> Break </a> 
+  </div>
+  <div class="footer-2">
+  </div>
+  <div class="footer-3">
+  </div>
+</div>
+<script type="text/javascript">
+
+
+
+let targ = 0
+//document.querySelector('.footer').classList.add('hidden')
+mountListeners()
+
+S = { x:0, y:0 }
+I = { x:0 }
+P = { target:0, tol:0.01 }
+O = { cost:0 }
+
+let space = { S, P, I, O };
+let controller;
+let study;
+
+window.onload = function() {
+  stateMachine = CreateMachine({
+    id: 'study',
+    initial: 'welcome',
+    states: {
+      welcome: {
+        screen: 'welcome',
+        on: {
+          CLICK: 'intro'
+        }
+      },
+      intro: {
+        screen: 'intro study_in study_target',
+        onEntry: function() {
+          startController(study)
+        },
+      },
+      calib: {
+        screen: 'study_in study_out'
+      },
+      study: {
+        screen: 'study_in study_out'
+      },
+      break: {
+        screen: 'break'
+      }
+    }
+  })
+  controller = DynamSpace({update_fn: update})
+
+  fetch("http://localhost:8000/studies/sample")
+    .then(response => response.json())
+    .then(out => study = out)
+
+  document.getElementById('cover').style = "display: none;"
+}
+
+function startController(study) {
+  if(study) {
+    controller.mount(study)
+  } else {
+    console.log('study not loaded')
+  }
+}
+
+
+function mountListeners() {
+  /* Footer */
+  const setScreens = document.querySelectorAll('.setScreen');
+  setScreens.forEach( function(v)  {
+    v.addEventListener("click", (e) => {
+      setScreen(v.getAttribute('title'))
+    })
+  })
+}
+
+function setScreen(screen) {
+  console.log('setScreen('+screen+')')
+  const screens = document.querySelectorAll(".screen");
+  screens.forEach( (v) => {
+    if(screen.split(" ").includes(v.getAttribute("id"))) {
+      v.classList.remove("hidden")
+    } else {
+      v.classList.add("hidden")
+    }
+  })
+}
+
+let myMsg = "";
+let myState = "";
+function update({msg, state}={}) {
+  if (msg) myMsg = msg
+  msg = myMsg + " | "
+  if (state && state != myState) {
+    myState = state
+    console.log(state)
+    switch(state) {
+      case 'go': 
+        setScreen('study_in study_out')
+        break;
+      case 'standby':
+        setScreen('intro study_in study_target')
+        break;
+
+    }
+  }
+
+  if(controller) {
+    let space = controller.getSpace()
+    try {
+      Object.keys(space).forEach((label) => {
+        msg += "<b>"+ label+".</b>"
+        Object.keys(space[label]).forEach((v) => {
+          msg += v + ": " + space[label][v].toFixed(2) + " | "
+        })
+      })
+    }
+    catch (err) {
+      msg += JSON.stringify(space)
+    }
+  } else {
+    msg = "..."
+  }
+  printStatus(msg)
+}
+
+function printStatus(status) {
+  textbar = document.querySelector(".footer-3")
+  textbar.innerHTML = status
+}
+
+//window.onmousemove = mousemove
+//window.ontouchmove = touchmove
+
+</script>
+
+ </body>
+</html>
