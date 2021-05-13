@@ -158,7 +158,7 @@ window.onload = function() {
   })
   controller = DynamSpace({update_fn: update, experiment: 'siso'})
 
-  fetch("http://localhost:8000/studies/sample")
+  fetch("https://api.dynam.space/demo/0")//("http://localhost:8000/studies/sample")
     .then(response => response.json())
     .then(out => study = out)
 
