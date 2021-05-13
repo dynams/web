@@ -258,6 +258,7 @@ function setup({canvas, draw, buff, get_S, D, set_I, get_inputmode}) {
 
   function destroy() {
     window.removeEventListener('mousemove', mouseMove)
+    window.removeEventListener('touchmove', touchMove)
     if(ws) {
       ws.close()
       console.log('closing')
