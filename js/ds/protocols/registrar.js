@@ -28,8 +28,18 @@ const registrar = {
       A: 2, tol:0.03
     },
     freq: 60,
+    duration: 10,
+    ready_wait: 2
+  },
+  'reftrack-0': {
+    env: 'reftrack',
+    freq: 40,
+    preset: {
+      dt:0.1, c: 100, d: 0.01, 
+      ramp: 400, scale: 400
+    },
     duration: 1,
-    ready_wait: 1
+    ready_wait: 2,
   }
 }
 

@@ -2,6 +2,7 @@ import registrar from '/js/ds/protocols/registrar.js'
 import StandbyReadyGoFixedProtocol from '/js/ds/protocols/standby_ready_go_fixed.js'
 import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
+import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 
 export default function DynamSpace({ update_fn, experiment } = {}) {
   
@@ -34,9 +35,19 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
 
   function mount(study) {
     loadStudy(study)
+    let Experiment;
+    if (experiment == 'siso') {
+      Experiment = SisoExperiment
+    }
+    else if (experiment == 'reftrack') {
+      Experiment = ReftrackExperiment
+    } else {
+      console.log('Experiment ' + experiment + ' not supported')
+    }
+
     controller = TaskController({
       protocol: StandbyReadyGoFixedProtocol,
-      experiment: SisoExperiment,
+      experiment: Experiment,
       registrar: registrar,
       done_fn: nextTask,
       update_fn: update_fn

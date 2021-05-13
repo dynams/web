@@ -20,28 +20,9 @@ body {
   overflow: hidden;
 }
 
-text {
-  font-family: sans-serif;
-}
 
 rect {
   background-color: var(--fg-color);
-}
-
-.screen {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-}
-
-.text {
-  vertical-align: middle;
-  text-align: center;
-  padding-top: 20%;
-}
-.text > svg{
-  vertical-align: middle;
-  padding: 0 1ex 0 1ex;
 }
 
 .main {
@@ -151,20 +132,10 @@ rect {
 </div>
 <script type="text/javascript">
 
-
-
-let targ = 0
 //document.querySelector('.footer').classList.add('hidden')
 mountListeners()
 
-S = { x:0, y:0 }
-I = { x:0 }
-P = { target:0, tol:0.01 }
-O = { cost:0 }
-
-let space = { S, P, I, O };
-let controller;
-let study;
+let controller, study;
 
 window.onload = function() {
   stateMachine = CreateMachine({
@@ -182,19 +153,10 @@ window.onload = function() {
         onEntry: function() {
           startController(study)
         },
-      },
-      calib: {
-        screen: 'study_in study_out'
-      },
-      study: {
-        screen: 'study_in study_out'
-      },
-      break: {
-        screen: 'break'
       }
     }
   })
-  controller = DynamSpace({update_fn: update})
+  controller = DynamSpace({update_fn: update, experiment: 'siso'})
 
   fetch("http://localhost:8000/studies/sample")
     .then(response => response.json())
@@ -272,8 +234,8 @@ function update({msg, state}={}) {
   printStatus(msg)
 }
 
+textbar = document.querySelector(".footer-3")
 function printStatus(status) {
-  textbar = document.querySelector(".footer-3")
   textbar.innerHTML = status
 }
 

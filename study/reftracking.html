@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/dist/papaparse.min.js"></script>
+  <script type="module" src="/js/ds.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+canvas { display:block; } /* To remove the scrollbars */
+
+p {
+  color: white;
+}
+
+#container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 200px;
+}
+canvas { 
+  display:block; 
+  cursor: cell;
+  background: #000;
+}
+
+#welcome {
+  background: #000;
+}
+
+#cover {
+  background: #000;
+}
+
+</style>
+</head>
+<body>
+  <div id="cover"></div>
+  <div id="welcome" class="screen text">
+    <p>
+    Welcome to Momona's reference tracking demo!
+    <p>
+    Click anywhere to start
+  </div>
+  <div id="study" class="screen">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div class="footer">
+    <div class="footer-1"> Momona's reference tracking demo (1):
+      <label>cursor 
+        <input type="radio" name="inputmode" value="cursor" checked>
+      </label>
+      <label>slider 
+        <input type="radio" name="inputmode" value="slider">
+      </label>
+      <label>
+        <input style="display: none;" type="text" id="websocketurl" value="ws://localhost:8765/">
+      </label>
+    </div>
+    <div class="footer-2"></div>
+    <div class="footer-3"></div>
+  </div>
+<script type="text/javascript">
+
+let controller;
+const study = {
+  sid: 1,
+  desc: "Momona's reference tracking demo (1)",
+  tasks: [{ 
+    id: 0,
+    protocol: 'reftrack-0',
+  }]
+}
+
+window.onload = function() {
+  controller = DynamSpace({
+    update_fn: update, 
+    experiment: 'reftrack'
+  })
+  controller.loadStudy(study)
+
+  stateMachine = CreateMachine({
+    id: 'study',
+    initial: 'welcome',
+    states: {
+      welcome: {
+        screen: 'welcome',
+        on: {
+          CLICK: 'study'
+        }
+      },
+      study: {
+        screen: 'study',
+        onEntry: function() {
+          //controller.mount(study)
+          start()
+        },
+      }
+    }
+  })
+
+  document.getElementById('cover').style = "display: none;"
+}
+
+function setScreen(screen) {
+  console.log('setScreen('+screen+')')
+  const screens = document.querySelectorAll(".screen");
+  screens.forEach( (v) => {
+    if(screen.split(" ").includes(v.getAttribute("id"))) {
+      v.classList.remove("hidden")
+    } else {
+      v.classList.add("hidden")
+    }
+  })
+}
+
+let myMsg = "";
+let myState = "";
+function update({msg, state}={}) {
+  if (msg) myMsg = msg
+  msg = myMsg + " | "
+  if (state && state != myState) {
+    myState = state
+    console.log(state)
+    switch(state) {
+      case 'go': 
+        setScreen('study')
+        break;
+      case 'standby':
+        setScreen('study')
+        break;
+    }
+  }
+}
+
+
+freqs = [2, 3, 5, 7, 11, 13, 17, 19]//, 23, 29, 31, 37]
+ramp = 400
+amp1 = []
+freqs.forEach((f, index) => {
+  amp1[index] = (.5/f)// working on this part - not sure if this is right equation
+});
+sum1 = amp1.reduce(function(a, b){
+        return a + b;
+    }, 0);
+amp = []
+freqs.forEach((f, index) => {
+  amp[index] = (1./f)*sum1*200
+});
+
+//amp = [10,9,8,7,6,5,4,3]//1./freqs*.5/freqs//10
+scale = 400
+GOLD = 'rgb(241,163,64)'
+PURPLE = 'rgb(153,142,195)'
+BLACK = 'rgb(0,0,0)'
+
+function reference(time) {
+  time = time - 100
+  x = 0
+  if (time < 0) return 0
+  // ramp
+  weight = (0<time)*(time<ramp)*(time/ramp) + (time>=ramp)
+  index=0
+  freqs.forEach((f) => {
+    x += weight*Math.sin(time*f/scale)*amp[index]
+    index++
+  })
+  return x
+}
+
+function init_reference(time, n, dt) {
+  let t = new Array(n).fill(1).map((e,i)=>i)
+  y = t.map((t)=>reference(time + t - n/2))
+  return y
+}
+
+function reset_draw(ctx, w, h){
+  ctx.resetTransform();
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = BLACK
+  ctx.fillRect(0, 0, w, h);
+  ctx.transform(1, 0, 0, 1, w / 2, h / 2);
+}
+
+function draw({canvas, buff, S, I}) {
+  ctx = canvas.getContext('2d');
+  w = canvas.width
+  h = canvas.height
+  reset_draw(ctx, w, h)
+
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = GOLD
+  ctx.lineCap = 'square';
+
+  ctx.beginPath();
+  i = 0
+  start_t = (S.t - buff.t) % buff.r.length
+  ctx.moveTo(buff.r[start_t],h/2)
+  for(let i=0; i < buff.r.length; i++) {
+    x = buff.r[(i+start_t)%buff.r.length]
+    ctx.lineTo(x, h/2-i)
+  }
+
+  ctx.stroke();
+
+  ctx.fillStyle = PURPLE
+  //ctx.beginPath();
+  //ctx.arc(I.x, h/3, 3, 0, 2*Math.PI)
+  //ctx.fill()
+
+  ctx.beginPath();
+  ctx.arc(S.x1, 0, 8, 0, 2*Math.PI)
+  ctx.fill()
+}
+
+function setup({canvas, draw, buff, get_S, D, set_I, get_inputmode}) {
+  ctx = canvas.getContext('2d');
+  ws = null
+  inputmode = get_inputmode()
+  if (inputmode == 'slider') {
+    ws = connect(getUrl(), set_I, get_inputmode)
+    printStatus('connecting...')
+  } else if (inputmode == 'cursor') {
+    window.addEventListener('mousemove', mouseMove, false);
+    window.addEventListener('touchmove', touchMove, false);
+  }
+  window.addEventListener('resize', resizeCanvas, false);
+  resizeCanvas();
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    S = get_S()
+    buff.r = init_reference(S.t, canvas.height, 0.1)
+    buff.t = S.t
+  }
+
+  function mouseMove() {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    set_I(2*x/canvas.width-1)
+  }
+
+  function touchMove() {
+     const rect = canvas.getBoundingClientRect();
+     const x = event.touches[0].clientX - rect.left;
+     set_I(x-canvas.width/2)
+  }
+
+  function destroy() {
+    window.removeEventListener('mousemove', mouseMove)
+    if(ws) {
+      ws.close()
+      console.log('closing')
+    }
+  }
+  return destroy
+}
+
+// I think this is for the system dynamics
+// I.x is input
+// S.x is state
+function step({P, S, I}) {
+  x1 = P.dt*S.x2 + S.x1 // next state
+  x2 = P.c*I.x - P.d*S.x2 // for some reason when I add this in it starts flashing
+  x1 = Math.min(Math.max(x1, P.min), P.max)
+  Sp = { t: S.t+1, x1, x2}
+
+  // Ben's code for first order system?
+  // x = S.x + P.dt*I.x
+  // x = Math.min(Math.max(x, P.min), P.max)
+  // Sp = { t: S.t+1, x: x}
+  return Sp
+}
+
+function getCheckedValue(radioObj) {
+  if(!radioObj) return "";
+  var radioLength = radioObj.length;
+  if(radioLength == undefined)
+    if(radioObj.checked)
+      return radioObj.value;
+    else
+      return "";
+  for(var i = 0; i < radioLength; i++) { 
+    if(radioObj[i].checked) {
+      return radioObj[i].value;
+    }
+  }
+  return "";
+}
+function setCheckedValue(radioObj, newValue) {
+  if(!radioObj) return;
+  var radioLength = radioObj.length;
+  if(radioLength == undefined) {
+    radioObj.checked = (radioObj.value == newValue.toString());
+    return;
+  }
+  for(var i = 0; i < radioLength; i++) {
+    radioObj[i].checked = false;
+    if(radioObj[i].value == newValue.toString()) {
+      radioObj[i].checked = true;
+    }
+  }
+}
+
+textbar=document.querySelector(".footer-3")
+function printStatus(status) {
+  textbar.innerHTML = status
+}
+
+function getUrl() {
+  return document.getElementById('websocketurl').value
+}
+
+function connect(url, set_I, get_inputmode) {
+  var ws = new WebSocket(url);
+  ws.onopen = function() {
+    // subscribe to some channels
+    printStatus('connected')
+    ws.send(JSON.stringify({ }));
+  };
+
+  ws.onmessage = function(e) {
+    data = JSON.parse(e.data)
+    if(get_inputmode() == 'slider') {
+      set_I(data.I.x)
+    }
+  };
+
+  ws.onclose = function(e) {
+    printStatus('disconnected. ')
+    window.setTimeout(function() {
+      connect(url, set_I, get_inputmode);
+    }, 1000);
+  };
+
+  ws.onerror = function(err) {
+    console.error('Socket encountered error: ', err.message, 'Closing socket');
+    ws.close();
+  };
+  return ws
+}
+
+function start() {
+  const freq = 40 // should this be 20?
+  let t = 0
+  let P = {dt:0.1, c: 100, d:0.01, min:-window.innerWidth/2, max:window.innerWidth/2}
+  let I = {x:0}
+  let S = {t:0, x1:0, x2:0}
+  const get_S = ()=> (S)
+  let buff = {r:[], t:0}
+  let inputmode = 'cursor'
+  const canvas = document.getElementById('canvas')
+  let destroy = setup({canvas, draw, buff, get_S, set_I, get_inputmode})
+  buff.r = init_reference(S.t, canvas.height, 0.1)
+  buff.t = S.t
+  inputmode_radio = document.getElementsByName('inputmode')
+
+
+  function get_inputmode(){
+    return (inputmode)
+  }
+  function set_I(x) {
+    I = {x: x}
+    printStatus('input: '+x.toFixed(2))
+  }
+
+  function tick(){
+    new_inputmode = getCheckedValue(inputmode_radio)
+    if (inputmode != new_inputmode) {
+      inputmode = new_inputmode
+      destroy()
+      destroy = setup({canvas, draw, buff, get_S, set_I, get_inputmode })
+    }
+
+    draw({canvas, buff, S, I})
+    Sp = step({P, S, I})
+    S = Sp
+    buff.r[(S.t-buff.t-1) % buff.r.length] = reference(S.t + canvas.height/2)
+    window.setTimeout(tick, 1000/freq)
+  }
+
+  tick()
+}
+</script>
+
+
+
+
+</body></html>

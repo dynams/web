@@ -2,6 +2,7 @@ import { log, init_zip, zip, save_zip, zip_add_file } from '/js/ds/analysis/util
 //import SampleStudy from '/js/protocols/sample_study.json'
 import quadgame from '/js/ds/environments/quadgame.js'
 import graddescent from '/js/ds/environments/graddescent.js'
+import reftrack from '/js/ds/environments/reftrack.js'
 
 console.log(quadgame)
 
@@ -91,6 +92,9 @@ export default function TaskController({
     } else if (proto.env == 'quadgame') {
       state.step_fn = quadgame.step
       state.reset_fn = quadgame.reset
+    } else if (proto.env == 'reftrack') {
+      state.step_fn = reftrack.step
+      state.reset_fn = reftrack.reset
     } else {
       console.log(proto.env + ' environment not supported')
       return false

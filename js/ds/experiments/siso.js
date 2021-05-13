@@ -69,14 +69,4 @@ function drawTarget(x) {
   target.setAttribute('transform-origin', x+'% 85%')
 }
 
-
-function draw_I({ P, I }) {
-}
-
-function draw_S({ P, S }) {
-}
-
-function draw_O({ ctx, P, O }) {
-}
-
 export default { mount, destroy, start_condition, draw }

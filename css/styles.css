@@ -24,6 +24,10 @@ p {
   margin-bottom: 1em;
 }
 
+input[type=text] {
+  font-size: 8pt;
+}
+
 b {
   font-weight: bold;
 }
@@ -43,6 +47,27 @@ b {
 
 .header {
   text-align: right;
+}
+
+.screen {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.text {
+  vertical-align: middle;
+  text-align: center;
+  padding-top: 20%;
+}
+
+text {
+  font-family: sans-serif;
+}
+
+.text > svg{
+  vertical-align: middle;
+  padding: 0 1ex 0 1ex;
 }
 
 .paragraph {
@@ -65,15 +90,17 @@ ul {
 
 .footer {
   background-color: var(--foot-color);
+  color: black;
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
   text-align: left;
   padding: 1ex;
-
   font-size: 8pt;
+  vertical-align: middle;
 }
+
 
 .footer-1 {
   float: left;
