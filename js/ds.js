@@ -56,7 +56,6 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
     controller.load(task)
     controller.start()
 
-
   }
 
   function save() {
@@ -89,11 +88,12 @@ export function CreateMachine(object) {
         const to_state = state.on[on] 
         if (on == 'CLICK') {
           // click anywhere to transition
+          const el = document.getElementById(states[to].screen);
           function onclick(e) {
             setState(to_state)
-            document.body.removeEventListener('click', onclick)
+            el.removeEventListener('click', onclick)
           }
-          document.body.addEventListener('click', onclick)
+          el.addEventListener('click', onclick)
         } else if (on == 'FUNC'){
           // function
         }
@@ -104,5 +104,17 @@ export function CreateMachine(object) {
 }
 
 
+function setScreen(screen) {
+  console.log('setScreen('+screen+')')
+  const screens = document.querySelectorAll(".screen");
+  screens.forEach( (v) => {
+    if(screen.split(" ").includes(v.getAttribute("id"))) {
+      v.classList.remove("hidden")
+    } else {
+      v.classList.add("hidden")
+    }
+  })
+}
 window.DynamSpace = DynamSpace
 window.CreateMachine = CreateMachine
+window.setScreen = setScreen
