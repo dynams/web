@@ -226,6 +226,7 @@ function setup({canvas, draw, buff, get_S, D, set_I, get_inputmode}) {
   ws = null
   inputmode = get_inputmode()
   if (inputmode == 'slider') {
+    set_I(0)
     ws = connect(getUrl(), set_I, get_inputmode)
     printStatus('connecting...')
   } else if (inputmode == 'cursor') {
