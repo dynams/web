@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="/css/styles.css">
   <script src="/js/dist/papaparse.min.js"></script>
   <script type="module" src="/js/ds.js"></script>
+  <script src="/js/scripts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -132,10 +133,18 @@ rect {
 </div>
 <script type="text/javascript">
 
-//document.querySelector('.footer').classList.add('hidden')
+document.querySelector('.footer').classList.add('hidden')
+function debug(val=true) {
+  if (val)
+    document.querySelector('.footer').classList.remove('hidden')
+  else
+    document.querySelector('.footer').classList.add('hidden')
+}
+
 mountListeners()
 
 let controller, study;
+let pid = getQuery().pid || "guest";
 
 window.onload = function() {
   stateMachine = CreateMachine({
@@ -151,14 +160,19 @@ window.onload = function() {
       intro: {
         screen: 'intro study_in study_target',
         onEntry: function() {
+          pid = prompt('enter your name or ID', pid)
           startController(study)
         },
       }
     }
   })
-  controller = DynamSpace({update_fn: update, experiment: 'siso'})
+  controller = DynamSpace({
+    update_fn: update, 
+    experiment: 'siso', 
+    upload_api: 'http://localhost:8000/upload/'+pid })
 
-  fetch("https://api.dynam.space/demo/0")//("http://localhost:8000/studies/sample")
+   // fetch("https://api.dynam.space/demo/0")//
+    fetch("http://localhost:8000/studies/sample")
     .then(response => response.json())
     .then(out => study = out)
 
@@ -167,6 +181,7 @@ window.onload = function() {
 
 function startController(study) {
   if(study) {
+    console.log(study)
     controller.mount(study)
   } else {
     console.log('study not loaded')
@@ -238,6 +253,14 @@ textbar = document.querySelector(".footer-3")
 function printStatus(status) {
   textbar.innerHTML = status
 }
+
+window.addEventListener("DOMContentLoaded", function() {
+  shortcut.set({
+    "f": function () {
+      document.querySelector('.footer').classList.remove('hidden')
+    }
+  })
+})
 
 //window.onmousemove = mousemove
 //window.ontouchmove = touchmove

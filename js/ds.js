@@ -4,7 +4,7 @@ import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
 import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 
-export default function DynamSpace({ update_fn, experiment } = {}) {
+export default function DynamSpace({ update_fn, experiment, upload_api } = {}) {
   
   let current, controller, study, task, space;
 
@@ -12,7 +12,6 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
 
   function loadStudy(study_json) {
     study = study_json
-    console.log(study)
   }
 
   function getSpace() {
@@ -49,8 +48,9 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
       protocol: StandbyReadyGoFixedProtocol,
       experiment: Experiment,
       registrar: registrar,
-      done_fn: nextTask,
-      update_fn: update_fn
+      done_fn: done,
+      update_fn: update_fn,
+      upload_fn: upload
     })
     nextTask();
     controller.load(task)
@@ -58,12 +58,33 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
 
   }
 
+  function upload(object) {
+    const payload = {
+      sid: study.sid,
+      ...object
+    }
+    const body = JSON.stringify(payload)
+    console.log("uploading")
+    fetch(upload_api, {
+      method: 'post',
+      headers: {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+        'mode': 'cors'
+      },
+      body 
+    })
+    .then( (res) => {
+    });
+  }
+
   function save() {
     controller.save()
   }
 
-  function setDone() {
+  function done() {
 
+    nextTask()
   }
 }
 
@@ -78,10 +99,10 @@ export function CreateMachine(object) {
 
   function setState(to) {
     console.log('transition to '+to)
-    setScreen(states[to].screen)
     if('onEntry' in states[to]) {
       states[to].onEntry()
     }
+    setScreen(states[to].screen)
     const state = states[to]
     if(state.on) {
       Object.keys(state.on).forEach((on) => {

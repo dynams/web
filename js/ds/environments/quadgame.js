@@ -42,12 +42,11 @@ function costs({ P, S }) {
 function gradients({ P, S }) {
     const { x1, x2, y1, y2 } = shift_centers({ P, S });
 
-    const gradx = P.a * x1 + P.b * y1;
-    const grady = P.c * x2 + P.d * y2;
-    const gradstackx = gradx - (P.c * (P.b * x1 + P.h * y1)) / P.d;
-    const gradstacky = grady - (P.b * (P.c * y2 + P.e * x2)) / P.a;
+    const gradx = P.a * x1 + P.b * y1 + P.k*(P.b * x1 + P.h * y1)
+    const grady = P.c * x2 + P.d * y2 + P.l*(P.c * y2 + P.e * x2)
+    const gradstackx = gradx - (P.c / P.d)* (P.b * x1 + P.h * y1);
 
-    return { gradx, grady, gradstackx, gradstacky };
+    return { gradx, grady, gradstackx };
 }
 
 

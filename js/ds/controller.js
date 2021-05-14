@@ -4,8 +4,6 @@ import quadgame from '/js/ds/environments/quadgame.js'
 import graddescent from '/js/ds/environments/graddescent.js'
 import reftrack from '/js/ds/environments/reftrack.js'
 
-console.log(quadgame)
-
 /**
  * Creates an experiment that operates according to the passed in functions and parameters, and returns
  * the collected data.
@@ -23,17 +21,19 @@ export default function TaskController({
     protocol, 
     registrar, 
     done_fn,
-    update_fn
+    update_fn,
+    save_zip = true,
+    upload_fn
  }) {
   let { init, update } = protocol
   let { mount, draw, destroy, start_condition } = experiment
 
   let state = {
-    P: {}, S: {}, I: {}, O: {}, 
+    P: {}, S: {}, I: {}, O: {},  //space
     canvas: null, 
     state: { state: null },
     registrar,
-    zip: null, history: [],
+    zip: null, trial: [],
     reset_fn: null,
     step_fn: null,
     freq: 40,
@@ -111,7 +111,8 @@ export default function TaskController({
     state.S = S
     state.I = I
     state.O = O
-    state.history = []
+    state.trial = []
+    state.trial_dict = []
 
     return true
 
@@ -145,7 +146,7 @@ export default function TaskController({
       state.O = O
 
       // Log
-      let json = log({ 
+      const data = { 
         t: { 
           t:state.state.t, 
           utc:Date.now() 
@@ -153,8 +154,11 @@ export default function TaskController({
         S: state.S, 
         I: state.I, 
         O: state.O
-      })
-      state.history.push(json)
+      }
+      state.trial_dict.push(data)
+
+      let json = log(data)
+      state.trial.push(json)
 
       // Update to next state
       state.S = Sp
@@ -162,9 +166,22 @@ export default function TaskController({
 
   function stop() {
       const filename = state.task.id + '-' + state.task.protocol + '-P' + JSON.stringify(state.P).replace(/[^\w\s.]/gi, '')+ '.csv'
-      zip(state.zip, filename, state.history)
+      if(save_zip) {
+        zip(state.zip, filename, state.trial)
+      }
+      if(upload_fn) {
+        upload_fn({
+          protocol: state.task.protocol, 
+          id: state.task.id, 
+          params: state.P, 
+          data: state.trial_dict
+        })
+      }
+
       done_fn()
   }
+
+
 
   function save() {
     function appendZero(x) {
