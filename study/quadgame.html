@@ -169,10 +169,9 @@ window.onload = function() {
   controller = DynamSpace({
     update_fn: update, 
     experiment: 'siso', 
-    upload_api: 'http://localhost:8000/upload/'+pid })
+    upload_api: 'https://api.dynam.space/upload/'+pid })
 
-   // fetch("https://api.dynam.space/demo/0")//
-    fetch("http://localhost:8000/studies/sample")
+    fetch("https://api.dynam.space/studies/sample")
     .then(response => response.json())
     .then(out => study = out)
 
