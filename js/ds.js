@@ -4,9 +4,9 @@ import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
 import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 
-export default function DynamSpace({ update_fn, experiment, upload_api } = {}) {
+export default function DynamSpace({ update_fn, experiment } = {}) {
   
-  let current, controller, study, task, space;
+  let current, controller, study, task, space, upload_api;
 
   return { loadStudy, getSpace, mount }
 
@@ -32,7 +32,8 @@ export default function DynamSpace({ update_fn, experiment, upload_api } = {}) {
 
   }
 
-  function mount(study) {
+  function mount(study, api) {
+    upload_api = api
     loadStudy(study)
     let Experiment;
     if (experiment == 'siso') {

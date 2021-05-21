@@ -143,7 +143,7 @@ function debug(val=true) {
 
 mountListeners()
 
-let controller, study;
+let ds, study;
 let pid = getQuery().pid || "guest";
 
 window.onload = function() {
@@ -161,27 +161,28 @@ window.onload = function() {
         screen: 'intro study_in study_target',
         onEntry: function() {
           pid = prompt('enter your name or ID', pid)
-          startController(study)
+          console.log('pid='+pid)
+          startController(study, pid)
         },
       }
     }
   })
-  controller = DynamSpace({
+  ds = DynamSpace({ 
     update_fn: update, 
-    experiment: 'siso', 
-    upload_api: 'https://api.dynam.space/upload/'+pid })
+  experiment: 'siso'})
 
-    fetch("https://api.dynam.space/studies/sample")
-    .then(response => response.json())
-    .then(out => study = out)
+  fetch("https://api.dynam.space/studies/sample")
+  //fetch("http://localhost:8000/studies/sample")
+  .then(response => response.json())
+  .then(out => study = out)
 
   document.getElementById('cover').style = "display: none;"
 }
 
-function startController(study) {
+function startController(study, pid) {
   if(study) {
     console.log(study)
-    controller.mount(study)
+    ds.mount(study, 'https://api.dynam.space/upload/'+pid)
   } else {
     console.log('study not loaded')
   }
@@ -229,8 +230,8 @@ function update({msg, state}={}) {
     }
   }
 
-  if(controller) {
-    let space = controller.getSpace()
+  if(ds) {
+    let space = ds.getSpace()
     try {
       Object.keys(space).forEach((label) => {
         msg += "<b>"+ label+".</b>"
