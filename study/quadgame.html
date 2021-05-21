@@ -150,6 +150,11 @@ let ds, study;
 let pid = getQuery().pid || "guest";
 
 window.onload = function() {
+  function touchstart(e) {
+    e.preventDefault();
+  }
+  window.addEventListener("touchstart", touchstart);
+
   stateMachine = CreateMachine({
     id: 'study',
     initial: 'welcome',

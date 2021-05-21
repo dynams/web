@@ -30,14 +30,8 @@ export function mount({ getSpace, setInput, update_fn }) {
     move(e.touches[0].clientX, e.touches[0].clientY)
   }
 
-  function touchstart(e) {
-    e.preventDefault();
-  }
-
   window.addEventListener("mousemove", mousemove);
   window.addEventListener("touchmove", touchmove);
-  window.addEventListener("touchstart", touchstart);
-
 }
 
 export function destroy({ canvas }) {
