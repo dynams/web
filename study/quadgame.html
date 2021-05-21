@@ -152,6 +152,7 @@ let pid = getQuery().pid || "guest";
 window.onload = function() {
   function touchstart(e) {
     e.preventDefault();
+    e.stopPropagation();
   }
   window.addEventListener("touchstart", touchstart);
 
