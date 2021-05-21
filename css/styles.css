@@ -2,13 +2,14 @@ body {
   background-color: var(--bg-color);
   color: var(--font-color);
 
-  font-family: Verdana, sans-serif;
+  /*font-family: Verdana, sans-serif;*/
+  font-family: Helvetica, sans-serif;
 
 }
 
 h1,h2,h3,p {
   color:  var(--head-color);
-  font-family: Helvetica, sans-serif;
+  margin-bottom: 1em;
 }
 
 h1 {
@@ -27,7 +28,6 @@ p {
 input[type=text] {
   font-size: 8pt;
 }
-
 b {
   font-weight: bold;
 }
@@ -41,6 +41,7 @@ b {
   background: var(--bg-color);
   z-index: 9999;
 }
+
 .container {
   padding-left: 1em;
 }
@@ -61,11 +62,20 @@ b {
   padding-top: 20%;
 }
 
+.popup {
+  opacity: .8;
+  background-color: #eee; 
+  display: inline-block; 
+  padding: 2em;
+  vertical-align: middle;
+  text-align: center;
+}
+
 text {
   font-family: sans-serif;
 }
 
-.text > svg{
+.popup > svg{
   vertical-align: middle;
   padding: 0 1ex 0 1ex;
 }

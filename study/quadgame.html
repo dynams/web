@@ -74,7 +74,7 @@ rect {
   <svg width="100%" height="100%">
     <rect id="output" class="fg-fill" width="50%" height="10%" x="25%" y="70%"></rect>
     <text x="50%" y="75%" dominant-baseline="middle" text-anchor="middle" class="bg-fill"> 
-      Make this small
+    keep this as small as possible
     </text>
   </svg>
 </div>
@@ -97,18 +97,21 @@ rect {
   </svg>
 </div>
 
-<div id="intro" class="screen text" style="text-align:center">
-  move 
-  <svg overflow="visible" width="40" height="40" viewbox="-20 -20 40 40" >
-    <polygon  fill="black" transform="scale(2)"
-    points="0,-10 10,0 0,10 -10,0">
-  </svg>
-  to fill
-  <svg overflow="visible" width="40" height="40" viewBox="-20 -20 40 40">
-    <polygon  stroke-dasharray="1,1" fill="none" stroke="black" transform="scale(2)"
-    points="0,-10 10,0 0,10 -10,0">
-    </polygon>
-  </svg>
+<div id="intro" class="screen text" >
+  <div class="popup">
+    <h3> Instructions: </h3>
+    move 
+    <svg overflow="visible" width="40" height="40" viewbox="-20 -20 40 40" >
+      <polygon  fill="black" transform="scale(2)"
+      points="0,-10 10,0 0,10 -10,0">
+    </svg>
+    to fill
+    <svg overflow="visible" width="40" height="40" viewBox="-20 -20 40 40">
+      <polygon  stroke-dasharray="1,1" fill="none" stroke="black" transform="scale(2)"
+      points="0,-10 10,0 0,10 -10,0">
+      </polygon>
+    </svg>
+  </div>
 </div>
 
 <div id="break" class="screen text">
@@ -169,15 +172,21 @@ window.onload = function() {
   })
   ds = DynamSpace({ 
     update_fn: update, 
-  experiment: 'siso'})
+    experiment: 'siso'})
 
-  fetch("https://api.dynam.space/studies/sample")
-  //fetch("http://localhost:8000/studies/sample")
-  .then(response => response.json())
-  .then(out => study = out)
+  getStudy("https://api.dynam.space/studies/sample")
 
-  document.getElementById('cover').style = "display: none;"
 }
+
+function getStudy(url) {
+  fetch(url)
+  .then(response => response.json())
+  .then(json => study = json)
+  .then(()=>
+    document.getElementById('cover').style = "display: none;"
+  )
+}
+
 
 function startController(study, pid) {
   if(study) {
