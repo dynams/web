@@ -49,9 +49,10 @@ const registrar = {
     freq: 40,
     preset: {
       dt:0.1, c: 100, d: 0.01, 
-      ramp: 400, scale: 400, shift: 100
+      ramp: 400, scale: 400, shift: 100,
+      amp: 400
     },
-    duration: 30,
+    duration: 40,
     ready_wait: 2,
   }
 }

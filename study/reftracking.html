@@ -46,7 +46,7 @@ canvas {
 
   <div id="welcome" class="screen text">
     <p>
-    Welcome to Momona's reference tracking demo!
+    Welcome to the reference tracking demo
     <p>
     Click anywhere to start
   </div>
@@ -61,7 +61,7 @@ canvas {
   </div>
 
   <div class="footer">
-    <div class="footer-1"> Momona's reference tracking demo (1):
+    <div class="footer-1"> Reference tracking demo (1):
       <label>cursor 
         <input type="radio" name="inputmode" value="cursor" checked>
       </label>
@@ -139,7 +139,7 @@ function update({msg, state}={}) {
   }
   if(ds) {
     let space = ds.getSpace()
-    printStatus(myMsg + ' | I.x: '+ space.I.x.toFixed(2) + ' | mode: ' + space.I.mode+ ' | S.x1: ' + space.S.x1.toFixed(2))
+    printStatus(myMsg + ' | I.x: '+ space.I.x.toFixed(2) + ' | mode: ' + space.I.mode+ ' | S.q: ' + space.S.q.toFixed(2))
   }
 }
 

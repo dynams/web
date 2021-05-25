@@ -16,7 +16,7 @@ const sum1 = amp1.reduce(function(a, b){
 
 let amp = []
 freqs.forEach((f, index) => {
-  amp[index] = (1./f)*sum1*200
+  amp[index] = (1./f)*sum1
 });
 
 const GOLD = 'rgb(241,163,64)'
@@ -98,7 +98,15 @@ function mount({ getSpace, setInput, update_fn }) {
 }
 
 
+let past_t = 0;
+
 function draw({ P, S, I }) {
+  if (past_t != S.t-1 && past_t != 0) {
+    console.log(past_t)
+    buff.r = init_reference(S.t, canvas.height, P)
+    buff.t = S.t
+  }
+  past_t = S.t;
   buff.r[(S.t-buff.t-1) % buff.r.length] = reference(S.t + canvas.height/2, P)
 
   let ctx = canvas.getContext('2d');
@@ -115,12 +123,12 @@ function draw({ P, S, I }) {
   ctx.moveTo(buff.r[start_t],h/2)
   for(let i=0; i < buff.r.length; i++) {
     const x = buff.r[(i+start_t)%buff.r.length]
-    ctx.lineTo(x, h/2-i)
+    ctx.lineTo(x*P.amp, h/2-i)
   }
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.arc(S.x1, 0, 8, 0, 2*Math.PI)
+  ctx.arc(S.q*P.amp, 0, 8, 0, 2*Math.PI)
   ctx.fill()
 }
 

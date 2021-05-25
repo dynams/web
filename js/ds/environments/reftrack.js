@@ -13,7 +13,7 @@ Array.prototype.add = function(b,c=1) {
       d[i] = a[i] + c*b;
     }
   }
-  return c;
+  return d;
 }
 
 Array.prototype.mul = function(b) {
@@ -45,7 +45,7 @@ function runge_kutta({ f, t, x, u, dt }) {
   return x.add(dx)
 }
 
-function second_order(x, u, b=1) {
+function second_order(t, x, u, b=1) {
   const q = x[0];
   const dq = x[1]
   const ddq = u;
@@ -53,7 +53,6 @@ function second_order(x, u, b=1) {
 }
 
 function step({ P, S, I }) {
-
   const r = 0;
 
   const f = second_order;
@@ -62,11 +61,10 @@ function step({ P, S, I }) {
   const d = 0; // disturbance
   const u = I.x + d;
 
-
   const xp = runge_kutta({f, t, x, u, dt:P.dt})
   const q = xp[0];
   const dq = xp[1];
-  const Sp = { t: S.t + P.dt, q, dq }
+  const Sp = { t: S.t + 1, time: S.time + P.dt, q, dq, r }
   const O = { cost: (S.q - S.r)**2 }
 
   return { Sp , O }
@@ -74,7 +72,7 @@ function step({ P, S, I }) {
 
 function reset({ P }) {
   const I = { x:0 }
-  const S = { t:0, d:0, q:0, dq:0 }
+  const S = { t:0, time:0, d:0, q:0, dq:0, r:0 }
   const { O } = step({ P, S, I })
 
   return { P, S, I, O }
