@@ -22,7 +22,7 @@ export default function TaskController({
     registrar, 
     done_fn,
     update_fn,
-    save_zip = true,
+    is_save_zip = true,
     upload_fn
  }) {
   let { init, update } = protocol
@@ -166,7 +166,7 @@ export default function TaskController({
 
   function stop() {
       const filename = state.task.id + '-' + state.task.protocol + '-P' + JSON.stringify(state.P).replace(/[^\w\s.]/gi, '')+ '.csv'
-      if(save_zip) {
+      if(is_save_zip) {
         zip(state.zip, filename, state.trial)
       }
       if(upload_fn) {

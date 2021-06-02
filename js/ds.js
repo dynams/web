@@ -8,7 +8,7 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
   
   let current, controller, study, task, space, upload_api;
 
-  return { loadStudy, getSpace, mount }
+  return { loadStudy, getSpace, mount, save }
 
   function loadStudy(study_json) {
     study = study_json
@@ -16,6 +16,10 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
 
   function getSpace() {
     return controller.getSpace()
+  }
+
+  function save() {
+    controller.save()
   }
 
   function nextTask() {

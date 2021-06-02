@@ -4,7 +4,11 @@
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/styles.css">
   <script src="/js/dist/papaparse.min.js"></script>
+  <script src="/js/dist/FileSaver.min.js"></script>
   <script type="module" src="/js/ds.js"></script>
+  <style>
+    .footer { background-color: grey; }
+  </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -51,7 +55,7 @@ canvas {
     Click anywhere to start
   </div>
 
-  <div id="intro" class="screen text" style="z-index:999">
+  <div id="intro" class="screen text" style="z-index:9">
     <p>
     Hover cursor/slider at 0 to start
   </div>
@@ -60,7 +64,7 @@ canvas {
     <canvas id="canvas"></canvas>
   </div>
 
-  <div class="footer">
+  <div class="footer" style="z-index:10">
     <div class="footer-1"> Reference tracking demo (1):
       <label>cursor 
         <input type="radio" name="inputmode" value="cursor" checked>
@@ -71,6 +75,7 @@ canvas {
       <label>
         <input style="display: none;" type="text" id="websocketurl" value="ws://localhost:8765/">
       </label>
+      <button onclick="save()">Save</button>
     </div>
     <div class="footer-2"></div>
     <div class="footer-3"></div>
@@ -81,10 +86,68 @@ let ds;
 const study = {
   sid: 1,
   desc: "Momona's reference tracking demo (1)",
-  tasks: [{ 
-    id: 0,
-    protocol: 'reftrack-0',
-  }]
+  tasks: [
+    { 
+      id: 0,
+      protocol: 'reftrack-0',
+      params: { mode: 'odd', d:0.1 }
+    },
+    { 
+      id: 1,
+      protocol: 'reftrack-0',
+      params: { mode: 'even', d:0.1 }
+    },
+    { 
+      id: 2,
+      protocol: 'reftrack-0',
+      params: { mode: 'odd', d:0.1 }
+    },
+    { 
+      id: 3,
+      protocol: 'reftrack-0',
+      params: { mode: 'even', d:0.1 }
+    },
+    { 
+      id: 4,
+      protocol: 'reftrack-0',
+      params: { mode: 'odd', d:0.1 }
+    },
+    { 
+      id: 5,
+      protocol: 'reftrack-0',
+      params: { mode: 'even', d:0.1 }
+    },
+    { 
+      id: 6,
+      protocol: 'reftrack-0',
+      params: { mode: 'odd', d:0.1 }
+    },
+    { 
+      id: 7,
+      protocol: 'reftrack-0',
+      params: { mode: 'even', d:0.1 }
+    },
+    { 
+      id: 8,
+      protocol: 'reftrack-0',
+      params: { mode: 'odd', d:0.1 }
+    },
+    { 
+      id: 9,
+      protocol: 'reftrack-0',
+      params: { mode: 'even', d:0.1 }
+    },
+    { 
+      id: 10,
+      protocol: 'reftrack-0',
+      params: { mode: 'odd', d:0.1 }
+    },
+    { 
+      id: 11,
+      protocol: 'reftrack-0',
+      params: { mode: 'odd', d:0.1 }
+    }
+  ]
 }
 
 window.onload = function() {
@@ -139,7 +202,7 @@ function update({msg, state}={}) {
   }
   if(ds) {
     let space = ds.getSpace()
-    printStatus(myMsg + ' | I.x: '+ space.I.x.toFixed(2) + ' | mode: ' + space.I.mode+ ' | S.q: ' + space.S.q.toFixed(2))
+    printStatus(myMsg + ' | I.x: '+ space.I.x.toFixed(2) + ' | mode: ' + space.I.mode+ ' | S.q: ' + space.S.q.toFixed(2) + ' | S.r: ' + space.S.r.toFixed(2))
   }
 }
 
@@ -150,6 +213,11 @@ function printStatus(status) {
 
 function getUrl() {
   return document.getElementById('websocketurl').value
+}
+
+function save() {
+  ds.save()
+  console.log('save')
 }
 
 </script>

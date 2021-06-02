@@ -1,47 +1,12 @@
+import { reference, init_reference, buff } from '/js/ds/environments/reftrack.js'
+
 const canvas = document.getElementById('canvas')
 const inputmode_radio = document.getElementsByName('inputmode')
-
-let buff = {r:[], t:0}
-const freqs = [2, 3, 5, 7, 11, 13, 17, 19]
-//freqs = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
-let amp1 = []
-freqs.forEach((f, index) => {
-  // working on this part - not sure if this is right equation
-  amp1[index] = (.5/f)
-});
-
-const sum1 = amp1.reduce(function(a, b){
-  return a + b;
-}, 0);
-
-let amp = []
-freqs.forEach((f, index) => {
-  amp[index] = (1./f)*sum1
-});
 
 const GOLD = 'rgb(241,163,64)'
 const PURPLE = 'rgb(153,142,195)'
 const BLACK = 'rgb(0,0,0)'
 
-function reference(time, P) {
-  time = time - P.shift
-  let x = 0
-  if (time < 0) return 0
-  // ramp
-  const weight = (0<time)*(time<P.ramp)*(time/P.ramp) + (time>=P.ramp)
-  let index=0;
-  freqs.forEach((f) => {
-    x += weight*Math.sin(time*f/P.scale)*amp[index]
-    index++
-  })
-  return x
-}
-
-function init_reference(time, n, P) {
-  let t = new Array(n).fill(1).map((e,i)=>i)
-  const y = t.map((t)=>reference(time + t - n/2, P))
-  return y
-}
 
 export function start_condition({ P, S, I }) {
     return Math.abs(I.x) < 0.03;
