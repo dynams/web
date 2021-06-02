@@ -64,7 +64,7 @@ function step({ P, S, I }) {
   const xp = runge_kutta({f, t, x, u, dt:P.dt})
   const q = xp[0];
   const dq = xp[1];
-  const Sp = { t: S.t + 1, time: S.time + P.dt, q, dq, r }
+  const Sp = { t: S.t + 1, time: S.time + P.dt, q, dq, r, d }
   const O = { cost: (S.q - S.r)**2 }
 
   return { Sp , O }
