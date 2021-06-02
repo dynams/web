@@ -58,8 +58,8 @@ function step({ P, S, I }) {
   const f = second_order;
   const t = S.t
   const x = [ S.q, S.dq ];
-  const d = disturbance(S.t, P); // disturbance
-  const u = I.x + P.d*d;
+  const d = P.d*disturbance(S.t, P); // disturbance
+  const u = I.x + d;
 
   const xp = runge_kutta({f, t, x, u, dt:P.dt})
   const q = xp[0];
