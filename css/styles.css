@@ -112,9 +112,8 @@ svg > text {
 .paragraph .content {
   text-align: left; 
   display: inline-block;
-  padding: 1ex 2em 0 2em;
+  padding: 1ex 2em 2em 2em;
   margin-top: 0;
-  padding-bottom: 2em;
   flex: 1;
 }
 @media(min-width: 48em) {
@@ -127,7 +126,7 @@ svg > text {
   margin: 1em auto 1em auto;
 }
 .paragraph .content{
-  padding: 1ex 1ex 0 1ex;
+  padding: 1ex;
 }
 }
 
