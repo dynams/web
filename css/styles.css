@@ -126,6 +126,9 @@ svg > text {
 .paragraph {
   margin: 1em auto 1em auto;
 }
+.paragraph .content{
+  padding: 1ex 1ex 0 1ex;
+}
 }
 
 .paragraph .title {
