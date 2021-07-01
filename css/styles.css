@@ -3,26 +3,30 @@ body {
   color: var(--font-color);
 
   /*font-family: Verdana, sans-serif;*/
-  font-family: Helvetica, sans-serif;
 
 }
+body, textarea, input{
+  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
-h1,h2,h3,p {
+h1,h2,h3 {
   color:  var(--head-color);
-  margin-bottom: 1em;
+  margin-bottom: 1ex;
 }
 
 h1 {
-  font-size: 16pt;
+  font-size: 24pt;
 }
 
 h2 {
-  font-size: 14pt;
+  font-size: 20pt;
+  padding: 1ex;
+  margin: 0;
 }
 
 p {
-  margin-top: 1em;
-  margin-bottom: 1em;
+  font-size: 14pt;
+  padding: 1ex;
 }
 
 input[type=text] {
@@ -56,10 +60,16 @@ b {
   width: 100%;
 }
 
+.scroll {
+  overflow: scroll;
+}
+
+.page {
+  margin: 0 1em;
+}
 .text {
   vertical-align: middle;
   text-align: center;
-  padding-top: 20%;
 }
 
 .popup {
@@ -69,20 +79,122 @@ b {
   padding: 2em;
   vertical-align: middle;
   text-align: center;
+  y: 50%;
 }
 
 text {
   font-family: sans-serif;
 }
 
+
+svg > text {
+  font-size: 14pt
+}
 .popup > svg{
   vertical-align: middle;
   padding: 0 1ex 0 1ex;
 }
 
 .paragraph {
+  border: 1px #444 solid;
+  max-width: 48em;
+  text-align: center;
+  margin: auto;
+  background-color: #EEE;
+}
+
+.paragraph .title, .paragraph h1{
+  margin-bottom: 0;
+}
+.paragraph .title {
+  padding: 8px;
+}
+.paragraph .content {
   text-align: left; 
   display: inline-block;
+  padding: 1ex 2em 0 2em;
+  margin-top: 0;
+  padding-bottom: 2em;
+  flex: 1;
+}
+@media(min-width: 48em) {
+.paragraph {
+  margin: 3em auto 3em auto;
+}
+}
+@media(max-width: 48em) {
+.paragraph {
+  margin: 1em auto 1em auto;
+}
+}
+
+.paragraph .title {
+  background-color: #80B6EA;
+}
+
+.paragraph b{
+  font-weight: bold;
+}
+
+.paragraph i{
+  font-style: italic;
+}
+.paragraph button{
+  padding: 1ex 1em;
+  font-size: 14pt;
+  font-weight: bold;
+  background-color: #80B6EA;
+  border: 1px black solid;
+  float: right;
+}
+.paragraph button:hover{
+  background-color: #90C6FA;
+  border: 1px #333 solid;
+}
+
+.paragraph hr{
+  padding: 0;
+  margin: 0;
+  border: none;
+  height: 1px;
+  background-color: black;
+}
+
+.paragraph textarea {
+  font-size: 12pt;
+  width: 70%;
+  height: 5em;
+  margin-top: 1ex;
+  padding: 1ex;
+}
+
+.paragraph input[type=email]{
+  font-size:12pt;
+  width: 70%;
+  height: 2ex;
+  margin-top: 1ex;
+  padding: 1ex;
+}
+.paragraph  input[type=range] {
+  width:100%;
+}
+.paragraph .labeltls {
+  font-weight: bold;
+  float: left;
+  width: 10em;
+}
+.paragraph .labeltls-left {
+  font-size: 12pt;
+  float: left;
+}
+.paragraph .labeltls-right {
+  font-size: 12pt;
+  float: right;
+}
+.paragraph .ptls {
+  text-indent: -10em;
+  padding-left: 10em;
+  margin-top: 2ex;
 }
 
 a {
@@ -196,28 +308,5 @@ input:checked + .slider:before {
   visibility: hidden;
 }
 
-
-
-/* Color themes
-   Primary, secondary, font, background, heading colors
-   */
-
-:root {
-    --pri-color: #001711; 
-    --sec-color: #536390;
-    --font-color: #424242;
-    --bg-color: #fff;
-    --head-color: #000000;
-    --foot-color: #ddd;
-}
-
-[data-theme="dark"] {
-    --pri-color: #9A97F3;
-    --sec-color: #818cab;
-    --font-color: rgb(90.47% 89.74% 89.21%);
-    --bg-color: rgb(0% 3.65% 4.04%);
-    --head-color: rgb(90.47% 89.74% 89.21%);
-    --foot-color: rgb(9.09% 10.18% 10.88%);
-}
 
 

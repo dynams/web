@@ -7,6 +7,8 @@
   <script type="module" src="/js/ds.js"></script>
   <script src="/js/scripts.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+
 
 <style>
 html,body {
@@ -43,7 +45,7 @@ rect {
 }
 
 :root {
-  --bg-color: rgb(90.47% 89.74% 89.21%);
+  --bg-color: rgb(100% 100% 100%);
   --fg-color: rgb(9.09% 10.18% 10.88%);
 }
 
@@ -53,20 +55,129 @@ rect {
 
 <div id="cover"></div>
 
+<div id="welcome" class="screen text scroll">
 <!-- Welcome screen -->
-<div id="welcome" class="screen text">
+  <div class="page">
   <div class="paragraph">
-    <p>
-  Thank you for participating in this test study.
-  
-  <h2>Instructions:</h2>
-  <p>
-    &bullet; move cursor horizontally  &#8596
-  <p>
-    &bullet; make rectangle small   &#8595
-  <p>
-  Click anywhere to start
+  <div class="title">
+    <h1>Research Study</h1>
+  </div>
+  <hr>
+  <div class="content">
+    <p> Welcome! Thanks for choosing to participate in our research study. 
+    <h2>📜 Instructions 
+      <span style="font-size: 12px; color: maroon;">Please read this carefully!</span>
+    </h2>
+    <p> Today you will participate in a <b>human/machine collaboration research study</b>. Please be comfortably seated at your computer or device (mouse, touchscreen). Your goal is to <i>move your cursor</i> to achieve the <i>best overall performance</i>.
+    <p> On the next page, you will start with a short training phase to enable you to acclimate and gain proficiency with the system. After the training, you will follow on-screen instructions to provide <i>input</i> that makes an object satisfy an <i>objective</i>. For example, you may be asked to make an object as <i>small</i> or <i>large</i> as possible.
+    <p> After each experiment, we will ask a brief series of questions to evaluate the interaction. The entire experimental session should take between 30 minutes and two hours. You are encouraged to take breaks during the allotted times.
+    <p> You are not required to complete the experimental session; you can excuse yourself at any time.
+    <h2> 🔬 Benefits of the Scientific Research </h2>
+    <p> We are studying how humans interact with machines like robots using computer interfaces, and what changes can be made to improve these interfaces.
+    <p> This research may contribute to safer, more intuitive, or more adaptive human/machine interfaces with applications in virtual/augmented reality, teleoperated robotics, or assistive devices.
+    <h2> 🎬 Start the Study! </h2>
+    <p> If you understood the instructions correctly, press 
+    <b>DONE</b>
+    to proceed.
+    <hr style="display: none;">
+    <button id="done_btn"> DONE </button>
+  </div>
 </div>
+</div>
+</div>
+<div id="progress" class="screen scroll">
+  <div class="page">
+    <div class="paragraph">
+      <div class="title">
+        <h1>Study Progress</h1>
+      </div>
+      <hr>
+      <div class="content">
+        <p> Take a break!
+        <p> <b>Trials:</b> 0/10  
+        <br>
+         <b>Time remaining:</b> ~3min
+        <br>
+        <br>
+        <hr style="display:none;">
+        <button>CONTINUE</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="survey" class="screen scroll">
+  <div class="page">
+    <div class="paragraph">
+      <div class="title">
+        <h1>Task Load Survey</h1>
+      </div>
+      <hr>
+      <div class="content tls">
+        <p class="ptls">
+        <span class="labeltls">Mental Demand</span>
+        How mentally demanding was the task?
+        <br>
+        <p>
+        <input type="range" min="-10" max="10" value="0"></input>
+        <span class="labeltls-left">Very Low</span>
+        <span class="labeltls-right">Very High</span>
+        <p class="ptls">
+        <span class="labeltls">Physical Demand</span>
+        How physically demanding was the task?
+        <p>
+        <input type="range" min="-10" max="10" value="0"></input>
+        <span class="labeltls-left">Very Low</span>
+        <span class="labeltls-right">Very High</span>
+        <p class="ptls">
+        <span class="labeltls">Temporal Demand</span>
+        How hurried or rushed was the pace of the task?
+        <p>
+        <input type="range" min="-10" max="10" value="0"></input>
+        <span class="labeltls-left">Very Low</span>
+        <span class="labeltls-right">Very High</span>
+        <p class="ptls">
+        <span class="labeltls">Performance</span>
+        How successful were you in accomplishing what you were asked to do?
+        <p>
+        <input type="range" min="-10" max="10" value="0"></input>
+        <span class="labeltls-left">Perfect</span>
+        <span class="labeltls-right">Failure</span>
+        <p class="ptls">
+        <span class="labeltls">Effort</span>
+        How hard did you have to work to accomplish your level of performance?
+        <p>
+        <input type="range" min="-10" max="10" value="0"></input>
+        <span class="labeltls-left">Very Low</span>
+        <span class="labeltls-right">Very High</span>
+        <p class="ptls">
+        <span class="labeltls">Frustration</span>
+        How insecure, discouraged, irritated, stressed, and annoyed were you?
+        <p>
+        <input type="range" min="-10" max="10" value="0"></input>
+        <span class="labeltls-left">Very Low</span>
+        <span class="labeltls-right">Very High</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="ending" class="screen scroll">
+  <div class="page">
+    <div class="paragraph">
+      <div class="title">
+        <h1> Thank you for participating!  </h1>
+      </div>
+      <hr>
+      <div class="content">
+        <p> You have now completed this task and your data has been saved.
+        <p> If you would like to be contacted for future studies, please enter your email:
+        <br>
+        <input type="email" placeholder="email"></input> (optional)
+        <p> Any feedback? Let us know here:
+        <br>
+        <textarea placeholder="I think that..."></textarea>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Main study graphics -->
@@ -98,10 +209,12 @@ rect {
 </div>
 
 <div id="intro" class="screen text" >
-  <div class="popup">
-    <h3> Instructions: </h3>
-    move 
-    <svg overflow="visible" width="40" height="40" viewbox="-20 -20 40 40" >
+  <svg width="100%" height="100%">
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"> 
+    move the cursor to fill the diamond
+    </text>
+  </svg>
+    <!--<svg overflow="visible" width="40" height="40" viewbox="-20 -20 40 40" >
       <polygon  fill="black" transform="scale(2)"
       points="0,-10 10,0 0,10 -10,0">
     </svg>
@@ -110,8 +223,7 @@ rect {
       <polygon  stroke-dasharray="1,1" fill="none" stroke="black" transform="scale(2)"
       points="0,-10 10,0 0,10 -10,0">
       </polygon>
-    </svg>
-  </div>
+    </svg>-->
 </div>
 
 <div id="break" class="screen text">
@@ -127,7 +239,10 @@ rect {
     <a class="setScreen" title="welcome"> Welcome</a> | 
     <a class="setScreen" title="intro study_in study_target"> Instructions</a> |
     <a class="setScreen" title="study_in study_out"> Start Study</a> |
-    <a class="setScreen" title="break"> Break </a> 
+    <a class="setScreen" title="progress"> Progress </a> |
+    <a class="setScreen" title="survey"> Survey </a> |
+    <a class="setScreen" title="break"> Break </a> |
+    <a class="setScreen" title="ending"> Ending </a> 
   </div>
   <div class="footer-2">
   </div>
@@ -146,6 +261,7 @@ function debug(val=true) {
 
 mountListeners()
 
+
 let ds, study;
 let pid = getQuery().pid || "guest";
 
@@ -163,7 +279,10 @@ window.onload = function() {
       welcome: {
         screen: 'welcome',
         on: {
-          CLICK: 'intro'
+          CLICK: {
+            el: document.getElementById('done_btn'),
+            target: 'intro'
+          }
         }
       },
       intro: {

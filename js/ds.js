@@ -111,10 +111,10 @@ export function CreateMachine(object) {
     const state = states[to]
     if(state.on) {
       Object.keys(state.on).forEach((on) => {
-        const to_state = state.on[on] 
+        const to_state = state.on[on].target
         if (on == 'CLICK') {
           // click anywhere to transition
-          const el = document.getElementById(states[to].screen);
+          const el = state.on[on].el || document.getElementById(states[to].screen);
           function onclick(e) {
             setState(to_state)
             el.removeEventListener('click', onclick)
