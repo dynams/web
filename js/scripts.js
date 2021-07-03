@@ -1,23 +1,22 @@
-function setDarkMode() {
-  var checkbox = document.querySelector("#darkmode");
-  console.log('hello')
-  _setDarkMode(checkbox.checked)
-}
-
-function _setDarkMode(mode) {
-  if (mode) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  } else {
-    document.documentElement.setAttribute('data-theme', 'light');
-  }
-}
-
 function getQuery() {
   let queryDict = {}
   location.search.substr(1).split("&").forEach(function(item) {
     queryDict[item.split("=")[0]] = item.split("=")[1]
   })
   return queryDict
+}
+
+
+function setScreen(screen) {
+  console.log('setScreen('+screen+')')
+  const screens = document.querySelectorAll(".screen");
+  screens.forEach( (v) => {
+    if(screen.split(" ").includes(v.getAttribute("id"))) {
+      v.classList.remove("hidden")
+    } else {
+      v.classList.add("hidden")
+    }
+  })
 }
 
 var shortcut = {

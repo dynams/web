@@ -96,19 +96,24 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
 
 
 export function CreateMachine(object) {
-  let { id, initial, states } = object;
+  let { id, initial, context, states } = object;
 
   let currentState = initial;
 
   setState(initial)
 
   function setState(to) {
-    console.log('transition to '+to)
+    console.log('State transition to "'+to+'"')
+
+    /* Entry */
     if('onEntry' in states[to]) {
       states[to].onEntry()
     }
+
     setScreen(states[to].screen)
+
     const state = states[to]
+
     if(state.on) {
       Object.keys(state.on).forEach((on) => {
         const to_state = state.on[on].target
@@ -120,7 +125,8 @@ export function CreateMachine(object) {
             el.removeEventListener('click', onclick)
           }
           el.addEventListener('click', onclick)
-        } else if (on == 'FUNC'){
+        } 
+        if (on == 'TIMEOUT'){
           // function
         }
       })
