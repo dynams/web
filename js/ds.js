@@ -4,14 +4,42 @@ import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
 import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 
+//import * as workerTimersBroker from '/js/dist/worker-timers-broker.js';
+//import * as workerTimers from '/js/dist/worker-timers.js';
+
 export default function DynamSpace({ update_fn, experiment } = {}) {
   
   let current, controller, study, task, space, upload_api;
 
-  return { loadStudy, getSpace, mount, save }
+  return { load, start, getSpace, mount, save }
 
-  function loadStudy(study_json) {
-    study = study_json
+  function load(s, api) {
+    study = s
+    upload_api = api
+  }
+
+  function start( ){
+    let Experiment;
+    if (experiment == 'siso') {
+      Experiment = SisoExperiment
+    }
+    else if (experiment == 'reftrack') {
+      Experiment = ReftrackExperiment
+    } else {
+      console.log('Experiment ' + experiment + ' not supported')
+    }
+
+    controller = TaskController({
+      protocol: StandbyReadyGoFixedProtocol,
+      experiment: Experiment,
+      registrar: registrar,
+      done_fn: done,
+      update_fn: update_fn,
+      upload_fn: upload
+    })
+    nextTask();
+    controller.load(task)
+    controller.start()
   }
 
   function getSpace() {
@@ -36,31 +64,10 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
 
   }
 
-  function mount(study, api) {
+  function mount(s, api) {
+    study = s
     upload_api = api
-    loadStudy(study)
-    let Experiment;
-    if (experiment == 'siso') {
-      Experiment = SisoExperiment
-    }
-    else if (experiment == 'reftrack') {
-      Experiment = ReftrackExperiment
-    } else {
-      console.log('Experiment ' + experiment + ' not supported')
-    }
-
-    controller = TaskController({
-      protocol: StandbyReadyGoFixedProtocol,
-      experiment: Experiment,
-      registrar: registrar,
-      done_fn: done,
-      update_fn: update_fn,
-      upload_fn: upload
-    })
-    nextTask();
-    controller.load(task)
-    controller.start()
-
+    start()
   }
 
   function upload(object) {
@@ -98,13 +105,36 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
 export function CreateMachine(object) {
   let { id, initial, context, states } = object;
 
+  let destructors = [];
   let currentState = initial;
+  let timer = new Worker('/js/timer.js')
 
-  setState(initial)
+  transitionTo(initial)
 
-  function setState(to) {
+  return { currentState, send, transitionTo };
+
+  function send(event) {
+    console.log(states);
+    console.log(currentState);
+    if (states[currentState].on[event]) {
+      transitionTo(states[currentState].on[event].target)
+    }
+  }
+
+
+  function transition(state, action) {
+    
+  }
+
+  function transitionTo(to) {
+    if('onExit' in states[currentState]) {
+      states[currentState].onExit();
+    }
+    destructors.forEach( d => d() )
+    destructors = [];
     console.log('State transition to "'+to+'"')
 
+    
     /* Entry */
     if('onEntry' in states[to]) {
       states[to].onEntry()
@@ -114,25 +144,52 @@ export function CreateMachine(object) {
 
     const state = states[to]
 
+    /* setup listeners */
     if(state.on) {
-      Object.keys(state.on).forEach((on) => {
-        const to_state = state.on[on].target
-        if (on == 'CLICK') {
-          // click anywhere to transition
-          const el = state.on[on].el || document.getElementById(states[to].screen);
-          function onclick(e) {
-            setState(to_state)
-            el.removeEventListener('click', onclick)
+      Object.keys(state.on).forEach((e) => {
+        const ev = state.on[e];
+        const target = ev.target
+        if (e == 'CLICK') {
+          // setup event listener for clicks
+          const el = ev.el || window; 
+          function onclick(e) { 
+            transitionTo(target) 
           }
           el.addEventListener('click', onclick)
-        } 
-        if (on == 'TIMEOUT'){
-          // function
+          destructors.push(() => el.removeEventListener('click', onclick))
+        } else if (e == 'TIMER'){
+          // setup timer for duration 
+          const el = ev.el;
+          context.elapsed = 0;
+          let tick, timer;
+          if(el) {
+            timer = init_timer_graphic(el, 'timer123')
+            tick = () => {
+              context.elapsed += 50
+              const p = context.elapsed/(ev.duration*1000)
+              timer.update(p)
+            }
+            const _timer = window.setInterval(tick, 50)
+            destructors.push(() => {timer.destroy(); window.clearInterval(_timer); console.log('destroyed timer')})
+          }
+          let timeout;
+
+          timeout = function() {
+            if (tick) { 
+              window.clearInterval(tick)
+              timer.destroy()
+            }
+            context.elapsed = 0
+            transitionTo(target)
+          }
+          const _timeout = window.setTimeout(timeout, ev.duration*1000)
+          destructors.push(() => { window.clearTimeout(_timeout) })
         }
       })
     }
-    currentState = state;
+    currentState = to;
   }
+
 }
 
 
@@ -147,6 +204,36 @@ function setScreen(screen) {
     }
   })
 }
+
+function init_timer_graphic(el, id) {
+  el.innerHTML = `
+  <svg overflow='visible' viewbox='0 0 11 11'>
+    <path id="` + id + `" fill='black'/>
+  </svg>
+  `
+  function update(val) {
+    let timer = document.getElementById(id)
+    if (val>= 1) val = 0.99999999
+    if (val<= -1) val = -0.9999999
+    const x = -Math.sin(-val*Math.PI*2)*5+5
+    const y = -Math.cos(-val*Math.PI*2)*5+5
+    const xy = x + " " + y
+    const large = 1-(val <= -0.5 || val >= 0.5)*1
+    const sweep = 1-(val >= 0)*1
+    const d = "M 5 5 M 5 0 A 5 5 0 "
+    //d = "M 0 0 M 0-5 A 0 0 0 "
+      + large + " " + sweep + " " + xy
+      + " L 5 5 Z";
+      //+ " L 0 0 Z";
+    timer.setAttribute('d', d)
+  }
+
+  function destroy() { el.innerHTML = "" }
+
+  return { update, destroy }
+}
+
+
 window.DynamSpace = DynamSpace
 window.CreateMachine = CreateMachine
 window.setScreen = setScreen

@@ -23,7 +23,6 @@ body {
   overflow: hidden;
 }
 
-
 rect {
   background-color: var(--fg-color);
 }
@@ -94,6 +93,7 @@ rect {
         to proceed.
         <hr style="display: none;">
         <button id="done_btn"> 
+          <div class="timer" id="timer_welcome"></div>
           DONE 
         </button>
       </div>
@@ -107,7 +107,7 @@ rect {
   </div>
 </div>
 
-<div id="progress" class="screen scroll">
+<div id="break" class="screen scroll">
   <div class="page">
     <div class="paragraph">
       <div class="title">
@@ -214,18 +214,25 @@ rect {
   </div>
 </div>
 
+<div id="intro" class="screen text" >
+  <div class="message" style="top: 50%;">
+    <div class="timer" id="timer_intro"></div>
+    click or touch the cursor 
+  </div>
+</div>
+
 <div id="study_in" class="screen">
   <svg width="100%" height="100%">
     <svg id="input" x="50%" y="90%" overflow="visible"> 
-      <polygon class="fg-fill" transform="scale(2)"
-      points="0,-10 10,0 0,10 -10,0">
+      <polygon id="input_poly" class="fg-fill" transform="scale(2)"
+      points="0,-10 10,0 0,10 -10,0" z-order="10">
     </svg>
   </svg>
 </div>
 
 <div id="study_target" class="screen">
   <div class="message" style="top: 50%;">
-    <div class="timer"></div>
+    <div class="timer" class="timer_target"></div>
     move the cursor to fill the diamond
   </div>
   <svg width="100%" height="100%">
@@ -236,19 +243,7 @@ rect {
   </svg>
 </div>
 
-<div id="intro" class="screen text" >
-  <div class="message" style="top: 50%;">
-    <div class="timer"></div>
-    click or touch the cursor 
-  </div>
-</div>
 
-<div id="break" class="screen text">
-  <div class="paragraph">
-    <p>Trial: # 1 of 10
-    <p>Time remaining: 10min
-  </div>
-</div>
 <br>
 <br>
 <div class="footer">
@@ -256,9 +251,8 @@ rect {
     <a class="setScreen" title="welcome"> Welcome</a> | 
     <a class="setScreen" title="intro study_in study_target"> Instructions</a> |
     <a class="setScreen" title="study_in study_out"> Start Study</a> |
-    <a class="setScreen" title="progress"> Progress </a> |
-    <a class="setScreen" title="survey"> Survey </a> |
     <a class="setScreen" title="break"> Break </a> |
+    <a class="setScreen" title="survey"> Survey </a> |
     <a class="setScreen" title="ending"> Ending </a> 
   </div>
   <div class="footer-2">
@@ -269,32 +263,6 @@ rect {
 <script type="text/javascript">
 
 
-function init_timer_graphic(el) {
-  //<svg overflow='visible' viewbox='-5 -5 5 5'>
-  el.innerHTML = `
-  <svg overflow='visible' viewbox='0 0 11 11'>
-    <path id="timer_graphic" fill='grey'/>
-  </svg>
-  `
-  function update(val) {
-    timer = document.getElementById('timer_graphic')
-    if (val>= 1) val = 0.99999999
-    if (val<= -1) val = -0.9999999
-    x = -Math.sin(-val*Math.PI*2)*5+5
-    y = -Math.cos(-val*Math.PI*2)*5+5
-    xy = x + " " + y
-    large = 1-(val <= -0.5 || val >= 0.5)*1
-    sweep = 1-(val >= 0)*1
-    d = "M 5 5 M 5 0 A 5 5 0 "
-    //d = "M 0 0 M 0-5 A 0 0 0 "
-      + large + " " + sweep + " " + xy
-      + " L 5 5 Z";
-      //+ " L 0 0 Z";
-    timer.setAttribute('d', d)
-  }
-
-  return update
-}
 
 
 
@@ -309,7 +277,7 @@ function debug(val=true) {
 mountListeners()
 
 
-let ds, study;
+let ds, study, studyMachine;
 let pid = getQuery().pid || "guest";
 
 window.onload = function() {
@@ -331,19 +299,21 @@ window.onload = function() {
   }
   
 
-  stateMachine = CreateMachine({
+  studyMachine = CreateMachine({
     id: 'study',
-    initial: 'idle',
+    initial: 'load',
     context: {
       elapsed: 0,
       duration: 0,
     },
+
     states: {
-      idle: {
+      load: {
         screen: 'idle',
         on: { 
+          LOAD: {
+          },
           CLICK: { 
-            el: window, 
             target: 'welcome' 
           } 
         }
@@ -352,52 +322,58 @@ window.onload = function() {
         screen: 'welcome',
         on: {
           CLICK: {
-            el: document.getElementById('done_btn'),
-            target: 'intro'
+            target: 'intro',
+            el: document.getElementById('done_btn')
           },
-          TIMEOUT: {
-            duration: 60,
-            target: 'error'
+          TIMER: {
+            target: 'intro',
+            duration: 120,
+            el: document.getElementById('timer_welcome')
           }
         },
         onEntry: function () {
           console.log("Welcome!")
-          console.log("-- Starting controller")
-          //controller.start()
+          console.log(">> Starting controller")
+          ds.load(study, 'https://api.dynam.space/upload/'+pid )
         }
       },
+
       error: {
         screen: 'welcome error',
       },
+
       intro: {
         screen: 'intro study_in',
         onEntry: function() {
           //pid = prompt('enter your name or ID', pid)
           console.log('pid='+pid)
-          startController(study, pid)
+          //startController(study, pid)
+        },
+        onExit: function() {
+          ds.start()
         },
         on: {
           CLICK: {
-            el: document.getElementById('input'),
+            el: document.getElementById('input_poly'),
+            target: 'standby'
+          },
+          TIMER: {
+            el: document.getElementById('timer_intro'),
+            duration: 3,
             target: 'standby'
           }
         }
       },
+
       standby: {
         screen: 'study_in study_target',
-        on: {
-          NEXT: {
-          },
-          TIMEOUT: {
-            target: 'go'
-          }
-        }
       },
       ready: {
+        screen: 'study_in study_target'
       },
       go: { 
+        screen: 'study_in study_out'
       }
-
     }
   })
 
@@ -434,19 +410,21 @@ function mountListeners() {
 }
 
 let myMsg = "";
-let myState = "";
+let myState = "initial";
 function update({msg, state}={}) {
   if (msg) myMsg = msg
-  msg = myMsg + " | "
+  msg = state + " | " + myMsg + " | " 
   if (state && state != myState) {
     myState = state
     console.log(state)
     switch(state) {
       case 'go': 
+        //studyMachine.transitionTo('go')
         setScreen('study_in study_out')
         break;
       case 'standby':
         setScreen('study_in study_target')
+        //studyMachine.transitionTo('standby')
         break;
 
     }
@@ -483,8 +461,6 @@ window.addEventListener("DOMContentLoaded", function() {
     }
   })
 
-update_timer_graphic = init_timer_graphic(document.getElementsByClassName('timer')[0])
-
 function tickk() {
   let val = -1.0
   function tock () {
@@ -496,7 +472,6 @@ function tickk() {
   }
   tock()
 }
-tickk(0)
 })
 
 //window.onmousemove = mousemove
