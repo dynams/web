@@ -200,6 +200,10 @@ export default function TaskController({
     save_zip(state.zip, 'DS01-' + date + '-' + name + '.zip')
   }
 
+  function resume() {
+    state.state.state = 'resume'
+  }
+
   function tick() {
     state.state = update({
       PSI: { 

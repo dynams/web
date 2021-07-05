@@ -34,6 +34,7 @@ export function update({ state, PSI, standby, ready, go, rest, rest_freq, step_f
         if (state.timer >= standby) {
             state.state = "go";
             state.timer = 0;
+            state.t = 0;
         }
     }
     if (state.state == "go") {
@@ -63,6 +64,11 @@ export function update({ state, PSI, standby, ready, go, rest, rest_freq, step_f
             state.timer = 0
         }
     }
+    if (state.state == "resume") {
+        state.timer = 0
+        state.state = "standby"
+    }
+
     return state;
 }
 
