@@ -76,6 +76,11 @@ export default function TaskController({
     }
     state.task = task
     const protocol = task.protocol
+    if (protocol == 'welcome' || protocol == 'break') {
+      console.log('go to break')
+      return false
+    }
+
     const params = task.params
     const proto = registrar[protocol]
 
@@ -83,6 +88,9 @@ export default function TaskController({
     state.freq = proto.freq
     state.duration = proto.duration
     state.ready_wait = proto.ready_wait
+    state.standby_wait = proto.standby_wait
+    state.rest_wait = 10
+    state.rest_freq = 1
     // state.canvas.width = proto.preset.k.w
     // state.canvas.height = proto.preset.k.h
 
@@ -95,10 +103,7 @@ export default function TaskController({
     } else if (proto.env == 'reftrack') {
       state.step_fn = reftrack.step
       state.reset_fn = reftrack.reset
-    } else {
-      console.log(proto.env + ' environment not supported')
-      return false
-    }
+    } 
     
 
     let PP = {...proto.preset, ...params}
@@ -206,8 +211,11 @@ export default function TaskController({
       start_fn: start_condition,
       step_fn: step, 
       stop_fn: stop,
+      standby: state.freq*state.standby_wait,
       ready: state.freq*state.ready_wait,
       go: state.freq*state.duration,
+      rest: state.freq*state.rest_wait,
+      rest_freq: state.rest_freq
     })
     const PSIO = { P: state.P, S: state.S, I: state.I, O: state.O }
     if(state.canvas) {

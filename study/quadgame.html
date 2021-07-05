@@ -107,7 +107,7 @@ rect {
   </div>
 </div>
 
-<div id="break" class="screen scroll">
+<div id="rest" class="screen scroll">
   <div class="page">
     <div class="paragraph">
       <div class="title">
@@ -115,7 +115,7 @@ rect {
       </div>
       <hr>
       <div class="content">
-        <p> Take a break!
+        <p> Take a rest!
         <p> <b>Trials:</b> 0/10  
         <br>
          <b>Time remaining:</b> ~3min
@@ -251,7 +251,7 @@ rect {
     <a class="setScreen" title="welcome"> Welcome</a> | 
     <a class="setScreen" title="intro study_in study_target"> Instructions</a> |
     <a class="setScreen" title="study_in study_out"> Start Study</a> |
-    <a class="setScreen" title="break"> Break </a> |
+    <a class="setScreen" title="rest"> Rest </a> |
     <a class="setScreen" title="survey"> Survey </a> |
     <a class="setScreen" title="ending"> Ending </a> 
   </div>
@@ -291,13 +291,11 @@ window.onload = function() {
     update_fn: update, 
     experiment: 'siso'})
 
-  getStudy("https://api.dynam.space/studies/sample")
+  //getStudy("https://api.dynam.space/studies/sample")
+  getStudy("http://localhost:8000/studies/sample")
 
-  worker = new Worker('/js/timer.js')
-  worker.onmessage = function() {
-    console.log('worker')
-  }
-  
+  //worker = new Worker('/js/timer.js')
+  //worker.onmessage = function() { }
 
   studyMachine = CreateMachine({
     id: 'study',
@@ -345,7 +343,7 @@ window.onload = function() {
       intro: {
         screen: 'intro study_in',
         onEntry: function() {
-          //pid = prompt('enter your name or ID', pid)
+          pid = prompt('enter your name or ID', pid)
           console.log('pid='+pid)
           //startController(study, pid)
         },
@@ -426,6 +424,10 @@ function update({msg, state}={}) {
         setScreen('study_in study_target')
         //studyMachine.transitionTo('standby')
         break;
+      case 'rest':
+        setScreen('rest study_target')
+        //studyMachine.transitionTo('standby')
+        break;
 
     }
   }
@@ -461,17 +463,6 @@ window.addEventListener("DOMContentLoaded", function() {
     }
   })
 
-function tickk() {
-  let val = -1.0
-  function tock () {
-    if (val >= 0) val += 0.001
-    if (val < 0) val += 0.003
-    if (val >= 1) val = -1
-    update_timer_graphic(val)
-    window.setTimeout(tock, 10)
-  }
-  tock()
-}
 })
 
 //window.onmousemove = mousemove

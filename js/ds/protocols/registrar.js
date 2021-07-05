@@ -20,7 +20,8 @@ const registrar = {
     },
     freq: 60,
     duration: 30,
-    ready_wait: 1
+    ready_wait: 1,
+    standby_wait: 5,
   },
   'quadgame-1': {
     env: 'quadgame',
@@ -33,7 +34,8 @@ const registrar = {
     },
     freq: 60,
     duration: 30,
-    ready_wait: 1
+    ready_wait: 1,
+    standby_wait: 5
   },
   "graddescent-0": {
     env: 'graddescent',
@@ -42,7 +44,8 @@ const registrar = {
     },
     freq: 60,
     duration: 5,
-    ready_wait: 1
+    ready_wait: 1,
+    standby_wait: 5
   },
   'reftrack-0': {
     env: 'reftrack',
@@ -54,6 +57,7 @@ const registrar = {
     },
     duration: 40,
     ready_wait: 2,
+    standby_wait: 5
   }
 }
 

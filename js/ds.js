@@ -213,6 +213,7 @@ function init_timer_graphic(el, id) {
   `
   function update(val) {
     let timer = document.getElementById(id)
+    if(!timer) return
     if (val>= 1) val = 0.99999999
     if (val<= -1) val = -0.9999999
     const x = -Math.sin(-val*Math.PI*2)*5+5
