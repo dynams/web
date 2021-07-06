@@ -11,11 +11,27 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
   
   let current, controller, study, task, space, upload_api;
 
-  return { load, start, getSpace, mount, save }
+  return { load, start, pause, resume, progress, getSpace, mount, save }
 
   function load(s, api) {
     study = s
     upload_api = api
+  }
+
+  function pause() {
+    controller.pause()
+  }
+
+  function resume() {
+    controller.resume()
+  }
+
+  function progress(sec=0) {
+    return { 
+      current: current, 
+      total: study.tasks.length,
+      time_remaining: sec*(study.tasks.length-current)/60
+    }
   }
 
   function start( ){
@@ -37,7 +53,8 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
       update_fn: update_fn,
       upload_fn: upload
     })
-    nextTask();
+    current = 0
+    task = study.tasks[current]
     controller.load(task)
     controller.start()
   }
@@ -51,17 +68,11 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
   }
 
   function nextTask() {
-    if(!current) current = 0
-    else current += 1
-
-    let okay = false;
-    while(okay == false) {
-      task = study.tasks[current]
-      okay = controller.reset(task)
-      current += 1
+    if (current >= study.tasks.length-1) {
+      controller.exit()
     }
-    current -= 1
-
+    current += 1
+    task = study.tasks[current];
   }
 
   function mount(s, api) {
@@ -95,7 +106,6 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
   }
 
   function done() {
-
     nextTask()
   }
 }
@@ -140,7 +150,6 @@ export function CreateMachine(object) {
       states[to].onEntry()
     }
 
-    setScreen(states[to].screen)
 
     const state = states[to]
 
@@ -187,6 +196,7 @@ export function CreateMachine(object) {
         }
       })
     }
+    setScreen(states[to].screen)
     currentState = to;
   }
 

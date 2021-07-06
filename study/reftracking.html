@@ -155,7 +155,6 @@ window.onload = function() {
     update_fn: update, 
     experiment: 'reftrack'
   })
-  ds.loadStudy(study)
 
   stateMachine = CreateMachine({
     id: 'study',
@@ -167,13 +166,17 @@ window.onload = function() {
           CLICK: {
             target: 'study'
           }
+        },
+        onEntry: function () {
+          ds.load(study)
         }
       },
       study: {
         screen: 'study intro',
         onEntry: function() {
-          ds.mount(study)
+          //ds.mount(study)
           //start()
+          ds.start() 
         },
       }
     }

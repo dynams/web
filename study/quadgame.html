@@ -92,7 +92,7 @@ rect {
         <b>DONE</b>
         to proceed.
         <hr style="display: none;">
-        <button id="done_btn"> 
+        <button id="btn_welcome"> 
           <div class="timer" id="timer_welcome"></div>
           DONE 
         </button>
@@ -116,13 +116,14 @@ rect {
       <hr>
       <div class="content">
         <p> Take a rest!
-        <p> <b>Trials:</b> 0/10  
-        <br>
-         <b>Time remaining:</b> ~3min
+        <div id="progress_div">
+        </div>
         <br>
         <br>
         <hr style="display:none;">
-        <button id+"continue_btn">CONTINUE</button>
+        <button id="btn_continue">
+          <div class="timer" id="timer_continue"></div>
+          CONTINUE</button>
       </div>
     </div>
   </div>
@@ -141,50 +142,55 @@ rect {
         How mentally demanding was the task?
         <br>
         <p>
-        <input type="range" min="-10" max="10" value="0"></input>
+        <input type="range" min="-10" max="10" value="0" disabled></input>
         <span class="labeltls-left">Very Low</span>
         <span class="labeltls-right">Very High</span>
         <p class="ptls">
         <span class="labeltls">Physical Demand</span>
         How physically demanding was the task?
         <p>
-        <input type="range" min="-10" max="10" value="0"></input>
+        <input type="range" min="-10" max="10" value="0" disabled></input>
         <span class="labeltls-left">Very Low</span>
         <span class="labeltls-right">Very High</span>
         <p class="ptls">
         <span class="labeltls">Temporal Demand</span>
         How hurried or rushed was the pace of the task?
         <p>
-        <input type="range" min="-10" max="10" value="0"></input>
+        <input type="range" min="-10" max="10" value="0" disabled></input>
         <span class="labeltls-left">Very Low</span>
         <span class="labeltls-right">Very High</span>
         <p class="ptls">
         <span class="labeltls">Performance</span>
         How successful were you in accomplishing what you were asked to do?
         <p>
-        <input type="range" min="-10" max="10" value="0"></input>
+        <input type="range" min="-10" max="10" value="0" disabled></input>
         <span class="labeltls-left">Perfect</span>
         <span class="labeltls-right">Failure</span>
         <p class="ptls">
         <span class="labeltls">Effort</span>
         How hard did you have to work to accomplish your level of performance?
         <p>
-        <input type="range" min="-10" max="10" value="0"></input>
+        <input type="range" min="-10" max="10" value="0" disabled></input>
         <span class="labeltls-left">Very Low</span>
         <span class="labeltls-right">Very High</span>
         <p class="ptls">
         <span class="labeltls">Frustration</span>
         How insecure, discouraged, irritated, stressed, and annoyed were you?
         <p>
-        <input type="range" min="-10" max="10" value="0"></input>
+        <input type="range" min="-10" max="10" value="0" disabled></input>
         <span class="labeltls-left">Very Low</span>
         <span class="labeltls-right">Very High</span>
+        <br/>
+        <hr style="display: none;">
+        <button id+"btn_survey">
+          <div class="timer" id="timer_survey"></div>
+          CONTINUE</button>
       </div>
     </div>
   </div>
 </div>
 
-<div id="ending" class="screen scroll">
+<div id="end" class="screen scroll">
   <div class="page">
     <div class="paragraph">
       <div class="title">
@@ -195,10 +201,16 @@ rect {
         <p> You have now completed this task and your data has been saved.
         <p> If you would like to be contacted for future studies, please enter your email:
         <br>
-        <input type="email" placeholder="email"></input> (optional)
+        <input type="email" placeholder="email" disabled></input> (optional)
+        <p>
         <p> Any feedback? Let us know here:
         <br>
-        <textarea placeholder="I think that..."></textarea>
+        <textarea placeholder="I think that..." disabled></textarea>
+        <p>
+        Deidentify your email 
+        <input type="checkbox" checked disabled></input> 
+        and feedback 
+        <input type="checkbox" checked disabled></input> 
       </div>
     </div>
   </div>
@@ -209,8 +221,10 @@ rect {
   <svg width="100%" height="100%">
     <rect id="output" class="fg-fill" width="70%" height="10%" x="15%" y="70%"></rect>
   </svg>
-  <div class="message" style="color: white; top: 75%">
+  <div class="message" style="color: white; top: 73%">
+    <span style="vertical-align: middle">
     keep this as small as possible
+    </span>
   </div>
 </div>
 
@@ -253,7 +267,7 @@ rect {
     <a class="setScreen" title="study_in study_out"> Start Study</a> |
     <a class="setScreen" title="rest"> Rest </a> |
     <a class="setScreen" title="survey"> Survey </a> |
-    <a class="setScreen" title="ending"> Ending </a> 
+    <a class="setScreen" title="end"> End </a> 
   </div>
   <div class="footer-2">
   </div>
@@ -321,7 +335,7 @@ window.onload = function() {
         on: {
           CLICK: {
             target: 'intro',
-            el: document.getElementById('done_btn')
+            el: document.getElementById('btn_welcome')
           },
           TIMER: {
             target: 'intro',
@@ -345,7 +359,6 @@ window.onload = function() {
         onEntry: function() {
           pid = prompt('enter your name or ID', pid)
           console.log('pid='+pid)
-          //startController(study, pid)
         },
         onExit: function() {
           ds.start()
@@ -377,24 +390,50 @@ window.onload = function() {
         screen: 'rest',
         onEntry: function() {
           ds.pause()
+          const prog = ds.progress(30)
+          let str = "<p><b>✅ Completed tasks:</b> "+prog.current+"/"+prog.total;
+          if(prog.time_remaining) {
+            str += "<p><b>⏱ Remaining time: </b> ~"+prog.time_remaining +" min";
+          }
+          const el = document.getElementById('progress_div')
+          el.innerHTML = str;
+
         },
         onExit: function() {
           ds.resume()
         },
         on: {
           CLICK: {
-            el: document.getElementById('continue_btn'),
+            el: document.getElementById('btn_continue'),
             target: 'standby'
           },
           TIMER: {
+            el: document.getElementById('timer_continue'),
             duration: 10,
             target: 'standby'
           }
         }
+      },
+
+      survey: {
+        screen: 'survey',
+        on: {
+          CLICK: {
+            el: document.getElementById('btn_survey'),
+            target: 'end'
+          },
+          TIMER: {
+            el: document.getElementById('timer_survey'),
+            duration: 120,
+            target: 'end'
+          }
+        }
+      },
+      end: {
+        screen: 'end'
       }
     }
   })
-
 }
 
 function getStudy(url) {
@@ -406,15 +445,6 @@ function getStudy(url) {
   )
 }
 
-
-function startController(study, pid) {
-  if(study) {
-    console.log(study)
-    ds.mount(study, 'https://api.dynam.space/upload/'+pid)
-  } else {
-    console.log('study not loaded')
-  }
-}
 
 
 function mountListeners() {
@@ -434,20 +464,21 @@ function update({msg, state}={}) {
   msg = state + " | " + myMsg + " | " 
   if (state && state != myState) {
     myState = state
-    console.log(state)
     switch(state) {
       case 'go': 
         //studyMachine.transitionTo('go')
         setScreen('study_in study_out')
         break;
       case 'standby':
-        setScreen('study_in study_target')
         //studyMachine.transitionTo('standby')
+        setScreen('study_in study_target')
         break;
       case 'rest':
         studyMachine.transitionTo('rest')
         break;
-
+      case 'exit':
+        studyMachine.transitionTo('survey')
+        break;
     }
   }
 

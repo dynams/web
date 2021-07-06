@@ -167,7 +167,7 @@ svg > text {
   font-style: italic;
 }
 .paragraph button{
-  padding: 1ex 1em;
+  padding: 1ex 1em 1ex 0.8em;
   font-size: 14pt;
   font-weight: bold;
   background-color: #80B6EA;

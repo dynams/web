@@ -3,10 +3,13 @@ export function init(state, t) {
     return { state, n: 0, t: 0, count: 0, timer: 0, rest: 0 };
 }
 
-export function update({ state, PSI, standby, ready, go, rest, rest_freq, step_fn, stop_fn, start_fn }) {
+export function update({ state, PSI, standby, ready, go, step_fn, stop_fn, start_fn, rest_freq=0, is_exit=false }) {
     // standby: wait until input is ready
     // ready: f ready for `ready` time steps, then transition into go
     // go: run for fixed `go` timesteps then transition into standby
+    if (is_exit) {
+      state.state == "exit"
+    }
     state.t += 1;
     if (state.state == "standby") {
         state.timer += 1
@@ -31,7 +34,7 @@ export function update({ state, PSI, standby, ready, go, rest, rest_freq, step_f
         }
     }
     if (state.state == "standby" || state.state == "ready") {
-        if (state.timer >= standby) {
+        if (standby > 0 && state.timer >= standby) {
             state.state = "go";
             state.timer = 0;
             state.t = 0;
@@ -48,7 +51,7 @@ export function update({ state, PSI, standby, ready, go, rest, rest_freq, step_f
             state.rest += 1
             state.t = 0;
             state.timer = 0;
-            if (state.rest >= rest_freq) {
+            if (rest_freq > 0 && state.rest >= rest_freq) {
                 state.state = "rest"
                 state.rest = 0
                 state.timer = 0
@@ -57,12 +60,10 @@ export function update({ state, PSI, standby, ready, go, rest, rest_freq, step_f
             }
         }
     }
-    if (state.state == "rest") {
-        state.timer += 1
-        if (state.timer >= rest) {
-            state.state = "standby"
-            state.timer = 0
-        }
+    if (state.state == "rest" || state.state == "exit") {
+      state.timer = 0
+      state.t = 0
+      state.count = 0
     }
     if (state.state == "resume") {
         state.timer = 0

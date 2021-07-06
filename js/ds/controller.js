@@ -39,14 +39,18 @@ export default function TaskController({
     freq: 40,
     duration: 30,
     ready_wait: 2,
+    is_exit: false
   };
 
   return {
     start,
     load, 
     reset, 
+    pause,
+    resume,
     //step, 
     save,
+    exit,
     getSpace,
     //status, 
     // getState: ()=>state
@@ -111,7 +115,8 @@ export default function TaskController({
     //PP.k.w = window.innerWidth;
     //PP.k.h = window.innerHeight;
 
-    let { P, S, I, O} = state.reset_fn({ P:PP })
+    let { P, S, I, O } = state.reset_fn({ P:PP })
+    console.log(S)
     state.P = P
     state.S = S
     state.I = I
@@ -200,8 +205,17 @@ export default function TaskController({
     save_zip(state.zip, 'DS01-' + date + '-' + name + '.zip')
   }
 
+  function pause() {
+    state.state.state = 'rest'
+  }
+
   function resume() {
     state.state.state = 'resume'
+  }
+
+  function exit() {
+    console.log('set exit')
+    state.is_exit = true
   }
 
   function tick() {
@@ -219,7 +233,8 @@ export default function TaskController({
       ready: state.freq*state.ready_wait,
       go: state.freq*state.duration,
       rest: state.freq*state.rest_wait,
-      rest_freq: state.rest_freq
+      rest_freq: state.rest_freq,
+      is_exit: state.is_exit
     })
     const PSIO = { P: state.P, S: state.S, I: state.I, O: state.O }
     if(state.canvas) {
@@ -228,9 +243,15 @@ export default function TaskController({
     } else {
       draw(PSIO)
     }
+    if (state.is_exit) {
+      state.state.state='exit'
+    }
+    update_fn({msg:status(), state:state.state.state})
+    if (state.is_exit) {
+      return
+    }
     window.setTimeout(tick, 1000/state.freq)
 
-    update_fn({msg:status(), state:state.state.state})
   }
 
   function status() {
