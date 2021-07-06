@@ -43,7 +43,7 @@ const registrar = {
       A: 2, tol:0.03
     },
     freq: 60,
-    duration: 1,
+    duration: 10,
     ready_wait: 1,
     standby_wait: 5
   },
