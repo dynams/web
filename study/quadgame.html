@@ -6,6 +6,7 @@
   <script src="/js/dist/papaparse.min.js"></script>
   <script type="module" src="/js/ds.js"></script>
   <script src="/js/scripts.js"></script>
+  <script type="text/javascript" src="/study/quadgame.json"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
 
@@ -305,8 +306,10 @@ window.onload = function() {
     update_fn: update, 
     experiment: 'siso'})
 
-  getStudy("https://api.dynam.space/studies/sample")
+  //getStudy("https://api.dynam.space/studies/sample")
   //getStudy("http://localhost:8000/studies/sample")
+  study = {"sid":"0","desc":"sample study","tasks":[{"id":"C00","protocol":"graddescent-0","params":{"seed":300.0}},{"id":"000","protocol":"quadgame-1","params":{"lr":0.1,"l":0.5049129395702733,"xflip":1.0}},{"id":"001","protocol":"quadgame-1","params":{"lr":0.1,"l":0.5049129395702733,"xflip":0.0}},{"id":"002","protocol":"quadgame-1","params":{"lr":0.1,"l":0.0,"xflip":1.0}},{"id":"003","protocol":"quadgame-1","params":{"lr":0.1,"l":0.1305118903667876,"xflip":0.0}},{"id":"004","protocol":"quadgame-1","params":{"lr":0.01,"l":0.5049129395702733,"xflip":1.0}},{"id":"005","protocol":"quadgame-1","params":{"lr":0.01,"l":0.0,"xflip":0.0}},{"id":"006","protocol":"quadgame-1","params":{"lr":0.01,"l":0.0,"xflip":1.0}},{"id":"007","protocol":"quadgame-1","params":{"lr":0.1,"l":0.0,"xflip":0.0}},{"id":"008","protocol":"quadgame-1","params":{"lr":0.1,"l":0.1305118903667876,"xflip":1.0}},{"id":"009","protocol":"quadgame-1","params":{"lr":0.01,"l":0.1305118903667876,"xflip":1.0}},{"id":"010","protocol":"quadgame-1","params":{"lr":0.01,"l":0.1305118903667876,"xflip":0.0}},{"id":"011","protocol":"quadgame-1","params":{"lr":0.01,"l":0.5049129395702733,"xflip":0.0}}]}
+  document.getElementById('cover').style = "display: none;"
 
   //worker = new Worker('/js/timer.js')
   //worker.onmessage = function() { }
