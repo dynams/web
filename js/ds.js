@@ -73,6 +73,7 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
     }
     current += 1
     task = study.tasks[current];
+    controller.reset(task)
   }
 
   function mount(s, api) {

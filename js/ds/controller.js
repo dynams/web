@@ -75,6 +75,7 @@ export default function TaskController({
   }
 
   function reset(task) {
+    console.log('reset')
     if ( task == null ) {
       console.log("Warning: task initialized to null")
     }
@@ -107,7 +108,9 @@ export default function TaskController({
     } else if (proto.env == 'reftrack') {
       state.step_fn = reftrack.step
       state.reset_fn = reftrack.reset
-    } 
+    } else {
+      return false
+    }
     
 
     let PP = {...proto.preset, ...params}
@@ -116,7 +119,6 @@ export default function TaskController({
     //PP.k.h = window.innerHeight;
 
     let { P, S, I, O } = state.reset_fn({ P:PP })
-    console.log(S)
     state.P = P
     state.S = S
     state.I = I
