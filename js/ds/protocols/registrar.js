@@ -37,13 +37,27 @@ const registrar = {
     ready_wait: 1,
     standby_wait: 5
   },
+  'quadgame-2': {
+    env: 'quadgame',
+    preset: {
+    d:1.8000, c:-0.5595, b:-0.7000, a:0.7000, h:3.4696, e:0.3976, x2:1.9967, y2:8.6417, x1:0.2896, y1:0.2896,
+    k:0, l:0, lr:0.1, s:.2, x0: 0.5, y0: 0.5, tol:0.03 
+    },
+    params: {
+      lr: 0.1, xflip: 0
+    },
+    freq: 60,
+    duration: 30,
+    ready_wait: 1,
+    standby_wait: 5
+  },
   "graddescent-0": {
     env: 'graddescent',
     preset: {
       A: 2, tol:0.03
     },
     freq: 60,
-    duration: 10,
+    duration: 5,
     ready_wait: 1,
     standby_wait: 5
   },
