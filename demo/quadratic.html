@@ -1239,6 +1239,12 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   y=500;ctx.lineTo(-(P.c*(P.x1-P.x2)+P.d*(P.y1-P.y2))/(P.e*(P.x1-P.x2)+P.c*(P.y1-P.y2))*(P.y1*P.scale-y)+P.x1*P.scale,y)
   ctx.stroke();
    }
+    if(P.showgrevstack2){
+  ctx.beginPath();
+  y=-500;ctx.moveTo(-(P.b*(P.y2-P.y1)+P.a*(P.x2-P.x1))/(P.h*(P.y2-P.y1)+P.b*(P.x2-P.x1))*(P.y2*P.scale-y)+P.x2*P.scale,y)
+  y=500;ctx.lineTo(-(P.b*(P.y2-P.y1)+P.a*(P.x2-P.x1))/(P.h*(P.y2-P.y1)+P.b*(P.x2-P.x1))*(P.y2*P.scale-y)+P.x2*P.scale,y)
+  ctx.stroke();
+   }
 
     if(P.showgconj){
   ctx.fillStyle = P.colorconj

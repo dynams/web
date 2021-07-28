@@ -4,6 +4,7 @@ import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
 import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 
+
 //import * as workerTimersBroker from '/js/dist/worker-timers-broker.js';
 //import * as workerTimers from '/js/dist/worker-timers.js';
 
@@ -122,11 +123,13 @@ export function CreateMachine(object) {
 
   transitionTo(initial)
 
-  return { currentState, send, transitionTo };
+  return { currentState, send, transitionTo, getCurrentState };
+
+  function getCurrentState() {
+    return currentState;
+  }
 
   function send(event) {
-    console.log(states);
-    console.log(currentState);
     if (states[currentState].on[event]) {
       transitionTo(states[currentState].on[event].target)
     }
@@ -134,71 +137,132 @@ export function CreateMachine(object) {
 
 
   function transition(state, action) {
-    
+    const s = states[state]
+
+    if(state != currentState) {
+      console.log('error: state ('+state+') does not match current state ('+currentState+')');
+      return
+    }
+    /* setup event listeners */
+    if (action in s.on) {
+      transitionTo(s.on[action].target)
+    } else {
+      console.log('invalid transition ('+action+')');
+    }
+  }
+
+  function parseOnEvent(state, e) {
+    const ev = state.on[e];
+    const target = ev.target
+    if (e == 'CLICK') {
+      // setup event listener for clicks
+      const el = ev.el || window; 
+      function onclick(e) { 
+        transitionTo(target) 
+      }
+      el.addEventListener('click', onclick)
+      destructors.push(() => el.removeEventListener('click', onclick))
+    } else if (e == 'TIMER'){
+      // setup timer for duration 
+      const el = ev.el;
+      context.elapsed = 0;
+      let tick, timer;
+      if(el) {
+        timer = init_timer_graphic(el, 'timer123')
+        tick = () => {
+          context.elapsed += 50
+          const p = context.elapsed/(ev.duration*1000)
+          timer.update(p)
+        }
+        const _timer = window.setInterval(tick, 50)
+        destructors.push(() => {timer.destroy(); window.clearInterval(_timer); console.log('destroyed timer')})
+      }
+      let timeout;
+
+      timeout = function() {
+        if (tick) { 
+          window.clearInterval(tick)
+          timer.destroy()
+        }
+        context.elapsed = 0
+        transitionTo(target)
+      }
+      const _timeout = window.setTimeout(timeout, ev.duration*1000)
+      destructors.push(() => { window.clearTimeout(_timeout) })
+    } else if (e == 'FETCH'){
+      //setup fetch
+      transitionTo(target)
+      console.log('fetching')
+      fetch(ev.url)
+      .then(function(response){
+        console.log('fetched')
+        if (!response.ok) {
+          throw new Error('HTTP error, status = ' + response.status);
+        } 
+        return response.json()
+      })
+      .then(function(json) {
+        context[ev.json] = json
+        console.log('study: ')
+        console.log(json);
+        console.log(context.study);
+        transition(target, 'RESOLVE')
+      })
+      .catch(function(error) {
+        transition(target, 'REJECT')
+      })
+    } else if (e == 'SUBMIT') {
+      const send = function () {
+        let fd = new FormData(ev.form);
+        const body = JSON.stringify(Object.fromEntries(fd))
+        fetch(ev.url, {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+            'mode': 'cors'
+          },
+          body
+        }).then(res => res.json())
+        .then(json => console.log(json))
+        .catch(err=> console.error(err));
+      }
+      if(ev.debounce) {
+        const debounced = _.debounce(send, ev.debounce)
+        ev.form.addEventListener('keyup', debounced)
+        destructors.push(function() {
+          ev.form.removeEventListener('keyup', debounced)
+        })
+      } else {
+        console.log('add')
+        destructors.push(send)
+      }
+    }
   }
 
   function transitionTo(to) {
-    if('onExit' in states[currentState]) {
-      states[currentState].onExit();
+    const prevState = currentState;
+    currentState = to;
+    console.log('transitionTo('+to+')')
+    setScreen(states[to].screen)
+    if('onExit' in states[prevState]) {
+      states[prevState].onExit();
     }
     destructors.forEach( d => d() )
     destructors = [];
-    console.log('State transition to "'+to+'"')
-
     
     /* Entry */
     if('onEntry' in states[to]) {
-      states[to].onEntry()
+      states[to].onEntry(context)
     }
-
 
     const state = states[to]
 
-    /* setup listeners */
+    /* setup event listeners */
     if(state.on) {
-      Object.keys(state.on).forEach((e) => {
-        const ev = state.on[e];
-        const target = ev.target
-        if (e == 'CLICK') {
-          // setup event listener for clicks
-          const el = ev.el || window; 
-          function onclick(e) { 
-            transitionTo(target) 
-          }
-          el.addEventListener('click', onclick)
-          destructors.push(() => el.removeEventListener('click', onclick))
-        } else if (e == 'TIMER'){
-          // setup timer for duration 
-          const el = ev.el;
-          context.elapsed = 0;
-          let tick, timer;
-          if(el) {
-            timer = init_timer_graphic(el, 'timer123')
-            tick = () => {
-              context.elapsed += 50
-              const p = context.elapsed/(ev.duration*1000)
-              timer.update(p)
-            }
-            const _timer = window.setInterval(tick, 50)
-            destructors.push(() => {timer.destroy(); window.clearInterval(_timer); console.log('destroyed timer')})
-          }
-          let timeout;
-
-          timeout = function() {
-            if (tick) { 
-              window.clearInterval(tick)
-              timer.destroy()
-            }
-            context.elapsed = 0
-            transitionTo(target)
-          }
-          const _timeout = window.setTimeout(timeout, ev.duration*1000)
-          destructors.push(() => { window.clearTimeout(_timeout) })
-        }
-      })
+      Object.keys(state.on).forEach((e)=>parseOnEvent(state,e))
     }
-    setScreen(states[to].screen)
-    currentState = to;
+
   }
 
 }
@@ -219,7 +283,7 @@ function setScreen(screen) {
 function init_timer_graphic(el, id) {
   el.innerHTML = `
   <svg overflow='visible' viewbox='0 0 11 11'>
-    <path id="` + id + `" fill='black'/>
+    <path id="` + id + `" d="M 5 5 M 5 0 A 5 5 0 1 0 5 0 L 5 5 Z" fill='black'/>
   </svg>
   `
   function update(val) {

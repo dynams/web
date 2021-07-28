@@ -171,14 +171,16 @@ svg > text {
   font-size: 14pt;
   font-weight: bold;
   background-color: #80B6EA;
-  border: 1px black solid;
+  border: 1px #0A9EF0 solid;
   float: right;
   align-items: center;
   justify-content: center;
 }
+.paragraph button:active{
+  background-color: #C7D8E2;
+}
 .paragraph button:hover{
-  background-color: #90C6FA;
-  border: 1px #333 solid;
+  border: 1px #4214B0 solid;
 }
 
 .paragraph hr{
@@ -208,22 +210,32 @@ svg > text {
   width:100%;
 }
 .paragraph .labeltls {
+  font-size: 15pt;
   font-weight: bold;
   float: left;
   width: 10em;
+  word-wrap: break-word;
 }
 .paragraph .labeltls-left {
-  font-size: 12pt;
+  font-size: 10pt;
   float: left;
 }
 .paragraph .labeltls-right {
-  font-size: 12pt;
+  font-size: 10pt;
   float: right;
 }
 .paragraph .ptls {
   text-indent: -10em;
   padding-left: 10em;
   margin-top: 2ex;
+}
+@media(max-width: 48em) {
+  .paragraph .labeltls {
+    float: none;
+  }
+  .paragraph .labeltls2 {
+    float: none;
+  }
 }
 
 a {

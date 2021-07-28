@@ -4,9 +4,10 @@
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/styles.css">
   <script src="/js/dist/papaparse.min.js"></script>
+  <script src="/js/dist/lodash.min.js"></script>
+  <script src="https://cdn.rangetouch.com/2.0.1/rangetouch.js"></script>
   <script type="module" src="/js/ds.js"></script>
   <script src="/js/scripts.js"></script>
-  <script type="text/javascript" src="/study/quadgame.json"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
 
@@ -30,7 +31,6 @@ rect {
 
 .main {
   display: block;
-  touch-action: none;
   height: 100%;
   cursor: crosshair;
 }
@@ -53,7 +53,14 @@ rect {
  </head>
 <body>
 
-<div id="cover">
+<div id="cover"></div>
+<div id="reject" class="screen">
+  <div class="message" style="top:50%">
+    Error. Please refresh the page.
+  </div>
+</div>
+
+<div id="loading" class="screen">
   <div class="message" style="top:50%">
     Loading...
   </div>
@@ -78,13 +85,12 @@ rect {
           <span style="font-size: 12px; color: maroon;">Please read this carefully!</span>
         </h2>
         <p> Today you will participate in a <b>human/machine collaboration research study</b>. Please be comfortably seated at your computer or device (mouse, touchscreen). Your goal is to <i>move your cursor</i> to achieve the <i>best overall performance</i>.
-        <p> On the next page, you will start with a short training phase to enable you to acclimate and gain proficiency with the system. 
-        After the training, you will follow on-screen instructions to provide <i>input</i> that makes an object satisfy an <i>objective</i>. 
+        <p> On the next page, 
+        you will follow on-screen instructions to provide <i>input</i> that makes an object satisfy an <i>objective</i>. 
         For example, you may be asked to make an object as <i>small</i> or <i>large</i> as possible.
         <p> After each experiment, we will ask a brief series of questions to evaluate the interaction. 
         The entire experimental session should take between 30 minutes and two hours. 
         You are encouraged to take breaks during the allotted times.
-        <p> You are not required to complete the experimental session; you can excuse yourself at any time.
         <h2> 🔬 Benefits of the Scientific Research </h2>
         <p> We are studying how humans interact with machines like robots using computer interfaces, and what changes can be made to improve these interfaces.
         <p> This research may contribute to safer, more intuitive, or more adaptive human/machine interfaces with applications in virtual/augmented reality, teleoperated robotics, or assistive devices.
@@ -138,60 +144,67 @@ rect {
       </div>
       <hr>
       <div class="content tls">
-        <p class="ptls">
-        <span class="labeltls">Mental Demand</span>
-        How mentally demanding was the task?
-        <br>
-        <p>
-        <input type="range" min="-10" max="10" value="0" disabled></input>
-        <span class="labeltls-left">Very Low</span>
-        <span class="labeltls-right">Very High</span>
-        <p class="ptls">
-        <span class="labeltls">Physical Demand</span>
-        How physically demanding was the task?
-        <p>
-        <input type="range" min="-10" max="10" value="0" disabled></input>
-        <span class="labeltls-left">Very Low</span>
-        <span class="labeltls-right">Very High</span>
-        <p class="ptls">
-        <span class="labeltls">Temporal Demand</span>
-        How hurried or rushed was the pace of the task?
-        <p>
-        <input type="range" min="-10" max="10" value="0" disabled></input>
-        <span class="labeltls-left">Very Low</span>
-        <span class="labeltls-right">Very High</span>
-        <p class="ptls">
-        <span class="labeltls">Performance</span>
-        How successful were you in accomplishing what you were asked to do?
-        <p>
-        <input type="range" min="-10" max="10" value="0" disabled></input>
-        <span class="labeltls-left">Perfect</span>
-        <span class="labeltls-right">Failure</span>
-        <p class="ptls">
-        <span class="labeltls">Effort</span>
-        How hard did you have to work to accomplish your level of performance?
-        <p>
-        <input type="range" min="-10" max="10" value="0" disabled></input>
-        <span class="labeltls-left">Very Low</span>
-        <span class="labeltls-right">Very High</span>
-        <p class="ptls">
-        <span class="labeltls">Frustration</span>
-        How insecure, discouraged, irritated, stressed, and annoyed were you?
-        <p>
-        <input type="range" min="-10" max="10" value="0" disabled></input>
-        <span class="labeltls-left">Very Low</span>
-        <span class="labeltls-right">Very High</span>
-        <br/>
-        <hr style="display: none;">
-        <button id+"btn_survey">
-          <div class="timer" id="timer_survey"></div>
-          CONTINUE</button>
+        <form id="form_survey" action="javascript:void(0);">
+          <p class="ptls">
+          <div class="labeltls">Mental Demand</div>
+          How mentally demanding was the task?
+          <p>
+          <div class="labeltls-left">Very Low</div>
+          <div class="labeltls-right">Very High</div>
+          <input name="mental" type="range" min="-10" max="10" value="0" ></input>
+
+          <p class="ptls">
+          <div class="labeltls">Physical Demand</div>
+          How physically demanding was the task?
+          <p>
+          <div class="labeltls-left">Very Low</div>
+          <div class="labeltls-right">Very High</div>
+          <input name="physical" type="range" min="-10" max="10" value="0" ></input>
+
+          <p class="ptls">
+          <div class="labeltls">Temporal Demand</div>
+          How hurried or rushed was the pace of the task?
+          <p>
+          <div class="labeltls-left">Very Low</div>
+          <div class="labeltls-right">Very High</div>
+          <input name="temporal" type="range" min="-10" max="10" value="0" ></input>
+
+          <p class="ptls">
+          <div class="labeltls">Performance</div>
+          How successful were you in accomplishing what you were asked to do?
+          <p>
+          <div class="labeltls-left">Perfect</div>
+          <div class="labeltls-right">Failure</div>
+          <input name="performance" type="range" min="-10" max="10" value="0" ></input>
+
+          <p class="ptls">
+          <div class="labeltls">Effort</div>
+          How hard did you have to work to accomplish your level of performance?
+          <p>
+          <div class="labeltls-left">Very Low</div>
+          <div class="labeltls-right">Very High</div>
+          <input name="effort" type="range" min="-10" max="10" value="0"></input>
+
+          <p class="ptls">
+          <div class="labeltls">Frustration</div>
+          How insecure, discouraged, irritated, stressed, and annoyed were you?
+          <p>
+          <div class="labeltls-left">Very Low</div>
+          <div class="labeltls-right">Very High</div>
+          <input name="frustration" type="range" min="-10" max="10" value="0"></input>
+          <br/>
+          <br/>
+          <hr style="display:none;">
+          <button id="btn_survey">
+            <div class="timer" id="timer_survey"></div>
+            CONTINUE</button>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
-<div id="end" class="screen scroll">
+<div id="thankyou" class="screen scroll">
   <div class="page">
     <div class="paragraph">
       <div class="title">
@@ -199,19 +212,21 @@ rect {
       </div>
       <hr>
       <div class="content">
-        <p> You have now completed this task and your data has been saved.
-        <p> If you would like to be contacted for future studies, please enter your email:
-        <br>
-        <input type="email" placeholder="email" disabled></input> (optional)
-        <p>
-        <p> Any feedback? Let us know here:
-        <br>
-        <textarea placeholder="I think that..." disabled></textarea>
-        <p>
-        Deidentify your email 
-        <input type="checkbox" checked disabled></input> 
-        and feedback 
-        <input type="checkbox" checked disabled></input> 
+        <form id="form_thankyou">
+          <p> You have now completed this task and your data has been saved.
+          <p> If you would like to be contacted for future studies, please enter your email:
+          <br>
+          <input name="email" type="email" placeholder="email"></input> (optional)
+          <p>
+          <p> Any feedback? Let us know here:
+          <br>
+          <textarea name="feedback" placeholder="I think that..."></textarea>
+          <p>
+          Deidentify your email 
+          <input name="deidentify_email" type="checkbox" id="check1" value="1" checked></input> 
+          and feedback 
+          <input name="deidentify_feedback" type="checkbox" id="check2" value="1" checked></input> 
+        </form>
       </div>
     </div>
   </div>
@@ -219,20 +234,18 @@ rect {
 
 <!-- Main study graphics -->
 <div id="study_out" class="screen main">
+  <div class="message" style="color: white; top: 72%; word-wrap: break-word; left:15%; right:15%;">
+    keep this as <span style="font-style:italic">small</span> as possible
+  </div>
   <svg width="100%" height="100%">
     <rect id="output" class="fg-fill" width="70%" height="10%" x="15%" y="70%"></rect>
   </svg>
-  <div class="message" style="color: white; top: 73%">
-    <span style="vertical-align: middle">
-    keep this as small as possible
-    </span>
-  </div>
 </div>
 
 <div id="intro" class="screen text" >
   <div class="message" style="top: 50%;">
     <div class="timer" id="timer_intro"></div>
-    click or touch the cursor 
+    click or touch the diamond 
   </div>
 </div>
 
@@ -248,7 +261,7 @@ rect {
 <div id="study_target" class="screen">
   <div class="message" style="top: 50%;">
     <div class="timer" class="timer_target"></div>
-    move the cursor to fill the diamond
+    move the cursor to fill 
   </div>
   <svg width="100%" height="100%">
     <svg id="target" x="50%" y="90%" overflow="visible"> 
@@ -268,7 +281,7 @@ rect {
     <a class="setScreen" title="study_in study_out"> Start Study</a> |
     <a class="setScreen" title="rest"> Rest </a> |
     <a class="setScreen" title="survey"> Survey </a> |
-    <a class="setScreen" title="end"> End </a> 
+    <a class="setScreen" title="thankyou"> End </a> 
   </div>
   <div class="footer-2">
   </div>
@@ -291,8 +304,9 @@ function debug(val=true) {
 
 mountListeners()
 
+const range = RangeTouch.setup('input[type="range"]');
 
-let ds, study, studyMachine;
+let ds, studyMachine;
 let pid = getQuery().pid || "guest";
 let group = getQuery().grp || "";
 
@@ -307,30 +321,54 @@ window.onload = function() {
     update_fn: update, 
     experiment: 'siso'})
 
-  getStudy("https://api.dynam.space/studies/sample")
-  //getStudy("http://localhost:8000/studies/sample")
-  document.getElementById('cover').style = "display: none;"
+  const api_url = "https://api.dynam.space/"
+  //const api_url = "http://localhost:8000/"
+
+  console.log('pid: '+pid)
+  const api_sample_url = api_url + "studies/sample"
+  const api_survey_url = api_url + "survey/" + pid 
+  const api_upload_url = api_url + "upload/" + pid + "-" + group 
 
   //worker = new Worker('/js/timer.js')
   //worker.onmessage = function() { }
 
   studyMachine = CreateMachine({
     id: 'study',
-    initial: 'load',
+    initial: 'idle',
     context: {
       elapsed: 0,
       duration: 0,
+      study: null
     },
 
     states: {
-      load: {
+      idle: {
         screen: 'idle',
+        on: {
+          FETCH: { 
+            target: 'loading',
+            url: api_sample_url,
+            json: 'study'
+          }
+        }
+      },
+      loading: {
+        screen: 'loading',
         on: { 
-          LOAD: {
-          },
-          CLICK: { 
+          RESOLVE: { 
             target: 'welcome' 
+          },
+          REJECT: { 
+            target: 'reject' 
           } 
+        }
+      },
+      reject: {
+        screen: 'reject',
+        on: {
+          CLICK: {
+            target: 'load'
+          }
         }
       },
       welcome: {
@@ -342,14 +380,14 @@ window.onload = function() {
           },
           TIMER: {
             target: 'intro',
-            duration: 120,
+            duration: 5*60,
             el: document.getElementById('timer_welcome')
           }
         },
-        onEntry: function () {
+        onEntry: function (context) {
           console.log("Welcome!")
           console.log(">> Starting controller")
-          ds.load(study, 'https://api.dynam.space/upload/'+pid+'-'+group )
+          ds.load(context.study, api_upload_url)
         }
       },
 
@@ -359,10 +397,6 @@ window.onload = function() {
 
       intro: {
         screen: 'intro study_in',
-        onEntry: function() {
-          pid = prompt('enter your name or ID', pid)
-          console.log('pid='+pid+'-'+group)
-        },
         onExit: function() {
           ds.start()
         },
@@ -423,31 +457,34 @@ window.onload = function() {
         on: {
           CLICK: {
             el: document.getElementById('btn_survey'),
-            target: 'end'
+            target: 'thankyou'
           },
           TIMER: {
             el: document.getElementById('timer_survey'),
             duration: 120,
-            target: 'end'
+            target: 'thankyou'
+          },
+          SUBMIT: {
+            url: api_survey_url,
+            form: document.getElementById('form_survey')
           }
         }
       },
-      end: {
-        screen: 'end'
+      thankyou: {
+        screen: 'thankyou',
+        on: {
+          SUBMIT: {
+            url: api_survey_url,
+            form: document.getElementById('form_thankyou'),
+            debounce: 2000
+          }
+        }
       }
     }
   })
-}
 
-function getStudy(url) {
-  fetch(url)
-  .then(response => response.json())
-  .then(json => study = json)
-  .then(()=>
-    document.getElementById('cover').style = "display: none;"
-  )
+  document.getElementById('cover').setAttribute('style','display:none;');
 }
-
 
 
 function mountListeners() {
@@ -511,7 +548,7 @@ function printStatus(status) {
 
 window.addEventListener("DOMContentLoaded", function() {
   shortcut.set({
-    "f": function () {
+    "ctrl-f": function () {
       document.querySelector('.footer').classList.remove('hidden')
     }
   })
