@@ -8,15 +8,19 @@ import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 //import * as workerTimersBroker from '/js/dist/worker-timers-broker.js';
 //import * as workerTimers from '/js/dist/worker-timers.js';
 
-export default function DynamSpace({ update_fn, experiment } = {}) {
+export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   
-  let current, controller, study, task, space, upload_api;
+  let current, controller, study, task, space, upload_api, session;
+  let min_left;
 
   return { load, start, pause, resume, progress, getSpace, mount, save }
 
-  function load(s, api) {
+  function load(s, api, sess={}) {
     study = s
     upload_api = api
+    current = 0
+    session = sess;
+    update_min_left()
   }
 
   function pause() {
@@ -28,10 +32,12 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
   }
 
   function progress(sec=0) {
+    update_min_left()
+    const time_remaining = min_left || sec*(study.tasks.length-current)/60;
     return { 
       current: current, 
       total: study.tasks.length,
-      time_remaining: sec*(study.tasks.length-current)/60
+      time_remaining 
     }
   }
 
@@ -54,7 +60,6 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
       update_fn: update_fn,
       upload_fn: upload
     })
-    current = 0
     task = study.tasks[current]
     controller.load(task)
     controller.start()
@@ -67,6 +72,13 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
   function save() {
     controller.save()
   }
+  function update_min_left() {
+    min_left = 0
+    for(let i=current; i<study.tasks.length; i++){
+      min_left += study.tasks.length.duration || 0;
+    }
+    min_left /= 60;
+  }
 
   function nextTask() {
     if (current >= study.tasks.length-1) {
@@ -74,7 +86,13 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
     }
     current += 1
     task = study.tasks[current];
-    controller.reset(task)
+    update_min_left()
+
+    if (task) controller.reset(task)
+    else {
+      console.log('Done trials')
+      done_fn();
+    }
   }
 
   function mount(s, api) {
@@ -84,14 +102,16 @@ export default function DynamSpace({ update_fn, experiment } = {}) {
   }
 
   function upload(object) {
-    const payload = {
+    console.log(session)
+    let payload = {
+      id: current,
       sid: study.sid,
+      session,
       ...object
     }
     const body = JSON.stringify(payload)
-    console.log("uploading")
     fetch(upload_api, {
-      method: 'post',
+      method: 'POST',
       headers: {
         'accept': 'application/json',
         'Content-Type': 'application/json',
@@ -141,7 +161,6 @@ export function CreateMachine(object) {
 
     if(state != currentState) {
       console.log('error: state ('+state+') does not match current state ('+currentState+')');
-      return
     }
     /* setup event listeners */
     if (action in s.on) {
@@ -191,7 +210,6 @@ export function CreateMachine(object) {
       destructors.push(() => { window.clearTimeout(_timeout) })
     } else if (e == 'FETCH'){
       //setup fetch
-      transitionTo(target)
       console.log('fetching')
       fetch(ev.url)
       .then(function(response){
@@ -199,22 +217,28 @@ export function CreateMachine(object) {
         if (!response.ok) {
           throw new Error('HTTP error, status = ' + response.status);
         } 
+        transitionTo(target)
         return response.json()
       })
       .then(function(json) {
         context[ev.json] = json
-        console.log('study: ')
-        console.log(json);
-        console.log(context.study);
         transition(target, 'RESOLVE')
       })
       .catch(function(error) {
+        console.log(error)
+        transitionTo(target)
         transition(target, 'REJECT')
       })
     } else if (e == 'SUBMIT') {
       const send = function () {
-        let fd = new FormData(ev.form);
-        const body = JSON.stringify(Object.fromEntries(fd))
+        console.log('sending')
+        const fd = new FormData(ev.form);
+        let payload = {}
+        if(ev.payload){
+          payload = {...payload, ...ev.payload}
+        }
+          
+        const body = JSON.stringify({...payload, data: Object.fromEntries(fd)})
         fetch(ev.url, {
           method: 'POST',
           headers: {
@@ -227,15 +251,24 @@ export function CreateMachine(object) {
         .then(json => console.log(json))
         .catch(err=> console.error(err));
       }
-      if(ev.debounce) {
-        const debounced = _.debounce(send, ev.debounce)
-        ev.form.addEventListener('keyup', debounced)
+      if(ev.throttle) {
+        const throttled = _.throttle(send, ev.throttle)
+        ev.form.addEventListener('keyup', throttled)
         destructors.push(function() {
-          ev.form.removeEventListener('keyup', debounced)
+          ev.form.removeEventListener('keyup', throttled)
         })
       } else {
         console.log('add')
         destructors.push(send)
+        console.log('added')
+      }
+    } else if (e == 'REDIRECT') {
+      console.log('redirect')
+      const href = ev.url(context) || '#';
+      ev.link.setAttribute('href', href);
+      if(context.completion_code) {
+        ev.code.innerHTML = context.completion_code
+        window.location.replace(ev.url(context));
       }
     }
   }
@@ -248,8 +281,11 @@ export function CreateMachine(object) {
     if('onExit' in states[prevState]) {
       states[prevState].onExit();
     }
-    destructors.forEach( d => d() )
+    console.log('descructing')
+    const des = destructors;
     destructors = [];
+    des.forEach( d => d() )
+    console.log('descructed')
     
     /* Entry */
     if('onEntry' in states[to]) {
@@ -291,6 +327,7 @@ function init_timer_graphic(el, id) {
     if(!timer) return
     if (val>= 1) val = 0.99999999
     if (val<= -1) val = -0.9999999
+    val = val-1;
     const x = -Math.sin(-val*Math.PI*2)*5+5
     const y = -Math.cos(-val*Math.PI*2)*5+5
     const xy = x + " " + y

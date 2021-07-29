@@ -56,7 +56,7 @@ export default function TaskController({
     // getState: ()=>state
     };
   function start() {
-    console.log('Started')
+    console.log('Controller: start')
     state.state = init('standby', 0)
     state.zip = init_zip()
     state.zip
@@ -75,27 +75,24 @@ export default function TaskController({
   }
 
   function reset(task) {
-    console.log('reset')
+    console.log('Controller: reset')
     if ( task == null ) {
       console.log("Warning: task initialized to null")
     }
+    // TODO: fix done state
     state.task = task
     const protocol = task.protocol
-    if (protocol == 'welcome' || protocol == 'break') {
-      console.log('go to break')
-      return false
-    }
-
     const params = task.params
     const proto = registrar[protocol]
 
+    console.log(task.params.duration)
     // Initialize a trial
     state.freq = proto.freq
-    state.duration = proto.duration
+    state.duration = task.params.duration || proto.duration;
     state.ready_wait = proto.ready_wait
     state.standby_wait = proto.standby_wait
     state.rest_wait = 10
-    state.rest_freq = 1
+    state.rest_freq = 3
     // state.canvas.width = proto.preset.k.w
     // state.canvas.height = proto.preset.k.h
 
@@ -114,9 +111,6 @@ export default function TaskController({
     
 
     let PP = {...proto.preset, ...params}
-    //PP.k = PP.k || {}
-    //PP.k.w = window.innerWidth;
-    //PP.k.h = window.innerHeight;
 
     let { P, S, I, O } = state.reset_fn({ P:PP })
     state.P = P
@@ -127,7 +121,6 @@ export default function TaskController({
     state.trial_dict = []
 
     return true
-
   }
 
   function load(task){
@@ -177,6 +170,7 @@ export default function TaskController({
   }
 
   function stop() {
+      console.log('Controller: stopped')
       const filename = state.task.id + '-' + state.task.protocol + '-P' + JSON.stringify(state.P).replace(/[^\w\s.]/gi, '')+ '.csv'
       if(is_save_zip) {
         zip(state.zip, filename, state.trial)
@@ -192,8 +186,6 @@ export default function TaskController({
 
       done_fn()
   }
-
-
 
   function save() {
     function appendZero(x) {
@@ -216,7 +208,7 @@ export default function TaskController({
   }
 
   function exit() {
-    console.log('set exit')
+    console.log('Controller: exit')
     state.is_exit = true
   }
 

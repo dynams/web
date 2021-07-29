@@ -80,17 +80,21 @@ rect {
       </div>
       <hr>
       <div class="content">
-        <p> Welcome! Thanks for choosing to participate in our research study. 
+        <p> Welcome! Thanks for choosing to participate in our study.
         <h2>📜 Instructions 
           <span style="font-size: 12px; color: maroon;">Please read this carefully!</span>
         </h2>
-        <p> Today you will participate in a <b>human/machine collaboration research study</b>. Please be comfortably seated at your computer or device (mouse, touchscreen). Your goal is to <i>move your cursor</i> to achieve the <i>best overall performance</i>.
-        <p> On the next page, 
-        you will follow on-screen instructions to provide <i>input</i> that makes an object satisfy an <i>objective</i>. 
+        <p> Today you will participate in a <b>human/machine collaboration research study</b>. 
+        <p> Your goal is to <i>move your cursor</i> to achieve the <i>best overall performance</i>.
+        <!--<p> On the next page, 
+        you will follow on-screen instructions to provide <i>input</i> that makes an object satisfy an <i>objective</i>. -->
         For example, you may be asked to make an object as <i>small</i> or <i>large</i> as possible.
-        <p> After each experiment, we will ask a brief series of questions to evaluate the interaction. 
-        The entire experimental session should take between 30 minutes and two hours. 
-        You are encouraged to take breaks during the allotted times.
+        <p> After the experiment, we will ask a some question to evaluate the interaction. 
+        The entire experimental session should take around <span style="font-weight:bold;" id="time_remaining_welcome">10 minutes</span>.
+
+        <p> You are encouraged to 
+        be comfortably seated with your device and
+        take breaks during the allotted times.
         <h2> 🔬 Benefits of the Scientific Research </h2>
         <p> We are studying how humans interact with machines like robots using computer interfaces, and what changes can be made to improve these interfaces.
         <p> This research may contribute to safer, more intuitive, or more adaptive human/machine interfaces with applications in virtual/augmented reality, teleoperated robotics, or assistive devices.
@@ -108,9 +112,21 @@ rect {
   </div>
 </div>
 
-<div id="error" class="screen">
-  <div class="message" style="top:50%; padding: 2em; background-color: rgba(213,165,165, 0.8); " >
-    Timeout! Refresh page to restart.
+<div id="complete" class="screen">
+</div>
+
+<div id="end" class="screen">
+  <div class="message" style="top:50%">
+    Redirecting... (<a id="redirect_href">Click here</a> if the page doesn't reload). (Completion code: <span id="redirect_code">UNAVAILABLE</span>)
+  </div>
+</div>
+
+<div id="final" class="screen">
+  <div class="message" style="top:50%">
+    Good bye!
+    <br>
+    <br>
+    <span style="font-size:0.8em">(Refresh to restart.)</span>
   </div>
 </div>
 
@@ -227,6 +243,10 @@ rect {
           and feedback 
           <input name="deidentify_feedback" type="checkbox" id="check2" value="1" checked></input> 
         </form>
+        <button id="btn_thankyou"> 
+          <div class="timer" id="timer_thankyou"></div>
+          COMPLETE 
+        </button>
       </div>
     </div>
   </div>
@@ -307,8 +327,13 @@ mountListeners()
 const range = RangeTouch.setup('input[type="range"]');
 
 let ds, studyMachine;
-let pid = getQuery().pid || "guest";
-let group = getQuery().grp || "";
+const query = getQuery()
+const pid = query.pid || query.PROLIFIC_PID || "guest";
+const sid = query.sid || "sample";
+const tags = query.tags || "";
+const PROLIFIC_PID = query.PROLIFIC_PID;
+const SESSION_ID = query.SESSION_ID;
+const STUDY_ID = query.STUDY_ID;
 
 window.onload = function() {
   function touchstart(e) {
@@ -317,17 +342,26 @@ window.onload = function() {
   }
   window.addEventListener("touchstart", touchstart);
 
+  function done() {
+    studyMachine.transitionTo('survey')
+  }
   ds = DynamSpace({ 
     update_fn: update, 
-    experiment: 'siso'})
+    experiment: 'siso',
+    done_fn: done
+  })
 
-  const api_url = "https://api.dynam.space/"
-  //const api_url = "http://localhost:8000/"
+
+  //const api_url = "https://api.dynam.space/"
+  const api_url = "http://localhost:8000/"
+  const completed_url = "https://app.prolific.co/submissions/complete?cc=";
+
 
   console.log('pid: '+pid)
-  const api_sample_url = api_url + "studies/sample"
-  const api_survey_url = api_url + "survey/" + pid 
-  const api_upload_url = api_url + "upload/" + pid + "-" + group 
+  const api_study_url = api_url + "study/" + sid
+  const api_survey_url = api_url + "upload/" + pid 
+  const api_upload_url = api_url + "upload/" + pid + (tags?"-" + tags:"")
+  const api_completed_url = api_url + "complete/" + sid
 
   //worker = new Worker('/js/timer.js')
   //worker.onmessage = function() { }
@@ -347,7 +381,7 @@ window.onload = function() {
         on: {
           FETCH: { 
             target: 'loading',
-            url: api_sample_url,
+            url: api_study_url,
             json: 'study'
           }
         }
@@ -380,14 +414,21 @@ window.onload = function() {
           },
           TIMER: {
             target: 'intro',
-            duration: 5*60,
+            duration: 2*60,
             el: document.getElementById('timer_welcome')
           }
         },
         onEntry: function (context) {
+          const extra_time = 1;
           console.log("Welcome!")
           console.log(">> Starting controller")
-          ds.load(context.study, api_upload_url)
+          ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID} )
+          const prog = ds.progress(30)
+          console.log(prog)
+          if(prog.time_remaining) {
+            const label = document.getElementById('time_remaining_welcome')
+            label.innerHTML = Math.round(prog.time_remaining+extra_time) + ' minutes';
+          }
         }
       },
 
@@ -461,24 +502,69 @@ window.onload = function() {
           },
           TIMER: {
             el: document.getElementById('timer_survey'),
-            duration: 120,
+            duration: 2*60,
             target: 'thankyou'
           },
           SUBMIT: {
             url: api_survey_url,
-            form: document.getElementById('form_survey')
+            form: document.getElementById('form_survey'),
+            payload: {id: 0, sid, protocol:"feedback"} 
           }
         }
       },
       thankyou: {
         screen: 'thankyou',
         on: {
+          CLICK: {
+            target: 'complete',
+            el: document.getElementById('btn_thankyou')
+          },
+          TIMER: {
+            target: 'complete',
+            duration: 3*60,
+            el: document.getElementById('timer_thankyou')
+          },
           SUBMIT: {
             url: api_survey_url,
             form: document.getElementById('form_thankyou'),
-            debounce: 2000
+            payload: {id: 0, sid, protocol:"feedback"},
+            throttle: 2000,
           }
         }
+      },
+      complete: {
+        screen: 'complete',
+        on: {
+          FETCH: {
+            target: 'end',
+            url: api_completed_url,
+            json: 'completion_code'
+          }
+        }
+      },
+      end: {
+        screen: 'end',
+        on: {
+          RESOLVE: {
+            target: 'redirect'
+          },
+          REJECT: {
+            target: 'final'
+          },
+        }
+      },
+      redirect: {
+        screen: 'end',
+        on: {
+          REDIRECT: {
+            url: (context) => completed_url + context.completion_code,
+            link: document.getElementById('redirect_href'),
+            code: document.getElementById('redirect_code')
+          }
+        }
+      },
+      final: {
+        screen: 'final',
       }
     }
   })
@@ -498,7 +584,7 @@ function mountListeners() {
 }
 
 let myMsg = "";
-let myState = "initial";
+let myState = "idle";
 function update({msg, state}={}) {
   if (msg) myMsg = msg
   msg = state + " | " + myMsg + " | " 
@@ -548,7 +634,7 @@ function printStatus(status) {
 
 window.addEventListener("DOMContentLoaded", function() {
   shortcut.set({
-    "ctrl-f": function () {
+    "control-f": function () {
       document.querySelector('.footer').classList.remove('hidden')
     }
   })

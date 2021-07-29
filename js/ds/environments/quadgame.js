@@ -4,6 +4,7 @@
 // by
 // x(t+1) = x(t) - lr*g_x(x,y)
 // y(t+1) = x(t) - lr*g_y(x,y)
+import { random_uniform } from "/js/ds/environments/utils.js";
 
 function shift_centers({ P, S }) {
     let x = S.x;
@@ -20,7 +21,6 @@ function shift_centers({ P, S }) {
     let x2 = x - P.x2 * P.s;
     let y2 = y - P.y2 * P.s;
 
-
     return { x1, x2, y1, y2 };
 }
 
@@ -29,11 +29,6 @@ function costs({ P, S }) {
 
     let costx = (P.a * x1 * x1) / 2 + P.b * x1 * y1 + (P.h * y1 * y1) / 2;
     let costy = (P.d * y2 * y2) / 2 + P.c * x2 * y2 + (P.e * x2 * x2) / 2;
-
-    // costx = Math.sqrt(costx)
-    // costy = Math.sqrt(costy)
-    costx /= P.s**2;
-    costy /= P.s**2;
 
     return { costx, costy };
 }
@@ -75,13 +70,16 @@ function step_sim({ P, S }) {
     const y_next = S.y - P.lr * gy;
 
     const Sp = { x: x_next, y: y_next }; 
-    const O = { costx, costy, gradx, grady, gradstackx };
+    const O = { costx, costy };
     return { Sp, O };
 }
 
 function reset({ P }) {
     // const x = P.xflip ? -P.x0 : P.x0
-    const S = { x: P.x0, y: P.y0 };
+    const x0 = !P.random? P.x0 : random_uniform(-.8,.8)
+    const y0 = !P.random? P.y0 : random_uniform(-.8,.8)
+    const S = { x: x0, y: y0 };
+    console.log(S)
     const I = { x: 0 };
     const { O } = step({ P, S, I });
 

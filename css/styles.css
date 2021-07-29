@@ -236,6 +236,12 @@ svg > text {
   .paragraph .labeltls2 {
     float: none;
   }
+  .paragraph textarea {
+    width: 90%;
+  }
+  .paragraph input[type=email]{
+    width: 90%;
+  }
 }
 
 a {

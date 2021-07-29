@@ -31,8 +31,7 @@ function step_sim({ P, S }) {
 function reset({ P }) {
     
     const PP = {...P,
-        lr: 0.01,
-        x0: random_uniform(-1, 1)
+        lr: 0,
     };
     const S = { x: random_uniform(-1, 1) } 
     const I = { x: 0 }
