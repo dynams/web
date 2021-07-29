@@ -54,7 +54,7 @@ function drawOutput(val) {
   const mid = 70
   const tot = 10
 
-  val = Math.atan(val)/Math.PI + 1/2
+  val = Math.atan(val/10)/Math.PI
   const h = val*(mid-tot) +bot-mid
   const y = (1-val) * (mid-tot) + tot
 

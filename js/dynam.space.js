@@ -1,5 +1,5 @@
 
-function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) {
+function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, truncate_fn, data, experiments ) {
  var vue = new Vue({
 	el: "#main",
   data: { 
@@ -19,6 +19,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
     H: { //history
     	I: {}, O: {}, S: {}
     },
+    P: {},
     results: []
   },
   filters: {
@@ -131,6 +132,9 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
 
       this.info.prevT = this.O.time
     },
+    truncate() {
+      truncate_fn(this.P)
+      },
   	tick() {
       if (this.info.hasStarted && this.info.isRunning) {
     	   this.O.time = Date.now() - this.info.startTime

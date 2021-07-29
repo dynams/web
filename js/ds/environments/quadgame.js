@@ -29,6 +29,9 @@ function costs({ P, S }) {
 
     let costx = (P.a * x1 * x1) / 2 + P.b * x1 * y1 + (P.h * y1 * y1) / 2;
     let costy = (P.d * y2 * y2) / 2 + P.c * x2 * y2 + (P.e * x2 * x2) / 2;
+      
+    costx /= P.s**2;
+    costy /= P.s**2;
 
     return { costx, costy };
 }
