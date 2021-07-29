@@ -2,7 +2,7 @@
  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <head>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <script src="/js/dist/vue@2.6.14.js"></script>
     <link rel="stylesheet" href="../css/style.css"></style>
     <script src="../js/dynam.space.js"></script> 
 <style>
@@ -955,6 +955,7 @@ function draw(canvas, S, I, O, P, H) {
 
   recompute(P)
 
+
   ctx.strokeStyle = 'white'
   ctx.fillStyle = 'black'
   ctx.lineWidth = 3
@@ -1063,11 +1064,13 @@ function draw(canvas, S, I, O, P, H) {
    } else if (P.mode == 'simgrad') {
      x = S.x
      y = S.y
-    }
+     } else {
+     console.log('ERROR')
+   }
 
 
-    xx1 = (x-P.x1*P.scale)
-    yy1 = (y-P.y1*P.scale)
+    xx1 = (S.x-P.x1*P.scale)
+    yy1 = (S.y-P.y1*P.scale)
     gradx = P.a*xx1 + P.b*yy1
     gradstackx = gradx - P.c*(P.b*xx1+P.h*yy1)/P.d
 
@@ -1383,7 +1386,7 @@ function truncate(P) {
   P.x2 = Math.round(P.x2*s)/s;
 }
 
-DynamSpace(update, draw, inputs, reset, truncate, data, experiments, )
+DynamSpace(update, draw, inputs, reset, truncate, data, experiments)
 }
 	</script>
 </body>
