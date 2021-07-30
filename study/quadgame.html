@@ -324,11 +324,15 @@ function debug(val=true) {
 
 mountListeners()
 
+if(!localStorage.guest_id){
+  localStorage.guest_id = Math.round(Math.random()*99999)
+}
 const range = RangeTouch.setup('input[type="range"]');
 
 let ds, studyMachine;
 const query = getQuery()
-const pid = query.pid || query.PROLIFIC_PID || "guest";
+const guest_id = localStorage.guest_id || 99999;
+const pid = query.pid || query.PROLIFIC_PID || "guest"+ ("00000" + guest_id).substr(-5,5) +"-"+Date.now();
 const sid = query.sid || "sample";
 const tags = query.tags || "";
 const PROLIFIC_PID = query.PROLIFIC_PID;
