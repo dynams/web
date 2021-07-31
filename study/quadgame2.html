@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat</title>
+  <script src="../js/dist/lodash.min.js"></script>
+  <style>
+    body{ 
+      width: 100%;
+      height: 100%
+    }
+  </style>
+</head>
+<body>
+  <div id="header"></div>
+  <div id="content"></div>
+
+
+<script>
+var pid = Date.now()
+var ws = new WebSocket(`ws://localhost:8000/ws/${pid}`);
+
+var P = { a: [[1], [1]], b: [[0], [1]], x0: [[0], [0]], s:0.2, num_players: 2, num_actions: 1 }
+var I = { xi: [[0], [0]], down: false };
+var S = { x: null };
+var Sp = { x: null };
+
+var updated_input = false;
+
+var CONST = {
+  freq_tick: 60,
+  freq_send: 5,
+  freq_ping: 0.2,
+}
+
+var stats = {
+  pings: [null, null],
+  ping: null
+}
+var flags = { 
+  initialized: false,
+  started: false,
+  done: false,
+};
+
+var config = { 
+  rid: null,
+  player_id: null,
+  num_player: null,
+  num_actions: null,
+  num_aux: null,
+}
+
+function cost(S, P, i) {
+  let c = 0;
+  const xi = S.x[i][0] - P.x0[i][0]*P.s;
+  for(let j = 0; j < P.num_players; j++) {
+    const xj = S.x[j][0]-P.x0[j][0]*P.s;
+    c += P.a[j][0]*xj*xj/2;
+    if (j != i) {
+      c += P.b[j][0]*xi*xj
+    }
+  }
+  return c
+}
+
+ws.onmessage = function(event) {
+  var data = JSON.parse(event.data)
+  switch (data.cmd) {
+    case 'init':
+      flags.initialized = true;
+      Object.assign(config, data.config)
+      Object.assign(Sp, data.S)
+      Object.assign(S, data.S)
+      tick()
+      ping()
+      break;
+
+
+    case 'start':
+      flags.started = true;
+      config.player_id = data.player_id
+    case 'update':
+      Object.assign(Sp, data.S)
+      Object.assign(S, data.S)
+      Sp.x[config.player_id] = I.xi;
+      Sp.down[config.player_id] = I.down;
+      break;
+
+    case 'stop':
+      flags.started = false;
+      break;
+
+    case 'status':
+      status = data
+      break;
+
+    case 'screen':
+      break;
+
+    case 'ping':
+      ws.send(JSON.stringify({
+        cmd:'pong',
+      }))
+      break;
+    case 'pong':
+      stats.pings[1] = window.performance.now()
+      stats.ping = stats.pings[1] - stats.pings[0];
+      break;
+
+    default:
+      console.log('cmd '+data.cmd+' not supported')
+      break;
+  }
+};
+ws.onclose = function(event) {
+    flags.done = true
+}
+
+function _tick() {
+    var content = document.getElementById("content")
+    var header = document.getElementById("header")
+    content.innerHTML = ""
+    if(stats.ping) {
+      content.innerHTML += 'ping: '+(stats.ping) + '<br>'
+    }
+    if(flags.initialized){
+      content.innerHTML += 'I='+I.xi+' | '+I.down + '<br>';
+
+    } 
+    if(flags.started && flags.initialized) {
+      content.innerHTML += 'S='
+      content.innerHTML += S.x.join('<br>');
+      content.innerHTML += '<br>cost: '+cost(Sp, P, config.player_id);
+    }
+    document.getElementById('header').innerHTML = `
+    pid: ${pid},
+    rid: ${config.rid},
+    ping: ${stats.ping},
+    player_id: ${config.player_id},
+    `
+}
+
+function _send() {
+  if(ws) {
+    const json = JSON.stringify({
+      cmd: 'update',
+      I})
+    ws.send(json)
+  }
+}
+
+tick = _.throttle(_tick, 1000/CONST.freq_tick);
+send = _.throttle(_send, 1000/CONST.freq_send);
+
+
+function ping() {
+  if(ws) {
+    stats.pings[0] = window.performance.now()
+    ws.send(JSON.stringify({
+      cmd: 'ping',
+    }))
+  }
+  window.setTimeout(ping, 1000/CONST.freq_ping)
+}
+
+
+function move(clientX, clientY){
+  const s = 10000
+  const x = clientX/window.innerWidth*2-1;
+  const y = clientY/window.innerHeight*2-1;
+  I.xi = [Math.round(x*s)/s, Math.round(y*s)/s]
+  if (config.player_id) {
+    Sp.x[config.player_id] = [Math.round(x*s)/s, Math.round(y*s)/s]
+  }
+  tick()
+  send()
+}
+
+function touchmove(e) {
+  move(e.touches[0].clientX, e.touches[0].clientY)
+}
+
+function mousemove(e) {
+  move(e.clientX, e.clientY)
+}
+
+function mousedown(event){
+  I.down = true 
+  tick()
+  send()
+}
+
+function mouseup(event){
+  I.down = false 
+  tick()
+  send()
+}
+window.addEventListener('mousemove', mousemove)
+window.addEventListener('touchmove', touchmove)
+window.addEventListener('mousedown', mousedown)
+window.addEventListener('mouseup', mouseup)
+window.addEventListener('touchmove', mousemove)
+
+</script>
+    </body>
+</html>
