@@ -11,6 +11,11 @@
 </head>
 <body>
   <div id="header">loading...</div>
+  <div id="">
+    <svg>
+      <rect id="out"  width="50%" height="50%"/>
+    </svg>
+  </div>
   <div id="content"></div>
   <div id="debug"></div>
 
@@ -145,7 +150,7 @@ window.onload = function(){
   function _tick() {
     const _P = JSON.stringify(P)
     const _t = window.performance.now()
-    var header = document.getElementById("header")
+    const header = document.getElementById("header")
     document.getElementById('header').innerHTML = `
     t: ${_t},
     pid: ${pid},
@@ -154,21 +159,24 @@ window.onload = function(){
     P: ${_P}
     `
 
-    var content = document.getElementById("content")
+    const content = document.getElementById("content")
     content.innerHTML = ""
     if(stats.ping) {
       content.innerHTML += 'ping: '+(stats.ping) + '<br>'
     }
     if(flags.initialized){
       content.innerHTML += 'I='+I.xi+' | '+I.down + '<br>';
-
     } 
     if(flags.started && flags.initialized) {
       const c = cost(Sp, P)
       content.innerHTML += 'S='
       content.innerHTML += Sp.x.join('<br>');
       content.innerHTML += '<br>cost: '+c;
+
+      const out = document.getElementById("out")
+      out.setAttribute('height', c/3*100 + "%")
     }
+
 
   }
 
