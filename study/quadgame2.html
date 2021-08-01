@@ -5,23 +5,34 @@
   <title>play</title>
   <script src="../js/dist/lodash.min.js"></script>
   <style>
-    body{ 
+    #main{ 
+      text-align: center;
+      padding-top: 10%;
     }
   </style>
 </head>
 <body>
-  <div id="header">loading...</div>
-  <div id="">
-    <svg>
-      <rect id="out"  width="50%" height="50%"/>
+  <div id="header"></div>
+  <div id="main">
+    <svg width="10em">
+      <rect id="out" y="100%" width="100%" height="0%"/>
     </svg>
+    <div id="content">loading...</div>
   </div>
-  <div id="content"></div>
   <div id="debug"></div>
 
 <script>
 window.onload = function(){
-  var pid = Date.now()
+  function getQuery() {
+    let queryDict = {}
+    location.search.substr(1).split("&").forEach(function(item) {
+      queryDict[item.split("=")[0]] = item.split("=")[1]
+    })
+    return queryDict
+  }
+
+  const query = getQuery();
+  const pid = query.pid || Date.now();
   const ws_url = 'wss://ws.dynam.space/ws/' + pid;
   //const ws_url = 'ws://localhost:8000/ws/' + pid;
   try {
@@ -46,13 +57,15 @@ window.onload = function(){
 
   var stats = {
     pings: [null, null],
-    ping: null
+    ping: null,
+    time_left_text: ""
   }
+
   var flags = { 
     initialized: false,
     started: false,
     done: false,
-  };
+  }
 
   var config = { 
     rid: null,
@@ -86,7 +99,11 @@ window.onload = function(){
         break;
 
       case 'heartbeat':
-        document.getElementById('debug').innerHTML = "time left:" + data.time_left.toFixed(1) + " s";
+        const secs = data.time_left.toFixed(2)
+        const mins = Math.floor(data.time_left/60);
+        const _ = Math.floor(secs%60)
+        stats.time_left_text = mins + 'm' + _ + 's';
+        tick()
         break;
 
       case 'reset':
@@ -111,6 +128,7 @@ window.onload = function(){
 
       case 'stop':
         flags.started = false;
+        flags.loaded = false;
         break;
 
       case 'status':
@@ -152,7 +170,6 @@ window.onload = function(){
     const _t = window.performance.now()
     const header = document.getElementById("header")
     document.getElementById('header').innerHTML = `
-    t: ${_t},
     pid: ${pid},
     rid: ${config.rid},
     ping: ${stats.ping},
@@ -161,23 +178,20 @@ window.onload = function(){
 
     const content = document.getElementById("content")
     content.innerHTML = ""
-    if(stats.ping) {
-      content.innerHTML += 'ping: '+(stats.ping) + '<br>'
-    }
-    if(flags.initialized){
-      content.innerHTML += 'I='+I.xi+' | '+I.down + '<br>';
+    if(flags.initialized && !flags.started){
+      content.innerHTML += `Waiting for other players to join... ${stats.time_left_text}`;
     } 
-    if(flags.started && flags.initialized) {
+    if(flags.started) {
       const c = cost(Sp, P)
-      content.innerHTML += 'S='
-      content.innerHTML += Sp.x.join('<br>');
-      content.innerHTML += '<br>cost: '+c;
+      //content.innerHTML = 'S='
+      //content.innerHTML += Sp.x.join('<br>');
+      //content.innerHTML += '<br>cost: '+c;
+      content.innerHTML = 'make this as small as possible'
 
       const out = document.getElementById("out")
-      out.setAttribute('height', c/3*100 + "%")
+      out.setAttribute('height', c/2*100 + "%")
+      out.setAttribute('y', 100 - c/2*98-2 + "%")
     }
-
-
   }
 
   function _send() {
