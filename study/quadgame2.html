@@ -1,23 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chat</title>
+  <title>play</title>
   <script src="../js/dist/lodash.min.js"></script>
   <style>
     body{ 
-      width: 100%;
-      height: 100%
     }
   </style>
 </head>
 <body>
-  <div id="header"></div>
+  <div id="header">loading...</div>
   <div id="content"></div>
-
+  <div id="debug"></div>
 
 <script>
+window.onload = function(){
+document.getElementById('header').innerHTML = 'hello'
 var pid = Date.now()
-var ws = new WebSocket(`ws://localhost:8000/ws/${pid}`);
+document.getElementById('header').innerHTML = 'bye'
+try {
+  var ws = new WebSocket('wss://ws.dynam.space/ws/'+pid);
+}
+catch(err) {
+  document.getElementById('header').innerHTML = err.message;
+}
 
 var P = { a: [[1], [1]], b: [[0], [1]], x0: [[0], [0]], s:0.2, num_players: 2, num_actions: 1 }
 var I = { xi: [[0], [0]], down: false };
@@ -25,6 +31,7 @@ var S = { x: null };
 var Sp = { x: null };
 
 var updated_input = false;
+
 
 var CONST = {
   freq_tick: 60,
@@ -75,7 +82,6 @@ ws.onmessage = function(event) {
       ping()
       break;
 
-
     case 'start':
       flags.started = true;
       config.player_id = data.player_id
@@ -84,6 +90,7 @@ ws.onmessage = function(event) {
       Object.assign(S, data.S)
       Sp.x[config.player_id] = I.xi;
       Sp.down[config.player_id] = I.down;
+      tick()
       break;
 
     case 'stop':
@@ -129,7 +136,7 @@ function _tick() {
     } 
     if(flags.started && flags.initialized) {
       content.innerHTML += 'S='
-      content.innerHTML += S.x.join('<br>');
+      content.innerHTML += Sp.x.join('<br>');
       content.innerHTML += '<br>cost: '+cost(Sp, P, config.player_id);
     }
     document.getElementById('header').innerHTML = `
@@ -141,7 +148,7 @@ function _tick() {
 }
 
 function _send() {
-  if(ws) {
+  if(ws.readyState == 1) {
     const json = JSON.stringify({
       cmd: 'update',
       I})
@@ -151,6 +158,8 @@ function _send() {
 
 tick = _.throttle(_tick, 1000/CONST.freq_tick);
 send = _.throttle(_send, 1000/CONST.freq_send);
+
+tick()
 
 
 function ping() {
@@ -168,7 +177,8 @@ function move(clientX, clientY){
   const s = 10000
   const x = clientX/window.innerWidth*2-1;
   const y = clientY/window.innerHeight*2-1;
-  I.xi = [Math.round(x*s)/s, Math.round(y*s)/s]
+
+  Object.assign(I, {xi: [Math.round(x*s)/s, Math.round(y*s)/s]})
   if (config.player_id) {
     Sp.x[config.player_id] = [Math.round(x*s)/s, Math.round(y*s)/s]
   }
@@ -177,7 +187,9 @@ function move(clientX, clientY){
 }
 
 function touchmove(e) {
-  move(e.touches[0].clientX, e.touches[0].clientY)
+  const x = e.touches[0].clientX;
+  const y = e.touches[0].clientY;
+  move(x, y)
 }
 
 function mousemove(e) {
@@ -199,8 +211,7 @@ window.addEventListener('mousemove', mousemove)
 window.addEventListener('touchmove', touchmove)
 window.addEventListener('mousedown', mousedown)
 window.addEventListener('mouseup', mouseup)
-window.addEventListener('touchmove', mousemove)
-
+}
 </script>
     </body>
 </html>
