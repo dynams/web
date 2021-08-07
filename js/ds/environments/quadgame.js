@@ -48,15 +48,23 @@ function gradients({ P, S }) {
 }
 
 
-
 function step({ P, S, I }) {
-    const { gradx, grady, gradstackx } = gradients({ P, S });
+    let y_offset = 0;
+    if(P.ypert) {
+      if((S.t/P.ypert_period*2) % 2 < 1){
+        y_offset = P.ypert;
+      } else {
+        y_offset = -P.ypert;
+      }
+    }
+    const Ss = {x: S.x, y: S.y + y_offset };
+    const { gradx, grady, gradstackx } = gradients({ P, S:Ss });
     const x_next = I.x;
     const y_next = S.y - P.lr * grady;
     const { costx, costy } = costs({ P, S })
 
-    const Sp = { x: x_next, y: y_next}
-    const O = { cost: costx, costy, gradx, grady, gradstackx }
+    const Sp = { t: S.t+1, x: x_next, y: y_next}
+    const O = { cost: costx, costy }
 
     return { Sp, O };
 }
@@ -78,11 +86,9 @@ function step_sim({ P, S }) {
 }
 
 function reset({ P }) {
-    // const x = P.xflip ? -P.x0 : P.x0
     const x0 = !P.random? P.x0 : random_uniform(-.8,.8)
     const y0 = !P.random? P.y0 : random_uniform(-.8,.8)
-    const S = { x: x0, y: y0 };
-    console.log(S)
+    const S = { t:0, x: x0, y: y0 };
     const I = { x: 0 };
     const { O } = step({ P, S, I });
 
