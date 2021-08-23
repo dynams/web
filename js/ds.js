@@ -88,10 +88,12 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
     }
     current += 1
     task = study.tasks[current];
-    Object.assign(task.params, params)
     update_min_left()
 
-    if (task) controller.reset(task)
+    if (task) {
+      Object.assign(task.params, params)
+      controller.reset(task)
+    }
     else {
       console.log('Done trials')
       done_fn();
