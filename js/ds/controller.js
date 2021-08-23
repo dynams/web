@@ -57,6 +57,8 @@ export default function TaskController({
     };
   function start() {
     console.log('Controller: start')
+    console.log('params: ')
+    console.log(state.task)
     state.state = init('standby', 0)
     state.zip = init_zip()
     state.zip
@@ -123,8 +125,9 @@ export default function TaskController({
     return true
   }
 
-  function load(task){
+  function load(task, params={}){
     console.log("loading")
+    Object.assign(task.params, params);
     state.task = task
     mount({ getSpace, setInput, update_fn })
   }
@@ -175,12 +178,14 @@ export default function TaskController({
       if(is_save_zip) {
         zip(state.zip, filename, state.trial)
       }
+      const trial_dict = state.trial_dict;
+      const P = state.P;
       if(upload_fn) {
         upload_fn({
           protocol: state.task.protocol, 
           id: state.task.id, 
-          params: state.P, 
-          data: state.trial_dict
+          params: P,
+          data: trial_dict,
         })
       }
 

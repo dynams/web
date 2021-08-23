@@ -11,15 +11,17 @@ import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   
   let current, controller, study, task, space, upload_api, session;
+  let params;
   let min_left;
 
   return { load, start, pause, resume, progress, getSpace, mount, save }
 
-  function load(s, api, sess={}) {
+  function load(s, api, sess={}, P={}) {
     study = s
     upload_api = api
     current = 0
     session = sess;
+    params = P
     update_min_left()
   }
 
@@ -61,7 +63,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       upload_fn: upload
     })
     task = study.tasks[current]
-    controller.load(task)
+    controller.load(task, params)
     controller.start()
   }
 
@@ -86,6 +88,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
     }
     current += 1
     task = study.tasks[current];
+    Object.assign(task.params, params)
     update_min_left()
 
     if (task) controller.reset(task)

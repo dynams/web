@@ -338,6 +338,13 @@ const tags = query.tags || "";
 const PROLIFIC_PID = query.PROLIFIC_PID;
 const SESSION_ID = query.SESSION_ID;
 const STUDY_ID = query.STUDY_ID;
+let params= {};
+if(query.k) {
+  params.k = parseFloat(query.k)
+}
+if(query.l) {
+  params.l = parseFloat(query.l)
+}
 
 window.onload = function() {
   function touchstart(e) {
@@ -356,8 +363,8 @@ window.onload = function() {
   })
 
 
-  const api_url = "https://api.dynam.space/"
-  //const api_url = "http://localhost:8000/"
+  //const api_url = "https://api.dynam.space/"
+  const api_url = "http://localhost:8000/"
   const completed_url = "https://app.prolific.co/submissions/complete?cc=";
 
 
@@ -426,7 +433,7 @@ window.onload = function() {
           const extra_time = 1;
           console.log("Welcome!")
           console.log(">> Starting controller")
-          ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID} )
+          ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID}, params)
           const prog = ds.progress(30)
           console.log(prog)
           if(prog.time_remaining) {
@@ -590,8 +597,9 @@ function mountListeners() {
 let myMsg = "";
 let myState = "idle";
 function update({msg, state}={}) {
-  if (msg) myMsg = msg
-  msg = state + " | " + myMsg + " | " 
+  if (msg) myMsg = msg;
+  //msg = state + " | " + myMsg + " | " 
+  msg = ""
   if (state && state != myState) {
     myState = state
     switch(state) {

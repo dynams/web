@@ -40,27 +40,38 @@ function costs({ P, S }) {
 function gradients({ P, S }) {
     const { x1, x2, y1, y2 } = shift_centers({ P, S });
 
-    const gradx = P.a * x1 + P.b * y1 + P.k*(P.b * x1 + P.h * y1)
+    const gradx = P.a * x1 + P.b * y1;
     const grady = P.c * x2 + P.d * y2 + P.l*(P.c * y2 + P.e * x2)
     const gradstackx = gradx - (P.c / P.d)* (P.b * x1 + P.h * y1);
 
     return { gradx, grady, gradstackx };
 }
 
+function gradients_rev({ P, S }) {
+    const { x1, x2, y1, y2 } = shift_centers({ P, S });
+
+    const gradx = P.a * x1 + P.b * y1;
+    const grady = -(P.k + P.kpert) * x2 + y2;
+    const gradstackx = 0;
+
+    return { gradx, grady, gradstackx };
+}
 
 function step({ P, S, I }) {
-    let y_offset = 0;
-    if(P.ypert) {
-      if((S.t/P.ypert_period*2) % 2 < 1){
-        y_offset = P.ypert;
-      } else {
-        y_offset = -P.ypert;
-      }
+    let g2;
+
+    const Ss = {x: S.x, y: S.y + P.ypert };
+
+    if (!P.rev) {
+      const { grady } = gradients({ P, S:Ss });
+      g2 = grady;
+    } else {
+      const { grady } = gradients_rev({ P, S:Ss })
+      g2 = grady;
     }
-    const Ss = {x: S.x, y: S.y + y_offset };
-    const { gradx, grady, gradstackx } = gradients({ P, S:Ss });
+
     const x_next = I.x;
-    const y_next = S.y - P.lr * grady;
+    const y_next = S.y - P.lr * g2;
     const { costx, costy } = costs({ P, S })
 
     const Sp = { t: S.t+1, x: x_next, y: y_next}
