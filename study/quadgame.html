@@ -345,6 +345,12 @@ if(query.k) {
 if(query.l) {
   params.l = parseFloat(query.l)
 }
+if(query.lr) {
+  params.lr = parseFloat(query.lr)
+}
+if(query.rev) {
+  params.rev = parseFloat(query.rev)
+}
 
 window.onload = function() {
   function touchstart(e) {

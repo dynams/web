@@ -47,33 +47,59 @@ function gradients({ P, S }) {
     return { gradx, grady, gradstackx };
 }
 
+function bestresponse({ P, S }) {
+    const brx = 0;
+    const bry = -(P.c + P.e * P.l)/(P.d + P.c * P.l)*(S.x - P.s * P.x2) + P.s * P.y2;
+    return { brx, bry };
+}
+
+function bestresponse_rev({ P, S }) {
+    const brx = 0;
+    const bry = (P.k + P.kpert) * (S.x - P.s * P.x2) + P.s * P.y2;
+    return { brx, bry };
+}
+
 function gradients_rev({ P, S }) {
     const { x1, x2, y1, y2 } = shift_centers({ P, S });
 
     const gradx = P.a * x1 + P.b * y1;
     const grady = -(P.k + P.kpert) * x2 + y2;
-    const gradstackx = 0;
 
-    return { gradx, grady, gradstackx };
+    return { gradx, grady };
 }
 
 function step({ P, S, I }) {
     let g2;
+    let y_next;
 
-    const Ss = {x: S.x, y: S.y + P.ypert };
+    const Ss = { 
+      x: S.x, 
+      y: S.y + P.ypert 
+    };
 
-    if (!P.rev) {
+
+    // State updates for x and y
+    const x_next = I.x;
+    if (P.lr > 0 && !P.rev ) {
+      // Forward case (gradient)
       const { grady } = gradients({ P, S:Ss });
-      g2 = grady;
-    } else {
+      y_next = S.y - P.lr * grady;
+    } else if (P.lr > 0 && P.rev ) {
+      // Reverse case (gradient)
       const { grady } = gradients_rev({ P, S:Ss })
-      g2 = grady;
+      y_next = S.y - P.lr * grady;
+    } else if (P.lr == -1 && !P.rev) {
+      // Forward case (best response)
+      const { bry } = bestresponse({ P, S:Ss });
+      y_next = bry;
+    } else if (P.lr == -1 && P.rev) {
+      // Reverse case (best response)
+      const { bry } = bestresponse_rev({ P, S:Ss });
+      y_next = bry;
     }
 
-    const x_next = I.x;
-    const y_next = S.y - P.lr * g2;
-    const { costx, costy } = costs({ P, S })
 
+    const { costx, costy } = costs({ P, S })
     const Sp = { t: S.t+1, x: x_next, y: y_next}
     const O = { cost: costx, costy }
 
