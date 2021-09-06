@@ -4,24 +4,25 @@ import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
 import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 
-
 //import * as workerTimersBroker from '/js/dist/worker-timers-broker.js';
 //import * as workerTimers from '/js/dist/worker-timers.js';
 
 export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   
-  let current, controller, study, task, space, upload_api, session;
+  let count, controller, study, task, space, upload_api, session;
   let params;
-  let min_left;
+  let min_left, random_permutation;
 
   return { load, start, pause, resume, progress, getSpace, mount, save }
 
   function load(s, api, sess={}, P={}) {
     study = s
     upload_api = api
-    current = 0
+    count = 0
     session = sess;
     params = P
+    random_permutation = _.shuffle(_.range(s.tasks.length));
+    console.log(random_permutation);
     update_min_left()
   }
 
@@ -35,9 +36,9 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
   function progress(sec=0) {
     update_min_left()
-    const time_remaining = min_left || sec*(study.tasks.length-current)/60;
+    const time_remaining = min_left || sec*(study.tasks.length-count)/60;
     return { 
-      current: current, 
+      current: count, 
       total: study.tasks.length,
       time_remaining 
     }
@@ -62,7 +63,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       update_fn: update_fn,
       upload_fn: upload
     })
-    task = study.tasks[current]
+    task = study.tasks[count]
     controller.load(task, params)
     controller.start()
   }
@@ -76,18 +77,20 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   }
   function update_min_left() {
     min_left = 0
-    for(let i=current; i<study.tasks.length; i++){
+    for(let i=count; i<study.tasks.length; i++){
       min_left += study.tasks.length.duration || 0;
     }
     min_left /= 60;
   }
 
   function nextTask() {
-    if (current >= study.tasks.length-1) {
+    if (count >= study.tasks.length-1) {
       controller.exit()
+      done_fn();
     }
-    current += 1
-    task = study.tasks[current];
+    count += 1
+    const idx = random_permutation[count];
+    task = study.tasks[idx];
     update_min_left()
 
     if (task) {
@@ -109,7 +112,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   function upload(object) {
     console.log(session)
     let payload = {
-      id: current,
+      id: count,
       sid: study.sid,
       session,
       ...object
