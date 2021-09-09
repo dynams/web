@@ -110,7 +110,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   }
 
   function upload(object) {
-    console.log(session)
+    console.log('upload')
     let payload = {
       id: count,
       sid: study.sid,

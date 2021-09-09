@@ -42,20 +42,22 @@ function gradients({ P, S }) {
 
     const gradx = P.a * x1 + P.b * y1;
     const grady = P.c * x2 + P.d * y2 + P.l*(P.c * y2 + P.e * x2)
-    const gradstackx = gradx - (P.c / P.d)* (P.b * x1 + P.h * y1);
+    const gradstackx = gradx - (P.c / P.d) * (P.b * x1 + P.h * y1);
 
     return { gradx, grady, gradstackx };
 }
 
 function bestresponse({ P, S }) {
+    const sgn = P.xflip ? -1 : 1;
     const brx = 0;
-    const bry = -(P.c + P.e * P.l)/(P.d + P.c * P.l)*(S.x - P.s * P.x2) + P.s * P.y2;
+    const bry = -(P.c + P.e * P.l)/(P.d + P.c * P.l)*(sgn*S.x - P.s * P.x2) + P.s * P.y2 + P.ypert;
     return { brx, bry };
 }
 
 function bestresponse_rev({ P, S }) {
+    const sgn = P.xflip ? -1 : 1;
     const brx = 0;
-    const bry = (P.k + P.kpert) * (S.x - P.s * P.x2) + P.s * P.y2;
+    const bry = (P.k + P.kpert) * (sgn*S.x - P.s * P.x2) + P.s * P.y2 + P.ypert;
     return { brx, bry };
 }
 

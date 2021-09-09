@@ -178,7 +178,7 @@ export default function TaskController({
       if(is_save_zip) {
         zip(state.zip, filename, state.trial)
       }
-      const trial_dict = state.trial_dict;
+      const trial_dict = JSON.parse(JSON.stringify(state.trial_dict));
       const P = state.P;
       if(upload_fn) {
         upload_fn({
