@@ -150,7 +150,16 @@ export default function TaskController({
 
   function step(PSI) {
       // Step
-      const { Sp, O } = state.step_fn(PSI)
+      const { P, S, I } = PSI;
+      //console.log('step')
+      //let Ss; Object.assign(Ss, S);
+      //if (state.state.t == 0){
+        // hack to fix the initial condition problem
+      //  console.log('starting step! S.x='+S.x+' I.x='+I.x);
+      //  Ss.x = I.x
+      //}
+
+      let { Sp, O } = state.step_fn({ P, S, I })
       state.O = O
 
       // Log

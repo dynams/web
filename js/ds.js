@@ -202,7 +202,10 @@ export function CreateMachine(object) {
           timer.update(p)
         }
         const _timer = window.setInterval(tick, 50)
-        destructors.push(() => {timer.destroy(); window.clearInterval(_timer); console.log('destroyed timer')})
+        destructors.push(() => {
+          timer.destroy(); 
+          window.clearInterval(_timer); 
+          })
       }
       let timeout;
 
@@ -239,7 +242,7 @@ export function CreateMachine(object) {
       })
     } else if (e == 'SUBMIT') {
       const send = function () {
-        console.log('sending')
+        console.log('submitting')
         const fd = new FormData(ev.form);
         let payload = {}
         if(ev.payload){
@@ -266,9 +269,7 @@ export function CreateMachine(object) {
           ev.form.removeEventListener('keyup', throttled)
         })
       } else {
-        console.log('add')
         destructors.push(send)
-        console.log('added')
       }
     } else if (e == 'REDIRECT') {
       console.log('redirect')
@@ -289,11 +290,9 @@ export function CreateMachine(object) {
     if('onExit' in states[prevState]) {
       states[prevState].onExit();
     }
-    console.log('descructing')
     const des = destructors;
     destructors = [];
     des.forEach( d => d() )
-    console.log('descructed')
     
     /* Entry */
     if('onEntry' in states[to]) {

@@ -351,6 +351,15 @@ if(query.lr) {
 if(query.rev) {
   params.rev = parseFloat(query.rev)
 }
+if(query.kpert) {
+  params.kpert = parseFloat(query.kpert)
+}
+if(query.ypert) {
+  params.ypert = parseFloat(query.ypert)
+}
+if(query.s) {
+  params.s = parseFloat(query.s)
+}
 
 window.onload = function() {
   function touchstart(e) {
@@ -369,8 +378,13 @@ window.onload = function() {
   })
 
 
-  const api_url = "https://api.dynam.space/"
-  //const api_url = "http://localhost:8000/"
+  let api_url; 
+  if (!query.dev) {
+    api_url = "https://api.dynam.space/"
+  } else {
+    api_url = "http://localhost:8000/"
+  }
+
   const completed_url = "https://app.prolific.co/submissions/complete?cc=";
 
 
