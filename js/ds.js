@@ -111,12 +111,14 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
   function upload(object) {
     console.log('upload')
+    console.log('len='+object.data.length);
     let payload = {
       id: count,
       sid: study.sid,
       session,
       ...object
     }
+
     const body = JSON.stringify(payload)
     fetch(upload_api, {
       method: 'POST',

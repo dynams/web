@@ -128,11 +128,17 @@ function step({ P, S, I }) {
         x: x_next, 
         y: y_next 
     }
-    const { costx, costy } = costs({ P, S: Sp })
-    const O = { cost: costx, costy }
+    const { O } = output({ P, S: Sp});
 
     return { Sp, O };
 }
+
+function output({ P, S }) {
+    const { costx, costy } = costs({ P, S })
+    const O = { cost: costx, costy }
+    return { O }
+}
+    
 
 function step_sim({ P, S }) {
     const { costx, costy } = costs({ P, S })
@@ -149,16 +155,13 @@ function step_sim({ P, S }) {
 
 function reset({ P }) {
     const x0 = P.random ? random_uniform(-.8,.8) : P.x0;
-    let y0 =   P.random ? random_uniform(-.8,.8) : P.y0;
+    let y0 = P.random ? random_uniform(-.8,.8) : P.y0;
 
-    if (P.lr == -1) {
-      const Ss = { x: x0 };
-      const { bry } = bestresponse({ P, S: Ss });
-      y0 = bry;
-    }
-    const S = { t:0, x: x0, y: y0 };
-    const I = { x: 0 };
-    const { O } = step({ P, S, I });
+    const Ss = { t:0, x: x0, y: y0 };
+    const I = { x: x0 };
+    const { Sp } = step({ P, S:Ss, I });
+    const S = { t:0, x: x0, y: Sp.y };
+    const { O } = output({ P, S })
 
     return { P, S, I, O };
 }

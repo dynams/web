@@ -121,6 +121,7 @@ export default function TaskController({
     state.O = O
     state.trial = []
     state.trial_dict = []
+    state.pretrial_dict = []
 
     return true
   }
@@ -151,13 +152,6 @@ export default function TaskController({
   function step(PSI) {
       // Step
       const { P, S, I } = PSI;
-      //console.log('step')
-      //let Ss; Object.assign(Ss, S);
-      //if (state.state.t == 0){
-        // hack to fix the initial condition problem
-      //  console.log('starting step! S.x='+S.x+' I.x='+I.x);
-      //  Ss.x = I.x
-      //}
 
       let { Sp, O } = state.step_fn({ P, S, I })
       state.O = O
@@ -181,6 +175,20 @@ export default function TaskController({
       state.S = Sp
   }
 
+  function prestep(PSI) {
+      const { P, S, I } = PSI;
+
+      // Log
+      const data = { 
+        t: { 
+          t:state.state.t, 
+          utc:Date.now() 
+        } , 
+        I: state.I, 
+      }
+      state.pretrial_dict.push(data)
+  }
+
   function stop() {
       console.log('Controller: stopped')
       const filename = state.task.id + '-' + state.task.protocol + '-P' + JSON.stringify(state.P).replace(/[^\w\s.]/gi, '')+ '.csv'
@@ -188,8 +196,15 @@ export default function TaskController({
         zip(state.zip, filename, state.trial)
       }
       const trial_dict = JSON.parse(JSON.stringify(state.trial_dict));
+      const pretrial_dict = JSON.parse(JSON.stringify(state.pretrial_dict));
       const P = state.P;
       if(upload_fn) {
+        upload_fn({
+          protocol: state.task.protocol + '-pre', 
+          id: state.task.id, 
+          params: P,
+          data: pretrial_dict,
+        })
         upload_fn({
           protocol: state.task.protocol, 
           id: state.task.id, 
@@ -235,6 +250,7 @@ export default function TaskController({
       },
       state: state.state, 
       start_fn: start_condition,
+      prestep_fn: prestep,
       step_fn: step, 
       stop_fn: stop,
       standby: state.freq*state.standby_wait,

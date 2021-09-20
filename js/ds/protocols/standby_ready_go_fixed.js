@@ -3,41 +3,47 @@ export function init(state, t) {
     return { state, n: 0, t: 0, count: 0, timer: 0, rest: 0 };
 }
 
-export function update({ state, PSI, standby, ready, go, step_fn, stop_fn, start_fn, rest_freq=0, is_exit=false }) {
+export function update({ state, PSI, standby, ready, go, prestep_fn, step_fn, stop_fn, start_fn, rest_freq=0, is_exit=false }) {
     // standby: wait until input is ready
     // ready: f ready for `ready` time steps, then transition into go
     // go: run for fixed `go` timesteps then transition into standby
     if (is_exit) {
       state.state == "exit"
     }
+    console.log('t='+state.t+
+      '|n='+state.n+'|count='+state.count+
+      '|timer='+state.timer+'|state='+state.state)
     state.t += 1;
+    if (state.state == "standby" || state.state == "ready") {
+        state.timer += 1;
+        prestep_fn(PSI);
+        if (standby > 0 && state.timer >= standby) {
+            state.state = "go";
+            state.timer = 0;
+            state.count = 0;
+            state.t = 0;
+            state.n += 1;
+        }
+    }
     if (state.state == "standby") {
-        state.timer += 1
+        state.count = 0;
         if (start_fn(PSI)) {
             state.state = "ready";
-            state.count = 0;
         }
     }
     if (state.state == "ready") {
-        state.timer += 1
         if (start_fn(PSI)) {
             state.count += 1;
             if (state.count >= ready) {
                 state.state = "go";
                 state.count = 0
+                state.timer = 0
                 state.t = 0;
                 state.n += 1;
             }
         } else {
             state.state = "standby";
             state.count = 0;
-        }
-    }
-    if (state.state == "standby" || state.state == "ready") {
-        if (standby > 0 && state.timer >= standby) {
-            state.state = "go";
-            state.timer = 0;
-            state.t = 0;
         }
     }
     if (state.state == "go") {
