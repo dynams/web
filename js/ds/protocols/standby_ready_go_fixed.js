@@ -10,9 +10,9 @@ export function update({ state, PSI, standby, ready, go, prestep_fn, step_fn, st
     if (is_exit) {
       state.state == "exit"
     }
-    console.log('t='+state.t+
-      '|n='+state.n+'|count='+state.count+
-      '|timer='+state.timer+'|state='+state.state)
+    // console.log('t='+state.t+
+    //  '|n='+state.n+'|count='+state.count+
+    //  '|timer='+state.timer+'|state='+state.state)
     state.t += 1;
     if (state.state == "standby" || state.state == "ready") {
         state.timer += 1;
