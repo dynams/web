@@ -1,8 +1,8 @@
-/
+<!DOCTYPE html>
  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <head>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <script src="/js/dist/vue@2.6.14.js"></script>
     <link rel="stylesheet" href="../css/style.css"></style>
     <script src="../js/dynam.space.js"></script> 
 <style>
@@ -33,22 +33,104 @@ body{
   </div>
   <div>
     <canvas id="myCanvas" ref="myCanvas" width="600" height="600"></canvas>
+   <template v-if="P.showinfo">
+   <br>
+   params: { a:{{P.a.toFixed(4)}}, b:{{P.b.toFixed(4)}}, c:{{P.c.toFixed(4)}}, d:{{P.d.toFixed(4)}}, e:{{P.e.toFixed(4)}}, h:{{P.h.toFixed(4)}},
+   x1:{{P.x1.toFixed(4)}}, y1:{{P.y1.toFixed(4)}}, x2:{{P.x2.toFixed(4)}}, y2:{{P.y2.toFixed(4)}} }
+   <br>
+   k_opt: {{P.k_opt}}
+   <br>
+   l_opt: {{P.l_opt}}
+   <br>
+   Continous game:
+   <br>
+   <br>
+   minimize f1(x,y), minimize f2(x,y)
+   <br>
+   &nbsp;&nbsp;
+   x
+   &nbsp;
+   &nbsp;
+   &nbsp;
+   &nbsp;
+   &nbsp;
+   &nbsp;
+   &nbsp;
+   &nbsp;
+   y
+
+  <br>
+  <br>
+  <br>
+   Costs:
+   <br>
+   f1(x,y) = ax<sup>2</sup>/2 + bxy + hy<sup>2</sup>/2
+   <br>
+   f2(x,y) = ex<sup>2</sup>/2 + cxy + dy<sup>2</sup>/2
+   <br>
+   <br>
+   <br>
+   <br>
+   Gradients:
+   <br>
+   <span :style="Math.abs(O.gradstackx) >= Math.abs(O.gradx)? 'color:green' : ''">
+   g1(x,y) = ax + by = {{(O.gradx/P.scale).toFixed(2)}}
+   </span>
+   <br>
+   <span :style="Math.abs(O.gradstackx) < Math.abs(O.gradx)? 'color:green' : ''">
+   gstack1(x,y) = {{(O.gradstackx/P.scale).toFixed(2)}}
+   </span>
+   <br>
+   <span :style="Math.abs(O.gradstacky) >= Math.abs(O.grady)? 'color:green' : ''">
+   g2(x,y) = cx + dy = {{(O.grady/P.scale).toFixed(2)}}
+   </span>
+   <br>
+   <span :style="Math.abs(O.gradstacky) < Math.abs(O.grady)? 'color:green' : ''">
+   gstack2(x,y) = {{(O.gradstacky/P.scale).toFixed(2)}}
+   </span>
+   <br>
+   <br>
+   Learning Dynamics:
+   <br>
+   x &lArr;  x -  αg1(x,y)
+   <br>
+   y &lArr;  y -  βg2(x,y)
+   <br>
+   <br>
+   Game Jacobian:
+   <br>
+   J(x,y) = ⎡a  b⎤ = ⎡{{P.a.toFixed(1)}}  {{P.b.toFixed(1)}}⎤ 
+   <br>
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ⎣c  d⎦ = ⎣{{P.c.toFixed(1)}} {{P.d.toFixed(1)}}⎦
+   <br>
+   
+   <br>
+   <br>
+   For more info, see papers: 
+   <br>
+   arXiv:<a href="https://arxiv.org/abs/2011.03650">2011.03650</a> 
+   and 
+   arXiv:<a href="https://arxiv.org/abs/2011.05562">2011.05562</a> 
+   
+   </template>
   </div>
+
   <div>
    <br>
-   Machine play stack:
-          <input type='checkbox' v-model="P.playstacky">
+   Noise: 
+          <input type='checkbox' v-model="P.usenoise">
           <br>
    Random initialization:
           <input type='checkbox' v-model="P.userandominit">
           <br>
-   Noise: 
-          <input type='checkbox' v-model="P.usenoise">
+   Machine play smart:
+          <input type='checkbox' v-model="P.playconjy">
           <br>
   <template v-if="P.mode!='both'">
   <template v-if="P.mode!='mouse'">
-   Other play stack:
-          <input type='checkbox' v-model="P.playstackx">
+          <br>
+   Other play smart:
+          <input type='checkbox' v-model="P.playconjx">
           <br>
   </template>
   </template>
@@ -97,15 +179,29 @@ body{
   Learning rate (machine):
   <br>
   <input v-model.number="P.beta">
+  <br>
+  conjectural variation (k,l)
+  <br>
+  <input v-model.number="P.k">
+  <br>
+  <input v-model.number="P.l">
   </template>
 
   <template v-if="P.showinfo">
+
+  <br>
+  <!--<button @click="truncate">truncate</button>-->
+  <br>
+
+
    <br>
    <br>
    More info:
    <br>
    (x,y) = ({{ (S.x/P.scale).toFixed(2) }},{{ (S.y/P.scale).toFixed(2) }})
    <br>
+   <br>
+   ccve is stable: {{ P.stableccve }}
    <br>
    costs
    <input type="checkbox" v-model="P.showcostx">
@@ -136,8 +232,15 @@ body{
    all iterative conjectures
    <input type='checkbox' v-model="P.showgallconj">: 
    <br>
-   ({{P.xstack2}}, {{P.ystack2}}) <br>
    <br>
+   <br>
+   reverse stack 1 <br> (etc)
+          <input type='checkbox' v-model="P.showgrevstack1">:
+          <br>
+   <br>
+   reverse stack 2 <br> (etc)
+          <input type='checkbox' v-model="P.showgrevstack2">:
+          <br>
    <br>
           
    conj11g1 (p1 conj, p2 stack)
@@ -165,6 +268,7 @@ body{
           <br>
           ({{P.xstacktwo.toFixed(1)}},{{P.ystacktwo.toFixed(1)}})
    <br>
+
           <br>
    a: <input v-model.number="P.a">
           <br>
@@ -177,87 +281,14 @@ body{
           <br>
   </template>
   </div>
-  <div></div>
-  <div>
-   <template v-if="P.showinfo">
-   <br>
-   <br>
-   Continous game:
-   <br>
-   <br>
-   minimize f1(x,y), minimize f2(x,y)
-   <br>
-   &nbsp;&nbsp;
-   x
-   &nbsp;
-   &nbsp;
-   &nbsp;
-   &nbsp;
-   &nbsp;
-   &nbsp;
-   &nbsp;
-   &nbsp;
-   y
 
-  <br>
-  <br>
-  <br>
-   Costs:
-   <br>
-   f1(x,y) = ax<sup>2</sup>/2 + bxy + hy<sup>2</sup>/2
-   <br>
-   f2(x,y) = ex<sup>2</sup>/2 + cxy + dy<sup>2</sup>/2
-   <br>
-   <br>
-   with a:{{P.a.toFixed(4)}}, b:{{P.b.toFixed(4)}}, c:{{P.c.toFixed(4)}}, d:{{P.d.toFixed(4)}}, e:{{P.e.toFixed(4)}}, h:{{P.h.toFixed(4)}},x1:{{P.x1.toFixed(4)}}, y1:{{P.y1.toFixed(4)}}, x2:{{P.x2.toFixed(4)}}, y2:{{P.y2.toFixed(4)}}.
-   <br>
-   Gradients:
-   <br>
-   <span :style="Math.abs(O.gradstackx) >= Math.abs(O.gradx)? 'color:green' : ''">
-   g1(x,y) = ax + by = {{(O.gradx/P.scale).toFixed(2)}}
-   </span>
-   <br>
-   <span :style="Math.abs(O.gradstackx) < Math.abs(O.gradx)? 'color:green' : ''">
-   gstack1(x,y) = {{(O.gradstackx/P.scale).toFixed(2)}}
-   </span>
-   <br>
-   <span :style="Math.abs(O.gradstacky) >= Math.abs(O.grady)? 'color:green' : ''">
-   g2(x,y) = cx + dy = {{(O.grady/P.scale).toFixed(2)}}
-   </span>
-   <br>
-   <span :style="Math.abs(O.gradstacky) < Math.abs(O.grady)? 'color:green' : ''">
-   gstack2(x,y) = {{(O.gradstacky/P.scale).toFixed(2)}}
-   </span>
-   <br>
-   <br>
-   Learning Dynamics:
-   <br>
-   x &lArr;  x -  αg1(x,y)
-   <br>
-   y &lArr;  y -  βg2(x,y)
-   <br>
-   <br>
-   Game Jacobian:
-   <br>
-   J(x,y) = ⎡a  b⎤ = ⎡{{P.a.toFixed(1)}}  {{P.b.toFixed(1)}}⎤ 
-   <br>
-   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   ⎣c  d⎦ = ⎣{{P.c.toFixed(1)}} {{P.d.toFixed(1)}}⎦
-   <br>
-   
-   <br>
-   <br>
-   For more info, see papers: 
-   <br>
-   arXiv:<a href="https://arxiv.org/abs/2011.03650">2011.03650</a> 
-   and 
-   arXiv:<a href="https://arxiv.org/abs/2011.05562">2011.05562</a> 
-   
-   </template>
-  </div>
 
   </div>
 
 <script>
+
+
+window.onload = function () {
 const s = (v) => Math.sin(v)
 const c = (v) => Math.cos(v)
 
@@ -285,10 +316,11 @@ const experiments = {
     showg2: true,
     showgstack1: true,
     showgstack2: true,
-    showgstacktwo1: true,
-    showgstackthree1: true,
-    showgstackfour1: true,
+    showgstacktwo1: false,
+    showgstackthree1: false,
+    showgstackfour1: false,
     showgconj: true,
+    showgallconj: false
    }
 }
 
@@ -309,21 +341,21 @@ const data = {
     colorstack2: '#92299F',
     colorstacktwo: '#80AB00',
     colorconj: '#8F5400',
-    duration: 100, //seconds
-    period: 20, //ms
+    duration: 1000, //seconds
+    period: 1/60*1000, //ms
     smooth: 0.95,
     playstackx: false,
     playstacky: false,
-    alpha: 0.001,
-    beta: 0.001,
+    alpha: 0.01,
+    beta: 0.01,
     xnash: -1,
     ynash: -1,
     xstack1: 1,
     ystack1: 1,
-    xstack2: .1,
-    ystack2: .8,
-    xconj: 1.3,
-    yconj: .3,
+    xstack2: -0.425,
+    ystack2: 0.8503,
+    xconj: 0.8493,
+    yconj: -0.1495,
     x1: 0,
     x2: 0,
     y1: 0,
@@ -334,6 +366,10 @@ const data = {
     d: .7,
     e: 3,
     h: 1,
+    k:0, 
+    l:0, 
+    l_opt:0,
+    k_opt:0,
     scale: 40,
     scalecost: 50,
     lvlset: 1,
@@ -346,11 +382,13 @@ const data = {
     showgstack1: false,
     showgstack2: false,
     showgconj: false,
+    showgrevstack1: false,
+    showgrevstack2: false,
     showgstacktwo: false,
     showgstacktwo1: false,
     showgstackthree1: false,
     showgstackfour1: false,
-    showgallconj: true,
+    showgallconj: false,
     showcostdiff: false,
     showcostgradient: false,
     showcostcurvature: false,
@@ -361,6 +399,7 @@ const data = {
     pointradius: 10,
     nash1: null,
     nash2: null,
+    stableccve: null
   },
   I: { //inputs
     posX: 0,
@@ -373,7 +412,9 @@ const data = {
     gradx: 0,
     grady: 0,
     gradstackx: 0,
-    gradstacky: 0
+    gradstacky: 0,
+    gradconjx: 0,
+    gradconjy: 0
   },
   S: { //state
     time: 0,
@@ -410,6 +451,7 @@ const data = {
   const c = P.d
   const h = P.h
   const e = P.e
+ 
 
   P.x1 = (xn*xs1*yc - xs1*xs2*yc - xc*xs2*yn + xs1*xs2*yn - xc*xn*ys1 + xc*xs2*ys1 + xc*xn*ys2 - xn*xs1*ys2)/
     (xn*yc - xs2*yc - xc*yn + xs1*yn - xn*ys1 + xs2*ys1 + xc*ys2 - xs1*ys2)
@@ -424,6 +466,18 @@ const data = {
   P.e = (c*(xs1*yc*yn - xs2*yc*yn + xc*yn*yn - xs2*yn*yn - xn*yc*ys1 + xs2*yc*ys1 - xc*yn*ys1 + xs2*yn*ys1 + xn*yc*ys2 - xs1*yc*ys2 - 
      xc*yn*ys2 - xs1*yn*ys2 + 2*xs2*yn*ys2 + xc*ys1*ys2 + xn*ys1*ys2 - 2*xs2*ys1*ys2 - xn*ys2*ys2 + xs1*ys2*ys2))/((xn - 
      xs1)*(xc - xs2)*(xn - xs2))
+
+  disc = 4*(P.a*P.c-P.b*P.e)*(P.c*P.h-P.b*P.d)+(P.a*P.d-P.e*P.h)**2
+  linf = (P.a*P.d - P.e*P.h - Math.sqrt(disc))/(2*P.b*P.e-2*P.a*P.c)
+  kinf = (P.a*P.d - P.e*P.h - Math.sqrt(disc))/(2*P.c*P.h-2*P.d*P.b)
+
+  Jinf = [[P.a + P.b*kinf, P.b + P.h*kinf],[P.c + P.e*linf, P.d + P.e*linf]]
+  trace = Jinf[0][0] + Jinf[1][1]
+  det = Jinf[0][0]*Jinf[1][1] - Jinf[1][0]*Jinf[0][1]
+    P.stableccve = (trace > 0) && (det > 0)
+
+
+
   P.h = (a*(xn*xn*yc - xn*xs1*yc - xn*xs2*yc + xs1*xs2*yc + xc*xs1*yn -
      xs1*xs1*yn - xc*xs2*yn + xs1*xs2*yn - xc*xn*ys1 - xn*xn*ys1 +
      2*xn*xs1*ys1 + xc*xs2*ys1 + xn*xs2*ys1 - 2*xs1*xs2*ys1 +
@@ -868,14 +922,16 @@ function update(S, I, O, P) {
   
   O.gradstackx = O.gradx - (P.c*(P.b*xx1+P.h*yy1))/P.d
   O.gradstacky = O.grady - (P.b*(P.c*yy2+P.e*xx2))/P.a
+  O.gradconjx = O.gradx + P.k*(P.b*xx1+P.h*yy1)
+  O.gradconjy = O.grady + P.l*(P.c*yy2+P.e*xx2)
   if (P.usenoise) {
     O.gradx += 2*(Math.random()-0.5)*P.noisestdx**2
     O.grady += 2*(Math.random()-0.5)*P.noisestdy**2
     O.gradstackx += 2*(Math.random()-0.5)*P.noisestdx**2
     O.gradstacky += 2*(Math.random()-0.5)*P.noisestdy**2
    }
-  const grady = P.playstacky ? O.gradstacky : O.grady
-  const gradx = P.playstackx ? O.gradstackx : O.gradx
+  const gradx = P.playconjx ? O.gradconjx : O.gradx
+  const grady = P.playconjy ? O.gradconjy : O.grady
   switch (P.mode) {
     case 'simgrad':
      S.x = S.x - P.alpha*gradx
@@ -898,6 +954,7 @@ function draw(canvas, S, I, O, P, H) {
   let h = canvas.height
 
   recompute(P)
+
 
   ctx.strokeStyle = 'white'
   ctx.fillStyle = 'black'
@@ -927,11 +984,54 @@ function draw(canvas, S, I, O, P, H) {
   r1 = (P.a+P.h)/2 + Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
   r2 = (P.a+P.h)/2 - Math.sqrt((P.a - P.h)**2/4+P.b*P.b)
   t = Math.atan2(r1-P.a, P.b)
-  for (var i=0; i<5; i++) {
+  for (var i=1; i<5; i++) {
   ctx.beginPath();
   ctx.ellipse(P.x1*P.scale, P.y1*P.scale, Math.sqrt(r2)*i*P.scale*P.lvlset, Math.sqrt(r1)*i*P.scale*P.lvlset, t, 0, 2*Math.PI)
   ctx.stroke()
    }
+
+//  for (var i=1; i<10; i++) {
+//  ctx.beginPath();
+//  x = -10*P.scale
+//  ctx.moveTo(x, (-P.b*(x-P.x1*P.scale)-Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(x-P.x1*P.scale)**2-P.a*P.h*(x-P.x1*P.scale)**2))/P.h + P.y1*P.scale)
+//  for (x = x ; x<10*P.scale; x+=0.1){
+//  ctx.lineTo(x, (-P.b*(x-P.x1*P.scale)-Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(x-P.x1*P.scale)**2-P.a*P.h*(x-P.x1*P.scale)**2))/P.h + P.y1*P.scale)
+//   }
+//  ctx.stroke()
+//   
+//  for (var i=1; i<10; i++) {
+//  ctx.beginPath();
+//  x = -10*P.scale
+//  ctx.moveTo(x, (-P.b*(x-P.x1*P.scale)+Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(x-P.x1*P.scale)**2-P.a*P.h*(x-P.x1*P.scale)**2))/P.h + P.y1*P.scale)
+//  for (x = x ; x<10*P.scale; x+=0.1){
+//  ctx.lineTo(x, (-P.b*(x-P.x1*P.scale)+Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(x-P.x1*P.scale)**2-P.a*P.h*(x-P.x1*P.scale)**2))/P.h + P.y1*P.scale)
+//   }
+//  ctx.stroke()
+//   }
+//   }
+
+
+//  for (var i=1; i<10; i++) {
+//  ctx.beginPath();
+//  y = -10*P.scale
+//  ctx.moveTo((-P.b*(y-P.y1*P.scale)-Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(y-P.y1*P.scale)**2-P.a*P.h*(y-P.y1*P.scale)**2))/P.a + P.y1*P.scale,y)
+//  for (y = y ; y<10*P.scale; y+=0.1){
+//  ctx.lineTo((-P.b*(y-P.y1*P.scale)-Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(y-P.y1*P.scale)**2-P.a*P.h*(y-P.y1*P.scale)**2))/P.a + P.x1*P.scale, y)
+//   }
+//  ctx.stroke()
+//   
+//  for (var i=1; i<10; i++) {
+//  ctx.beginPath();
+//  x = -10*P.scale
+//  ctx.moveTo((-P.b*(y-P.y1*P.scale)+Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(y-P.y1*P.scale)**2-P.a*P.h*(y-P.y1*P.scale)**2))/P.a + P.y1*P.scale,y)
+//  for (y = y ; y<10*P.scale; y+=0.1){
+//  ctx.lineTo((-P.b*(y-P.y1*P.scale)+Math.sqrt(2*P.lvlset**2*P.scale*i**2*P.h+P.b**2*(y-P.y1*P.scale)**2-P.a*P.h*(y-P.y1*P.scale)**2))/P.a + P.x1*P.scale, y)
+//   }
+//  ctx.stroke()
+//   }
+//   }
+
+
   ctx.beginPath();
   ctx.arc(P.x1*P.scale, P.y1*P.scale, 1, 0, 2*Math.PI)
   ctx.fill()
@@ -964,11 +1064,13 @@ function draw(canvas, S, I, O, P, H) {
    } else if (P.mode == 'simgrad') {
      x = S.x
      y = S.y
-    }
+     } else {
+     console.log('ERROR')
+   }
 
 
-    xx1 = (x-P.x1*P.scale)
-    yy1 = (y-P.y1*P.scale)
+    xx1 = (S.x-P.x1*P.scale)
+    yy1 = (S.y-P.y1*P.scale)
     gradx = P.a*xx1 + P.b*yy1
     gradstackx = gradx - P.c*(P.b*xx1+P.h*yy1)/P.d
 
@@ -1056,6 +1158,13 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   if(P.showinfo){
 
 
+  ctx.fillStyle = 'black'
+  ctx.beginPath();
+  ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
+  ctx.fill()
+
+    
+
   if(P.showgstacktwo){
   ctx.fillStyle = P.colorstacktwo
   ctx.beginPath();
@@ -1128,8 +1237,20 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
       ctx.lineWidth=2
      }
 
-
       ctx.setLineDash([])
+
+    if(P.showgrevstack1){
+  ctx.beginPath();
+  y=-500;ctx.moveTo(-(P.c*(P.x1-P.x2)+P.d*(P.y1-P.y2))/(P.e*(P.x1-P.x2)+P.c*(P.y1-P.y2))*(P.y1*P.scale-y)+P.x1*P.scale,y)
+  y=500;ctx.lineTo(-(P.c*(P.x1-P.x2)+P.d*(P.y1-P.y2))/(P.e*(P.x1-P.x2)+P.c*(P.y1-P.y2))*(P.y1*P.scale-y)+P.x1*P.scale,y)
+  ctx.stroke();
+   }
+    if(P.showgrevstack2){
+  ctx.beginPath();
+  y=-500;ctx.moveTo(-(P.b*(P.y2-P.y1)+P.a*(P.x2-P.x1))/(P.h*(P.y2-P.y1)+P.b*(P.x2-P.x1))*(P.y2*P.scale-y)+P.x2*P.scale,y)
+  y=500;ctx.lineTo(-(P.b*(P.y2-P.y1)+P.a*(P.x2-P.x1))/(P.h*(P.y2-P.y1)+P.b*(P.x2-P.x1))*(P.y2*P.scale-y)+P.x2*P.scale,y)
+  ctx.stroke();
+   }
 
     if(P.showgconj){
   ctx.fillStyle = P.colorconj
@@ -1159,13 +1280,6 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
   ctx.arc(P.xstackfour1*P.scale, P.ystackfour1*P.scale, 5, 0, 2*Math.PI)
   ctx.fill()
      }
-
-  ctx.fillStyle = 'black'
-  ctx.beginPath();
-  ctx.arc(S.x, S.y, 8, 0, 2*Math.PI)
-  ctx.fill()
-
-    
   ctx.beginPath();
     ctx.stroke()
     if(P.showgallconj){
@@ -1173,23 +1287,27 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
       k = 0
       l = 0
       for (var i=0; i <= 30; i++) {
-        if (i % 2 == 0) {
+        //if (i % 2 == 0) {
         k = -(P.c+P.e*l)/(P.d+P.c*l)
-         }
-        else{
+        // }
+        //else{
         l = -(P.b+P.h*k)/(P.a+P.b*k)
-         }
-  ctx.strokeStyle = 'orange'
-  ctx.beginPath();
-  y=-500;ctx.moveTo((P.b+P.h*k)/(P.a+P.b*k)*(P.y1*P.scale-y)+P.x1*P.scale,y);
-  y=500;ctx.lineTo((P.b+P.h*k)/(P.a+P.b*k)*(P.y1*P.scale-y)+P.x1*P.scale,y);
-  ctx.stroke();
-  ctx.strokeStyle = 'yellow'
-  ctx.beginPath();
-  x=-500;ctx.moveTo(x, (P.c+P.e*l)*(P.x2*P.scale-x)/(P.d+P.c*l)+P.y2*P.scale)
-  x=500;ctx.lineTo(x, (P.c+P.e*l)*(P.x2*P.scale-x)/(P.d+P.c*l)+P.y2*P.scale)
-  ctx.stroke();
+        // }
+
+        ctx.strokeStyle = 'orange'
+        ctx.beginPath();
+        y=-500;ctx.moveTo((P.b+P.h*k)/(P.a+P.b*k)*(P.y1*P.scale-y)+P.x1*P.scale,y);
+        y=500;ctx.lineTo((P.b+P.h*k)/(P.a+P.b*k)*(P.y1*P.scale-y)+P.x1*P.scale,y);
+        ctx.stroke();
+        ctx.strokeStyle = 'yellow'
+
+        ctx.beginPath();
+        x=-500;ctx.moveTo(x, (P.c+P.e*l)*(P.x2*P.scale-x)/(P.d+P.c*l)+P.y2*P.scale)
+        x=500;ctx.lineTo(x, (P.c+P.e*l)*(P.x2*P.scale-x)/(P.d+P.c*l)+P.y2*P.scale)
+        ctx.stroke();
        }
+      P.k_opt = k;
+      P.l_opt = l;
 
   ctx.fillStyle = P.colorstacktwo
   ctx.strokeStyle = P.colorstacktwo
@@ -1256,8 +1374,20 @@ function inputs(canvas, S, I, O, P, x, y) {
 
 }
 
-DynamSpace(update, draw, inputs, reset, data, experiments)
+function truncate(P) {
+  const s = 10;
+  P.a = Math.round(P.a*s)/s;
+  P.b = Math.round(P.b*s)/s;
+  P.c = Math.round(P.c*s)/s;
+  P.d = Math.round(P.d*s)/s;
+  P.e = Math.round(P.e*s)/s;
+  P.h = Math.round(P.h*s)/s;
+  P.x1 = Math.round(P.x1*s)/s;
+  P.x2 = Math.round(P.x2*s)/s;
+}
 
+DynamSpace(update, draw, inputs, reset, truncate, data, experiments)
+}
 	</script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 
-function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) {
- var vue = new Vue({
+function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, truncate_fn, data, experiments ) {
+  var vue = new Vue({
 	el: "#main",
   data: { 
     ...data,
@@ -131,6 +131,9 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
 
       this.info.prevT = this.O.time
     },
+    truncate() {
+      truncate_fn(this.P)
+      },
   	tick() {
       if (this.info.hasStarted && this.info.isRunning) {
     	   this.O.time = Date.now() - this.info.startTime
@@ -139,6 +142,7 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
         this.log()
       }
       if (this.info.isDrawing) {
+
         this.draw()
       }
 
@@ -188,7 +192,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
    this.canvas = this.$refs.myCanvas
 
 
-
      document.exitPointerLocker = document.exitPointerLock ||
       document.mozExitPointerLock;
      this.canvas.requestPointerLock = this.canvas.requestPointerLock || 
@@ -230,8 +233,6 @@ function DynamSpace(update_fn, draw_fn, input_fn, reset_fn, data, experiments ) 
       for (var i = 0; i < self.P.draggables.length; i++){
        var r = self.P.draggables[i];
        if (r.isDragging) {
-        console.log(dx)
-        console.log(dy)
         r.x += dx
         r.y += dy
        }

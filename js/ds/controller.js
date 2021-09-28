@@ -39,20 +39,26 @@ export default function TaskController({
     freq: 40,
     duration: 30,
     ready_wait: 2,
+    is_exit: false
   };
 
   return {
     start,
     load, 
     reset, 
+    pause,
+    resume,
     //step, 
     save,
+    exit,
     getSpace,
     //status, 
     // getState: ()=>state
     };
   function start() {
-    console.log('Started')
+    console.log('Controller: start')
+    console.log('params: ')
+    console.log(state.task)
     state.state = init('standby', 0)
     state.zip = init_zip()
     state.zip
@@ -71,18 +77,24 @@ export default function TaskController({
   }
 
   function reset(task) {
+    console.log('Controller: reset')
     if ( task == null ) {
       console.log("Warning: task initialized to null")
     }
+    // TODO: fix done state
     state.task = task
     const protocol = task.protocol
     const params = task.params
     const proto = registrar[protocol]
 
+    console.log(task.params.duration)
     // Initialize a trial
     state.freq = proto.freq
-    state.duration = proto.duration
+    state.duration = task.params.duration || proto.duration;
     state.ready_wait = proto.ready_wait
+    state.standby_wait = proto.standby_wait
+    state.rest_wait = 10
+    state.rest_freq = 3
     // state.canvas.width = proto.preset.k.w
     // state.canvas.height = proto.preset.k.h
 
@@ -96,30 +108,27 @@ export default function TaskController({
       state.step_fn = reftrack.step
       state.reset_fn = reftrack.reset
     } else {
-      console.log(proto.env + ' environment not supported')
       return false
     }
     
 
     let PP = {...proto.preset, ...params}
-    //PP.k = PP.k || {}
-    //PP.k.w = window.innerWidth;
-    //PP.k.h = window.innerHeight;
 
-    let { P, S, I, O} = state.reset_fn({ P:PP })
+    let { P, S, I, O } = state.reset_fn({ P:PP })
     state.P = P
     state.S = S
     state.I = I
     state.O = O
     state.trial = []
     state.trial_dict = []
+    state.pretrial_dict = []
 
     return true
-
   }
 
-  function load(task){
+  function load(task, params={}){
     console.log("loading")
+    Object.assign(task.params, params);
     state.task = task
     mount({ getSpace, setInput, update_fn })
   }
@@ -142,7 +151,9 @@ export default function TaskController({
 
   function step(PSI) {
       // Step
-      const { Sp, O } = state.step_fn(PSI)
+      const { P, S, I } = PSI;
+
+      let { Sp, O } = state.step_fn({ P, S, I })
       state.O = O
 
       // Log
@@ -164,24 +175,46 @@ export default function TaskController({
       state.S = Sp
   }
 
+  function prestep(PSI) {
+      const { P, S, I } = PSI;
+
+      // Log
+      const data = { 
+        t: { 
+          t:state.state.t, 
+          utc:Date.now() 
+        } , 
+        I: state.I, 
+      }
+      state.pretrial_dict.push(data)
+  }
+
   function stop() {
+      console.log('Controller: stopped')
       const filename = state.task.id + '-' + state.task.protocol + '-P' + JSON.stringify(state.P).replace(/[^\w\s.]/gi, '')+ '.csv'
       if(is_save_zip) {
         zip(state.zip, filename, state.trial)
       }
+      const trial_dict = JSON.parse(JSON.stringify(state.trial_dict));
+      const pretrial_dict = JSON.parse(JSON.stringify(state.pretrial_dict));
+      const P = state.P;
       if(upload_fn) {
+        upload_fn({
+          protocol: state.task.protocol + '-pre', 
+          id: state.task.id, 
+          params: P,
+          data: pretrial_dict,
+        })
         upload_fn({
           protocol: state.task.protocol, 
           id: state.task.id, 
-          params: state.P, 
-          data: state.trial_dict
+          params: P,
+          data: trial_dict,
         })
       }
 
       done_fn()
   }
-
-
 
   function save() {
     function appendZero(x) {
@@ -195,6 +228,19 @@ export default function TaskController({
     save_zip(state.zip, 'DS01-' + date + '-' + name + '.zip')
   }
 
+  function pause() {
+    state.state.state = 'rest'
+  }
+
+  function resume() {
+    state.state.state = 'resume'
+  }
+
+  function exit() {
+    console.log('Controller: exit')
+    state.is_exit = true
+  }
+
   function tick() {
     state.state = update({
       PSI: { 
@@ -204,10 +250,15 @@ export default function TaskController({
       },
       state: state.state, 
       start_fn: start_condition,
+      prestep_fn: prestep,
       step_fn: step, 
       stop_fn: stop,
+      standby: state.freq*state.standby_wait,
       ready: state.freq*state.ready_wait,
       go: state.freq*state.duration,
+      rest: state.freq*state.rest_wait,
+      rest_freq: state.rest_freq,
+      is_exit: state.is_exit
     })
     const PSIO = { P: state.P, S: state.S, I: state.I, O: state.O }
     if(state.canvas) {
@@ -216,9 +267,15 @@ export default function TaskController({
     } else {
       draw(PSIO)
     }
+    if (state.is_exit) {
+      state.state.state='exit'
+    }
+    update_fn({msg:status(), state:state.state.state})
+    if (state.is_exit) {
+      return
+    }
     window.setTimeout(tick, 1000/state.freq)
 
-    update_fn({msg:status(), state:state.state.state})
   }
 
   function status() {

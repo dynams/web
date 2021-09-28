@@ -95,8 +95,23 @@ table.vector{
       <tr><td @click="dp=0">dp
       </td><td>
   <input type="range" min="-10" max="10" v-model.number='dp'>
-      </td>
-    </tr>
+      </td></tr>
+      <!--<tr><td @click="t1=0">t1
+      </td><td>
+  <input type="range" min="-3.1415" max="3.1415" step="0.1" v-model.number='t1'>
+      </td></tr>
+      <tr><td @click="t2=0">t2
+      </td><td>
+  <input type="range" min="-3.1415" max="3.1415" step="0.1" v-model.number='t2'>
+      </td></tr>
+      <tr><td @click="tz=0">tz
+      </td><td>
+  <input type="range" min="-3.1415" max="3.1415" step="0.1" v-model.number='tz'>
+      </td></tr>
+      <tr><td @click="tp=0">tp
+      </td><td>
+  <input type="range" min="-3.1415" max="3.1415" step="0.1" v-model.number='tp'>
+      </td></tr>-->
     <template v-if="is4x4">
     <tr><td>eig1</td><td>{{eigs[0][0].toFixed(1)}}+{{eigs[0][1].toFixed(1)}}i</td></tr>
     <tr><td>eig2</td><td>{{eigs[1][0].toFixed(1)}}+{{eigs[1][1].toFixed(1)}}i</td></tr>
@@ -251,26 +266,26 @@ table.vector{
   =
     <table class="matrix">
     <tr>
-      <td>{{a1}}</td>
+      <td>{{a1.toFixed(0)}}</td>
       <td>0</td>
-      <td>{{b11}}</td>
-      <td>{{b12}}</td>
+      <td>{{b11.toFixed(0)}}</td>
+      <td>{{b12.toFixed(0)}}</td>
     </tr>
     <tr>
       <td>0</td>
       <td>{{a2}}</td>
-      <td>{{b21}}</td>
-      <td>{{b22}}</td>
+      <td>{{b21.toFixed(0)}}</td>
+      <td>{{b22.toFixed(0)}}</td>
     </tr>
     <tr>
-      <td>{{c11}}</td>
-      <td>{{c12}}</td>
+      <td>{{c11.toFixed(0)}}</td>
+      <td>{{c12.toFixed(0)}}</td>
       <td>{{d1}}</td>
       <td>0</td>
     </tr>
     <tr>
-      <td>{{c21}}</td>
-      <td>{{c22}}</td>
+      <td>{{c21.toFixed(0)}}</td>
+      <td>{{c22.toFixed(0)}}</td>
       <td>0</td>
       <td>{{d2}}</td>
     </tr>
@@ -349,8 +364,10 @@ new Vue({
     dd:0,
     dp:0,
     dz:0,
-    tp:0,
     tz:0,
+    tp:0,
+    t1:0,
+    t2:0,
     svg:null,
     x:null,
     y:null,
@@ -384,12 +401,24 @@ new Vue({
   a2() { return this.m + this.f - this.da },
   d1() { return this.m - this.f + this.dd },
   d2() { return this.m - this.f - this.dd },
+  z1() { return this.z+this.dz },
+  z2() { return this.z-this.dz},
+  p1() { return this.p+this.dp},
+  p2() { return this.p-this.dp},
   b1() { return this.p + this.dp + this.z + this.dz },
   b2() { return this.p - this.dp + this.z - this.dz },
   c1() { return this.p + this.dp - (this.z + this.dz) },
   c2() { return this.p - this.dp - (this.z - this.dz) },
+  //b11() { return this.rot11(this.t1,this.tz,this.p1,this.p2) + this.rot11(this.t1, this.tp, this.z1, this.z2) },
+  //b12() { return this.rot12(this.t1,this.tz,this.p1,this.p2) + this.rot12(this.t1, this.tp, this.z1, this.z2) },
+  //b21() { return this.rot21(this.t1,this.tz,this.p1,this.p2) + this.rot21(this.t1, this.tp, this.z1, this.z2) },
+  //b22() { return this.rot22(this.t1,this.tz,this.p1,this.p2) + this.rot22(this.t1, this.tp, this.z1, this.z2) },
+  //c11() { return this.rot11(this.t2,this.tp,this.p1,this.p2) - this.rot11(this.t2, this.tp, this.z1, this.z2) },
+  //c12() { return this.rot12(this.t2,this.tp,this.p1,this.p2) - this.rot12(this.t2, this.tp, this.z1, this.z2) },
+  //c21() { return this.rot21(this.t2,this.tp,this.p1,this.p2) - this.rot21(this.t2, this.tp, this.z1, this.z2) },
+  ////c22() { return this.rot22(this.t2,this.tp,this.p1,this.p2) - this.rot22(this.t2, this.tp, this.z1, this.z2) },
   b11() { return this.b1 },
-	 b12() { return 0 },
+  b12() { return 0 },
   b21() { return 0 },
   b22() { return this.b2 },
   c11() { return this.c1 },
@@ -578,6 +607,10 @@ new Vue({
 
   },
      methods: {
+  rot11(t1,t2,a,b) { return a*Math.cos(t1)*Math.sin(t2)+b*Math.sin(t2)*Math.sin(t1) },
+  rot12(t1,t2,a,b) { return b*Math.cos(t2)*Math.sin(t1)-a*Math.cos(t1)*Math.sin(t2) },
+  rot21(t1,t2,a,b) { return b*Math.cos(t1)*Math.sin(t2)-a*Math.cos(t2)*Math.sin(t1) },
+  rot22(t1,t2,a,b) { return b*Math.cos(t1)*Math.cos(t2)+a*Math.sin(t1)*Math.sin(t2) },
 
           draw() {
                const gamma = 0.05

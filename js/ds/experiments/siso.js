@@ -39,8 +39,8 @@ export function destroy({ canvas }) {
 }
 
 export function draw({ P, S, I, O }) {
-  drawOutput(O.cost)
-  drawTarget(S.x)
+  drawOutput({ P, O })
+  drawTarget({ S })
 }
 
 function drawInput(x) {
@@ -49,13 +49,17 @@ function drawInput(x) {
   input.setAttribute('transform-origin', x+'% 85%')
 }
 
-function drawOutput(val) {
+function drawOutput({ P, O }) {
   const bot = 80
   const mid = 70
   const tot = 10
 
-  if (val < 0) val = 0
-  val = Math.atan(val/10)*2/Math.PI
+  let val = Math.sqrt(O.cost);
+  if ( val > 0.5) {
+    val = Math.atan(Math.PI*(val-0.5))/Math.PI + 1/2
+  }
+    
+
   const h = val*(mid-tot) +bot-mid
   const y = (1-val) * (mid-tot) + tot
 
@@ -63,7 +67,8 @@ function drawOutput(val) {
   output.setAttribute('y', y+'%')
 }
 
-function drawTarget(x) {
+function drawTarget({ S }) {
+  let x = S.x;
   x = (x+1)/2*100
 
   target.setAttribute('x', x+'%')

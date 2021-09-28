@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8"/>
+<head>
+  <title>play</title>
+  <script src="../js/dist/lodash.min.js"></script>
+  <style>
+    #main{ 
+      text-align: center;
+      padding-top: 10%;
+    }
+  </style>
+</head>
+<body>
+  <div id="header"></div>
+  <div id="main">
+    <svg width="10em">
+      <rect id="out" y="100%" width="100%" height="0%"/>
+    </svg>
+    <div id="content">loading...</div>
+    <svg width="100%" height="2em" style='padding-top:1ex;'>
+      <svg id="input" x="50%" y="50%" overflow="visible">
+        <polygon class="fg-fill" transform="scale(1)"
+        points="0,-10 10,0 0,10 -10,0">
+      </svg>
+    </svg>
+  </div>
+  <div id="debug"></div>
+
+<script>
+window.onload = function(){
+  function getQuery() {
+    let queryDict = {}
+    location.search.substr(1).split("&").forEach(function(item) {
+      queryDict[item.split("=")[0]] = item.split("=")[1]
+    })
+    return queryDict
+  }
+
+  const query = getQuery();
+  const pid = query.pid || Date.now();
+  const ws_url = 'wss://ws.dynam.space/ws/' + pid;
+  //const ws_url = 'ws://localhost:8000/ws/' + pid;
+  try {
+    var ws = new WebSocket(ws_url);
+  }
+  catch(err) {
+    document.getElementById('header').innerHTML = err.message;
+  }
+
+  var P = {}
+  var I = { xi: [0, 0], down: false };
+  var S = { x: null };
+  var Sp = { x: null };
+
+  var updated_input = false;
+
+  var CONST = {
+    freq_tick: 60,
+    freq_send: 5,
+    freq_ping: 0.2,
+  }
+
+  var stats = {
+    pings: [null, null],
+    ping: null,
+    time_left_text: ""
+  }
+
+  var flags = { 
+    initialized: false,
+    started: false,
+    done: false,
+  }
+
+  var config = { 
+    rid: null,
+    num_player: null,
+    num_actions: null,
+    num_aux: null,
+  }
+
+  function cost(S, P) {
+    let c = 0;
+    const i = P.i
+    const xi = S.x[i][0] - P.x0[i][0]*P.s;
+    for(let j = 0; j < config.num_players; j++) {
+      const xj = S.x[j][0]-P.x0[j][0]*P.s;
+      c += P.a[j][0]*xj*xj/2;
+      if (j != i) {
+        c += P.b[j][0]*xi*xj
+      }
+    }
+    return c
+  }
+
+  ws.onmessage = function(event) {
+    var data = JSON.parse(event.data)
+    switch (data.cmd) {
+      case 'init':
+        flags.initialized = true;
+        Object.assign(config, data.config)
+        tick()
+        ping()
+        break;
+
+      case 'heartbeat':
+        const secs = data.time_left.toFixed(2)
+        const mins = Math.floor(data.time_left/60);
+        const _ = Math.floor(secs%60)
+        stats.time_left_text = mins + 'm' + _ + 's';
+        tick()
+        break;
+
+      case 'reset':
+        console.log('reset')
+        flags.loaded = true;
+        Object.assign(P, data.P)
+        break;
+
+      case 'start':
+        flags.started = true;
+        Object.assign(Sp, data.S)
+        Object.assign(S, data.S)
+        break;
+
+      case 'update':
+        Object.assign(Sp, data.S)
+        Object.assign(S, data.S)
+        Sp.x[P.i] = I.xi;
+        Sp.down[P.i] = I.down;
+        tick()
+        break;
+
+      case 'stop':
+        flags.started = false;
+        flags.loaded = false;
+        break;
+
+      case 'status':
+        status = data
+        break;
+
+      case 'screen':
+        break;
+
+      case 'complete':
+        window.location.href = data.url
+        flags.started = false;
+        flags.initialized = false;
+        break;
+        
+
+      case 'ping':
+        ws.send(JSON.stringify({
+          cmd:'pong',
+        }))
+        break;
+
+      case 'pong':
+        stats.pings[1] = window.performance.now()
+        stats.ping = stats.pings[1] - stats.pings[0];
+        break;
+
+      default:
+        console.log('cmd '+data.cmd+' not supported')
+        break;
+    }
+  };
+  ws.onclose = function(event) {
+      flags.done = true
+  }
+
+  function _tick() {
+    const _P = JSON.stringify(P)
+    const _t = window.performance.now()
+    const header = document.getElementById("header")
+    //document.getElementById('header').innerHTML = `
+    //pid: ${pid},
+    //rid: ${config.rid},
+    //ping: ${stats.ping},
+    //P: ${_P}
+    //`
+
+    const content = document.getElementById("content")
+    content.innerHTML = ""
+    if(flags.initialized && !flags.started){
+      content.innerHTML += `Waiting for other players to join... ${stats.time_left_text}`;
+    } 
+    if(flags.started) {
+      const c = cost(Sp, P)
+      //content.innerHTML = 'S='
+      //content.innerHTML += Sp.x.join('<br>');
+      //content.innerHTML += '<br>cost: '+c;
+      content.innerHTML = 'make this as small as possible'
+
+      const out = document.getElementById("out")
+      out.setAttribute('height', c/2*100 + "%")
+      out.setAttribute('y', 100 - c/2*98-2 + "%")
+    }
+  }
+
+  function _send() {
+    if(ws.readyState == 1) {
+      const json = JSON.stringify({
+        cmd: 'update',
+        I})
+      ws.send(json)
+    }
+  }
+
+  tick = _.throttle(_tick, 1000/CONST.freq_tick);
+  send = _.throttle(_send, 1000/CONST.freq_send);
+
+  tick()
+
+
+  function ping() {
+    if(ws) {
+      stats.pings[0] = window.performance.now()
+      ws.send(JSON.stringify({
+        cmd: 'ping',
+      }))
+    }
+    window.setTimeout(ping, 1000/CONST.freq_ping)
+  }
+
+
+  function move(clientX, clientY){
+    const s = 10000
+    const x = clientX/window.innerWidth*2-1;
+    const y = clientY/window.innerHeight*2-1;
+
+    Object.assign(I, {xi: [Math.round(x*s)/s, Math.round(y*s)/s]})
+    if (flags.started) {
+      Sp.x[P.i] = [Math.round(x*s)/s, Math.round(y*s)/s]
+    }
+
+    const inp = document.getElementById('input');
+    inp.setAttribute('x', (x+1)*50 + "%");
+
+    tick()
+    send()
+  }
+
+  function touchmove(e) {
+    const x = e.touches[0].clientX;
+    const y = e.touches[0].clientY;
+    move(x, y)
+  }
+
+  function mousemove(e) {
+    move(e.clientX, e.clientY)
+  }
+
+  function mousedown(event){
+    I.down = true 
+    tick()
+    send()
+  }
+
+  function mouseup(event){
+    I.down = false 
+    tick()
+    send()
+  }
+  window.addEventListener('mousemove', mousemove)
+  window.addEventListener('touchmove', touchmove)
+  window.addEventListener('mousedown', mousedown)
+  window.addEventListener('mouseup', mouseup)
+}
+</script>
+    </body>
+</html>

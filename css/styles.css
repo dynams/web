@@ -42,9 +42,11 @@ b {
   width: 100%;
   top: 0;
   left: 0;
+  right: 0;
   background: var(--bg-color);
   z-index: 9999;
 }
+
 
 .container {
   padding-left: 1em;
@@ -72,6 +74,14 @@ b {
   text-align: center;
 }
 
+.message { 
+  position: absolute; 
+  left:0; 
+  right:0; 
+  text-align:center; 
+  font-size:16pt;
+}
+
 .popup {
   opacity: .8;
   background-color: #eee; 
@@ -80,6 +90,17 @@ b {
   vertical-align: middle;
   text-align: center;
   y: 50%;
+}
+
+.timer {
+  display: inline-block;
+}
+.timer>svg {
+  vertical-align: middle;
+  width: 15px;
+  height: 15px;
+  padding-bottom:1px;
+  color: black;
 }
 
 text {
@@ -101,6 +122,10 @@ svg > text {
   text-align: center;
   margin: auto;
   background-color: #EEE;
+}
+
+.paragraph p{
+  line-height: 1.2;
 }
 
 .paragraph .title, .paragraph h1{
@@ -142,16 +167,20 @@ svg > text {
   font-style: italic;
 }
 .paragraph button{
-  padding: 1ex 1em;
+  padding: 1ex 1em 1ex 0.8em;
   font-size: 14pt;
   font-weight: bold;
   background-color: #80B6EA;
-  border: 1px black solid;
+  border: 1px #0A9EF0 solid;
   float: right;
+  align-items: center;
+  justify-content: center;
+}
+.paragraph button:active{
+  background-color: #C7D8E2;
 }
 .paragraph button:hover{
-  background-color: #90C6FA;
-  border: 1px #333 solid;
+  border: 1px #4214B0 solid;
 }
 
 .paragraph hr{
@@ -181,22 +210,38 @@ svg > text {
   width:100%;
 }
 .paragraph .labeltls {
+  font-size: 15pt;
   font-weight: bold;
   float: left;
   width: 10em;
+  word-wrap: break-word;
 }
 .paragraph .labeltls-left {
-  font-size: 12pt;
+  font-size: 10pt;
   float: left;
 }
 .paragraph .labeltls-right {
-  font-size: 12pt;
+  font-size: 10pt;
   float: right;
 }
 .paragraph .ptls {
   text-indent: -10em;
   padding-left: 10em;
   margin-top: 2ex;
+}
+@media(max-width: 48em) {
+  .paragraph .labeltls {
+    float: none;
+  }
+  .paragraph .labeltls2 {
+    float: none;
+  }
+  .paragraph textarea {
+    width: 90%;
+  }
+  .paragraph input[type=email]{
+    width: 90%;
+  }
 }
 
 a {

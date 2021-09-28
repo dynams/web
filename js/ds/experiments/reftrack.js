@@ -43,7 +43,6 @@ function mount({ getSpace, setInput, update_fn }) {
     canvas.height = window.innerHeight;
     const S = getSpace().S
     buff.r = init_reference(S.t, canvas.height, getSpace().P)
-    buff.t = S.t
   }
 
   function mouseMove() {
@@ -67,7 +66,6 @@ let past_t = 0;
 
 function draw({ P, S, I }) {
   if (past_t != S.t-1 && past_t != 0) {
-    console.log(past_t)
     buff.r = init_reference(S.t, canvas.height, P)
     buff.t = S.t
   }
@@ -84,7 +82,8 @@ function draw({ P, S, I }) {
   ctx.lineCap = 'square';
 
   ctx.beginPath();
-  const start_t = (S.t - buff.t) % buff.r.length
+  let start_t = (S.t - buff.t) % buff.r.length
+  if(!start_t) start_t = 0;
   ctx.moveTo(buff.r[start_t],h/2)
   for(let i=0; i < buff.r.length; i++) {
     const x = buff.r[(i+start_t)%buff.r.length]
