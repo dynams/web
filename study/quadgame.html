@@ -92,7 +92,7 @@ rect {
         you will follow on-screen instructions to provide <i>input</i> that makes an object satisfy an <i>objective</i>. -->
         For example, you may be asked to make an object as <i>small</i> or <i>large</i> as possible.
         <p> After the experiment, we will ask a some question to evaluate the interaction. 
-        <span style="display:none;">The entire experimental session should take around <span style="font-weight:bold;" id="time_remaining_welcome">10 minutes</span>.</span>
+        <span>The entire experimental session should take around <span style="font-weight:bold;" id="time_remaining_welcome">10 minutes</span>.</span>
 
         <p> You are encouraged to 
         be comfortably seated with your device and
@@ -459,7 +459,7 @@ window.onload = function() {
           console.log("Welcome!")
           console.log(">> Starting controller")
           ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID}, params)
-          const prog = ds.progress(30)
+          const prog = ds.progress()
           console.log(prog)
           if(prog.time_remaining) {
             const label = document.getElementById('time_remaining_welcome')
@@ -504,10 +504,10 @@ window.onload = function() {
         screen: 'rest',
         onEntry: function() {
           ds.pause()
-          const prog = ds.progress(30)
+          const prog = ds.progress()
           let str = "<p><b>✅ Completed tasks:</b> "+prog.current+"/"+prog.total;
           if(prog.time_remaining) {
-            str += "<p><b>⏱ Remaining time: </b> ~"+prog.time_remaining +" min";
+            str += "<p><b>⏱ Remaining time: </b> ~"+prog.time_remaining.toFixed(1) +" min";
           }
           const el = document.getElementById('progress_div')
           el.innerHTML = str;

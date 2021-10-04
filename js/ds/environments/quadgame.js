@@ -158,10 +158,10 @@ function reset({ P }) {
     let y0 = P.random ? random_uniform(-.8,.8) : P.y0;
 
     const Ss = { t:0, x: x0, y: y0 };
-    const I = { x: x0 };
-    const { Sp } = step({ P, S:Ss, I });
+    const { Sp } = step({ P, S:Ss, I: { x: x0 } });
     const S = { t:0, x: x0, y: Sp.y };
     const { O } = output({ P, S })
+    const I = { x: 0  };
 
     return { P, S, I, O };
 }

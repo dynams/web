@@ -2,13 +2,14 @@ function step({ P, S, I }) {
   console.log(S);
   console.log(I);
   const g = (I.cp - I.cn)/(P.delta);
-  const k_next = S.k - P.lr*g;
-  if (k_next < 0.4) {
-    return { Sp: { t: S.t + 1, k: 0.4 } }
-  } else if (k_next > 1.1) {
-    return { Sp: { t: S.t + 1, k: 1.1 } }
-  }
+  let k_next = S.k - P.lr*g;
 
+  console.log(P)
+  if (k_next < P.kmin) {
+    k_next = P.kmin
+  } else if (k_next > P.kmax) {
+    k_next = P.kmax
+  }
   return { Sp: { t: S.t + 1, k: k_next } }
 }
 

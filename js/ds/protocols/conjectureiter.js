@@ -4,8 +4,13 @@ function inner_step({ P, S, I }) {
 }
 
 function step({ P, S, I }) {
-  const l_next = (I.xp - I.xn)/(I.yp - I.yn) ;
+  let l_next = (I.xp - I.xn)/(I.yp - I.yn) ;
 
+  if (l_next < P.lmin) {
+    l_next = P.lmin
+  } else if (l_next > P.lmax) {
+    l_next = P.lmax
+  } 
   return { Sp: { t: S.t+1, l: l_next } }
 }
 
