@@ -4,6 +4,9 @@ import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
 import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
 
+import ConjectureIteration from '/js/ds/protocols/conjectureiter.js'
+import RevIteration from '/js/ds/protocols/reviter.js'
+
 //import * as workerTimersBroker from '/js/dist/worker-timers-broker.js';
 //import * as workerTimers from '/js/dist/worker-timers.js';
 
@@ -13,10 +16,115 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   let params;
   let min_left, random_permutation;
 
+  let S_outer = { 
+    t: 0, 
+    k: 0.4,
+    l: 0, 
+  }
+  let recieved_outer = { 
+      0: false, 
+      1: false
+  }
+  let I_outer = {
+    cn:0,
+    cp:0,
+    xn:0,
+    xp:0,
+    yn:0,
+    yp:0
+  };
+
+  let P_outer = {
+    delta: 0.2,
+    lr: 0.1,
+  };
+
+  let params_outer = {
+    
+  };
+
+  function step_outer_loop(id, trial_dict) {
+    console.log('step outer loop')
+    if(study.outer_tasks.protocol == "reviter-1") {
+      const costy = trial_dict.map(a => a.O.costy);
+      const costy_median = math.median(costy);
+
+      if (id == 0) {
+        I_outer.cn = costy_median;
+      } else if (id == 1) {
+        I_outer.cp = costy_median;
+      }
+      recieved_outer[id] = true;
+
+      console.log('reviter: '+id);
+      console.log(task.params)
+      console.log(costy_median);
+
+      if (recieved_outer[0] && recieved_outer[1]) {
+        console.log('TAKING A STEP')
+        recieved_outer[0] = false;
+        recieved_outer[1] = false;
+
+        const next = RevIteration.step({ 
+          P: P_outer, 
+          S: S_outer, 
+          I: I_outer 
+        })
+        console.log(next)
+
+        S_outer = next.Sp;
+        params_outer = { k: S_outer.k }
+        console.log(params_outer)
+      }
+    }
+    if(study.outer_tasks.protocol == "conjectureiter-1") {
+      const x = trial_dict.map(a => a.S.x);
+      const y = trial_dict.map(a => a.S.y);
+      const x_median = math.median(x);
+      const y_median = math.median(y);
+
+      if (id == 0) {
+        I_outer.xn = x_median;
+        I_outer.yn = y_median;
+      } else if (id == 1) {
+        I_outer.xp = x_median;
+        I_outer.yp = y_median;
+      }
+      recieved_outer[id] = true;
+
+      console.log('conjectureiter: '+id);
+      console.log(x_median);
+      console.log(y_median);
+
+      if (recieved_outer[0] && recieved_outer[1]) {
+        console.log('TAKING A STEP')
+        recieved_outer[0] = false;
+        recieved_outer[1] = false;
+
+        const next = ConjectureIteration.step({ 
+          P: P_outer, 
+          S: S_outer, 
+          I: I_outer 
+        })
+        console.log('l:', next.Sp.l)
+
+        S_outer = next.Sp;
+        params_outer = { l: S_outer.l }
+        console.log(params_outer)
+      }
+    }
+  }
+
   return { load, start, pause, resume, progress, getSpace, mount, save }
 
   function load(s, api, sess={}, P={}) {
     study = s
+    /* TODO REMOVE CODE: */
+    study.outer_tasks = {
+      protocol: s.protocol,
+      params: s.params
+    }
+
     upload_api = api
     count = 0
     session = sess;
@@ -59,7 +167,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       protocol: StandbyReadyGoFixedProtocol,
       experiment: Experiment,
       registrar: registrar,
-      done_fn: done,
+      done_fn: done_task,
       update_fn: update_fn,
       upload_fn: upload
     })
@@ -85,16 +193,29 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
   function nextTask() {
     if (count >= study.tasks.length-1) {
-      controller.exit()
-      done_fn();
+      if (study.outer_tasks) {
+        count = -1
+      } else {
+        controller.exit()
+        done_fn();
+      }
     }
-    count += 1
+    if(study.outer_tasks) {
+      if (S_outer.t >= study.outer_tasks.params.num_iter) {
+        controller.exit()
+        done_fn();
+      }
+    } 
+    count += 1;
     const idx = random_permutation[count];
     task = study.tasks[idx];
     update_min_left()
 
     if (task) {
       Object.assign(task.params, params)
+      if(study.outer_tasks) {
+        Object.assign(task.params, params_outer)
+      }
       controller.reset(task)
     }
     else {
@@ -137,7 +258,10 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
     controller.save()
   }
 
-  function done() {
+  function done_task(tid, trial_dict) {
+    if(study.outer_tasks) {
+      step_outer_loop(tid, trial_dict)
+    }
     nextTask()
   }
 }

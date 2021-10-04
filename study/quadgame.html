@@ -6,6 +6,7 @@
   <script src="/js/dist/papaparse.min.js"></script>
   <script src="/js/dist/lodash.min.js"></script>
   <script src="/js/dist/rangetouch.js"></script>
+  <script src="/js/dist/math.js"></script>
   <!--<script src="https://cdn.rangetouch.com/2.0.1/rangetouch.js"></script>-->
   <script type="module" src="/js/ds.js"></script>
   <script src="/js/scripts.js"></script>
@@ -360,6 +361,9 @@ if(query.ypert) {
 }
 if(query.s) {
   params.s = parseFloat(query.s)
+}
+if(query.duration) {
+  params.duration = parseFloat(query.duration)
 }
 
 window.onload = function() {

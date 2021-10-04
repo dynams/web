@@ -81,13 +81,11 @@ export default function TaskController({
     if ( task == null ) {
       console.log("Warning: task initialized to null")
     }
-    // TODO: fix done state
     state.task = task
     const protocol = task.protocol
     const params = task.params
     const proto = registrar[protocol]
 
-    console.log(task.params.duration)
     // Initialize a trial
     state.freq = proto.freq
     state.duration = task.params.duration || proto.duration;
@@ -110,7 +108,6 @@ export default function TaskController({
     } else {
       return false
     }
-    
 
     let PP = {...proto.preset, ...params}
 
@@ -213,7 +210,9 @@ export default function TaskController({
         })
       }
 
-      done_fn()
+      console.log(P)
+      console.log("P.id="+P.id)
+      done_fn(P.id, trial_dict)
   }
 
   function save() {
