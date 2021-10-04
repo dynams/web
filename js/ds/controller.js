@@ -39,7 +39,8 @@ export default function TaskController({
     freq: 40,
     duration: 30,
     ready_wait: 2,
-    is_exit: false
+    is_exit: false,
+    count: -1
   };
 
   return {
@@ -57,8 +58,6 @@ export default function TaskController({
     };
   function start() {
     console.log('Controller: start')
-    console.log('params: ')
-    console.log(state.task)
     state.state = init('standby', 0)
     state.zip = init_zip()
     state.zip
@@ -81,7 +80,11 @@ export default function TaskController({
     if ( task == null ) {
       console.log("Warning: task initialized to null")
     }
+    state.count += 1;
+    task.id = state.count;
     state.task = task
+    console.log('load task:')
+    console.log(task)
     const protocol = task.protocol
     const params = task.params
     const proto = registrar[protocol]
