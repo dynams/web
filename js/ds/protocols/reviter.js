@@ -4,7 +4,6 @@ function step({ P, S, I }) {
   const g = (I.cp - I.cn)/(P.delta);
   let k_next = S.k - P.lr*g;
 
-  console.log(P)
   if (k_next < P.kmin) {
     k_next = P.kmin
   } else if (k_next > P.kmax) {

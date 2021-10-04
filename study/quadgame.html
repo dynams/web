@@ -507,7 +507,7 @@ window.onload = function() {
           const prog = ds.progress()
           let str = "<p><b>✅ Completed tasks:</b> "+prog.current+"/"+prog.total;
           if(prog.time_remaining) {
-            str += "<p><b>⏱ Remaining time: </b> ~"+prog.time_remaining.toFixed(1) +" min";
+            str += "<p><b>⏱ Remaining time: </b> ~"+Math.ceil(prog.time_remaining) +" min";
           }
           const el = document.getElementById('progress_div')
           el.innerHTML = str;
