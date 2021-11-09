@@ -19,13 +19,15 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   /* TODO move outer loop code to protocol file */
   let S_outer = { 
     t: 0, 
-    k: 0.4,
+    k: 1,
     l: 0, 
   }
+
   let recieved_outer = { 
       0: false, 
       1: false
   }
+
   let I_outer = {
     cn:0,
     cp:0,
@@ -41,7 +43,8 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   };
 
   let params_outer = {
-    
+    k: 0,
+    l: 0
   };
 
   function step_outer_loop(id, trial_dict) {
@@ -54,12 +57,15 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
         I_outer.cn = costy_median;
       } else if (id == 1) {
         I_outer.cp = costy_median;
+      } else {
+        console.warn('id: '+ id +' not valid')
       }
       recieved_outer[id] = true;
 
       console.log('reviter: '+id);
       console.log(task.params)
       console.log(costy_median);
+      console.debug({recieved_outer})
 
       if (recieved_outer[0] && recieved_outer[1]) {
         console.log('TAKING A STEP')
@@ -89,7 +95,10 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       } else if (id == 1) {
         I_outer.xp = x_median;
         I_outer.yp = y_median;
+      } else {
+        console.warn('id: '+ id +' not valid')
       }
+
       recieved_outer[id] = true;
 
       console.log('conjectureiter: '+id);
@@ -175,10 +184,6 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       console.log('Experiment ' + experiment + ' not supported')
     }
 
-    if (hasOuterTask()) {
-      Object.assign(P_outer, study.params)
-    }
-
     controller = TaskController({
       protocol: StandbyReadyGoFixedProtocol,
       experiment: Experiment,
@@ -187,7 +192,23 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       update_fn: update_fn,
       upload_fn: upload
     })
-    task = study.tasks[count]
+    const idx = random_permutation[count];
+    task = study.tasks[idx]
+
+    if (hasOuterTask()) {
+      if(study.protocol == "reviter-1") {
+        S_outer.k = study.params.k;
+        params_outer.k = S_outer.k;
+        task.params.k = S_outer.k;
+      } else if(study.protocol == "conjectureiter-1") {
+        S_outer.l = study.params.l;
+        params_outer.l = S_outer.l;
+        task.params.l = S_outer.l;
+      }
+      Object.assign(P_outer, study.params)
+      console.debug({params_outer})
+    }
+
     controller.load(task, params)
     controller.start()
   }
@@ -219,6 +240,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
         done_fn();
       }
     } 
+
     count += 1;
     const idx = random_permutation[count];
     task = study.tasks[idx];
@@ -227,6 +249,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       Object.assign(task.params, params)
       if(hasOuterTask()) {
         Object.assign(task.params, params_outer)
+        console.debug({params_outer})
       }
       controller.reset(task)
     }

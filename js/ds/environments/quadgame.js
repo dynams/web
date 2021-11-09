@@ -154,8 +154,8 @@ function step_sim({ P, S }) {
 }
 
 function reset({ P }) {
-    const x0 = P.random ? random_uniform(-.8,.8) : P.x0;
-    let y0 = P.random ? random_uniform(-.8,.8) : P.y0;
+    const x0 = P.random ? random_uniform(-.4,.4) : P.x0;
+    let y0 = P.random ? random_uniform(-.4,.4) : P.y0;
 
     const Ss = { t:0, x: x0, y: y0 };
     const { Sp } = step({ P, S:Ss, I: { x: x0 } });
