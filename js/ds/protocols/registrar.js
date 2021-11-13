@@ -53,12 +53,16 @@ const registrar = {
   'quadgame-2': {
     env: 'quadgame',
     preset: {
-    a: 1, b: 0.108715, h: 0.141513,
-    d: 1, c: -1, e: -16.8311,
-    x1: -0.655565, y1: 3.99122,
-    x2: 0.4, y2: 0.4,
-    k: 0, l: 0, lr: 0.1, s: 1, 
-    x0: 0.5, y0: 0.5, tol:0.03 
+    a: 1, b: -1/3, h: 7/15,
+    d: 1, c: -1, e: 2,
+    x1: 0.1, y1: 0.7,
+    x2: 0, y2: 0,
+    s: 1, sx:1, sy:1, cx:0, cy:0,
+    x0: 0.5, y0: 0.5, tol:0.03,
+    random: 1, rev: 0,
+    xpert: 0, ypert: 0, 
+    kpert: 0, lpert: 0,
+    k: 0, l: 0, lr: 0.1, 
     },
     params: {
       lr: 0.1, xflip: 0
