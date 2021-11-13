@@ -54,7 +54,7 @@ const registrar = {
     env: 'quadgame',
     preset: {
     a: 1, b: -1/3, h: 7/15,
-    d: 1, c: -1, e: 2,
+    d: 1, c: -1, e: 5/2,
     x1: 0.1, y1: 0.7,
     x2: 0, y2: 0,
     s: 1, sx:1, sy:1, cx:0, cy:0,
