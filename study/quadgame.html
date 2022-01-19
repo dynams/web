@@ -341,6 +341,7 @@ const PROLIFIC_PID = query.PROLIFIC_PID;
 const SESSION_ID = query.SESSION_ID;
 const STUDY_ID = query.STUDY_ID;
 let params= {};
+let outer_params = {};
 if(query.k) {
   params.k = parseFloat(query.k)
 }
@@ -365,6 +366,20 @@ if(query.s) {
 if(query.duration) {
   params.duration = parseFloat(query.duration)
 }
+if(query.random) {
+  params.random = parseFloat(query.random)
+}
+
+/*
+if(query.outer_k) {
+  outer_params.k = parseFloat(query.outer_k)
+}
+
+if(query.outer_l) {
+  outer_params.l = parseFloat(query.outer_l)
+}
+*/
+
 
 window.onload = function() {
   function touchstart(e) {
@@ -458,7 +473,7 @@ window.onload = function() {
           const extra_time = 1;
           console.log("Welcome!")
           console.log(">> Starting controller")
-          ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID}, params)
+          ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID}, params)//, outer_params)
           const prog = ds.progress()
           console.log(prog)
           if(prog.time_remaining) {
