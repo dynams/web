@@ -13,8 +13,8 @@ function costs({ P, S }) {
     const b2 = P.b2;
     const d2 = P.d2;
 
-    const costx = (1 - S.x)**a1 * (S.x + d1*S.y)**b1;
-    const costy = (1 - S.y)**a2 * (S.y + d2*S.x)**b2;
+    const costx = -1*(1 - S.x)**a1 * (S.x + d1*S.y)**b1;
+    const costy = -1*(1 - S.y)**a2 * (S.y + d2*S.x)**b2;
 
     return { costx, costy };
 }
@@ -123,7 +123,7 @@ function step({ P, S, I }) {
 
 function output({ P, S }) {
     const { costx, costy } = costs({ P, S })
-    const c = (1.12 - costx);//P.cost_offset - costx - P.cost_offset
+    const c = (1.12 + costx);//P.cost_offset - costx - P.cost_offset
     const cc = c < 0 ? 0 : c;
     const O = { cost: cc, costx, costy }
     return { O }
