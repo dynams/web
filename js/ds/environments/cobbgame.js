@@ -123,8 +123,9 @@ function step({ P, S, I }) {
 
 function output({ P, S }) {
     const { costx, costy } = costs({ P, S })
-    const c = (1.12 - costx)*2;//P.cost_offset - costx - P.cost_offset
-    const O = { cost: c, costx, costy }
+    const c = (1.12 - costx);//P.cost_offset - costx - P.cost_offset
+    const cc = c < 0 ? 0 : c;
+    const O = { cost: cc, costx, costy }
     return { O }
 }
     
@@ -143,8 +144,8 @@ function step_sim({ P, S }) {
 }
 
 function reset({ P }) {
-    const x0 = P.random ? random_uniform(-.4,.4) : P.x0;
-    let y0 = P.random ? random_uniform(-.4,.4) : P.y0;
+    const x0 = P.random ? random_uniform(.2,.8) : P.x0;
+    let y0 = P.random ? random_uniform(.2,.8) : P.y0;
 
     const Ss = { t:0, x: x0, y: y0 };
     const { Sp } = step({ P, S:Ss, I: { x: x0 } });
