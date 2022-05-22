@@ -117,14 +117,13 @@ function step({ P, S, I }) {
         y: sat(y_next,0,1)
     }
     const { O } = output({ P, S: Sp});
-    console.log(O);
 
     return { Sp, O };
 }
 
 function output({ P, S }) {
     const { costx, costy } = costs({ P, S })
-    const c = (1 - costx)*2;//P.cost_offset - costx - P.cost_offset
+    const c = (1.12 - costx)*2;//P.cost_offset - costx - P.cost_offset
     const O = { cost: c, costx, costy }
     return { O }
 }
