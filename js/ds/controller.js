@@ -1,6 +1,8 @@
 import { log, init_zip, zip, save_zip, zip_add_file } from '/js/ds/analysis/utils.js'
 //import SampleStudy from '/js/protocols/sample_study.json'
 import quadgame from '/js/ds/environments/quadgame.js'
+import cobbgame from '/js/ds/environments/cobbgame.js'
+//import vectgame from '/js/ds/environments/vectgame.js'
 import graddescent from '/js/ds/environments/graddescent.js'
 import reftrack from '/js/ds/environments/reftrack.js'
 
@@ -105,6 +107,12 @@ export default function TaskController({
     } else if (proto.env == 'quadgame') {
       state.step_fn = quadgame.step
       state.reset_fn = quadgame.reset
+    } else if (proto.env == 'cobbgame') {
+      state.step_fn = cobbgame.step
+      state.reset_fn = cobbgame.reset
+    //} else if (proto.env == 'vectgame') {
+    //  state.step_fn = vectgame.step
+    //  state.reset_fn = vectgame.reset
     } else if (proto.env == 'reftrack') {
       state.step_fn = reftrack.step
       state.reset_fn = reftrack.reset
