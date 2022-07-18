@@ -54,7 +54,8 @@ function drawOutput({ P, O }) {
   const mid = 70
   const tot = 10
 
-  let val = Math.sqrt(O.cost);
+  let val = O.cost;
+
   if ( val > 0.5) {
     val = Math.atan(Math.PI*(val-0.5))/Math.PI + 1/2
   }

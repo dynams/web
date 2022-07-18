@@ -135,7 +135,7 @@ function step({ P, S, I }) {
 
 function output({ P, S }) {
     const { costx, costy } = costs({ P, S })
-    const O = { cost: costx, costy }
+    const O = { cost: Math.sqrt(costx), costx, costy }
     return { O }
 }
     
