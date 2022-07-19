@@ -99,7 +99,7 @@ const registrar = {
     preset: {
       a1: 0.3, b1: 0.6, d1: 9/8,
       a2: 0.4, b2: 0.8, d2: 1,
-      x2: 0.8, y2: 0.8,
+      x2: 0.7, y2: 0.7,
       tol:0.03,
       random: 1, rev: 0,
       xpert: 0, ypert: 0, 
