@@ -63,6 +63,7 @@ const registrar = {
     xpert: 0, ypert: 0, 
     kpert: 0, lpert: 0,
     k: 0, l: 0, lr: 0.1, 
+    ynash: -0.2
     },
     params: {
       lr: 0.1, xflip: 0
