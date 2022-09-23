@@ -116,6 +116,27 @@ const registrar = {
     ready_wait: 1,
     standby_wait: 5
   },
+  'cobbgame-2': {
+    env: 'cobbgame',
+    preset: {
+      a1: 0.175, b1: 0.5, d1: 1.1, 
+      a2: 0.2, b2: 0.5, d2: 1.1,
+      x2: 0.5, y2: 0.5,
+      tol:0.03,
+      random: 1, rev: 0,
+      xpert: 0, ypert: 0, 
+      kpert: 0, lpert: 0,
+      k: 0, l: 0, 
+      lr: -1, 
+    },
+    params: {
+      lr: 0.1, xflip: 0
+    },
+    freq: 60,
+    duration: 30,
+    ready_wait: 1,
+    standby_wait: 5
+  },
 }
 
 export default registrar
