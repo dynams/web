@@ -509,9 +509,6 @@ window.onload = function() {
           if (outer_params.lr_rev) {
             context.study.lr = outer_params.lr_rev
           }
-          if (outer_params.protocol) {
-            context.study.protocol = outer_params.protocol
-          }
           ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID}, params)//, outer_params)
           const prog = ds.progress()
           console.log(prog)

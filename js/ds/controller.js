@@ -85,10 +85,16 @@ export default function TaskController({
     state.count += 1;
     task.id = state.count;
     state.task = task
+    let protocol;
+    const params = task.params
+    if(params.protocol) {
+      protocol=params.protocol
+    } else {
+      protocol = task.protocol
+    }
+    task.protocol = protocol
     console.log('load task:')
     console.log(task)
-    const protocol = task.protocol
-    const params = task.params
     const proto = registrar[protocol]
 
     // Initialize a trial
