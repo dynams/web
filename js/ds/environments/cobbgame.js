@@ -79,7 +79,7 @@ function bestresponse_rev({ P, S }) {
 
 function step({ P, S, I }) {
     // State updates for x and y
-    const x_next = (I.x + 1)/2;
+    const x_next = I.x*.3+.5;
     let y_next;
 
     const Ss = { 
@@ -123,29 +123,17 @@ function step({ P, S, I }) {
 
 function output({ P, S }) {
     const { costx, costy } = costs({ P, S })
-    const c = (1.12 + costx);//P.cost_offset - costx - P.cost_offset
+    const c = (1.05 + costx);//P.cost_offset - costx - P.cost_offset
     const cc = c < 0 ? 0 : c;
-    const O = { cost: cc, costx, costy }
+    const ccc = Math.sqrt(cc*2);
+    const O = { cost: ccc, costx, costy }
     return { O }
 }
     
 
-function step_sim({ P, S }) {
-    const { costx, costy } = costs({ P, S })
-    const { grady, gradx } = gradients({ P, S });
-
-    const x_next = S.x - P.lr_sim * gradx;
-    const y_next = S.y - P.lr * grady;
-
-    const Sp = { x: x_next, y: y_next }; 
-    const O = { costx, costy };
-
-    return { Sp, O };
-}
-
 function reset({ P }) {
-    const x0 = P.random ? random_uniform(.2,.8) : P.x0;
-    let y0 = P.random ? random_uniform(.2,.8) : P.y0;
+    const x0 = P.random ? random_uniform(.3,.7) : P.x0;
+    let y0 = P.random ? random_uniform(.3,.7) : P.y0;
 
     const Ss = { t:0, x: x0, y: y0 };
     const { Sp } = step({ P, S:Ss, I: { x: x0 } });
@@ -156,4 +144,4 @@ function reset({ P }) {
     return { P, S, I, O };
 }
 
-export default { step, step_sim, reset }
+export default { step, reset }
