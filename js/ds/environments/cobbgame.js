@@ -14,7 +14,12 @@ function costs({ P, S }) {
     const d2 = P.d2;
 
     const costx = -1*(1 - S.x)**a1 * (S.x + d1*S.y)**b1;
-    const costy = -1*(1 - S.y)**a2 * (S.y + d2*S.x)**b2;
+    let costy=0;
+    if(!P.rev) {
+      costy = -1*(1 - S.y)**a2 * (S.y + d2*S.x)**b2;
+    } else {
+      costy = (S.x - P.x2)**2/2 + (S.y - P.y2)**2/2;
+    }
 
     return { costx, costy };
 }
@@ -145,3 +150,4 @@ function reset({ P }) {
 }
 
 export default { step, reset }
+
