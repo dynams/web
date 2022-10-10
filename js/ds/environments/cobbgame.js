@@ -112,6 +112,8 @@ function step({ P, S, I }) {
             const { bry } = bestresponse_rev({ P, S:Ss });
             y_next = bry;
         }
+    } else if (P.lr == 0) {
+        y_next = P.ynash;
     } else {
       console.log('error')
     }

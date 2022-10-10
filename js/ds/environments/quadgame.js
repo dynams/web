@@ -121,9 +121,6 @@ function step({ P, S, I }) {
         }
     } else if (P.lr == 0) {
         y_next = P.ynash;
-        console.log('DEBUG')
-        console.log(P.ynash);
-        console.log(y_next);
     } else {
       console.log('error')
     }

@@ -122,6 +122,7 @@ const registrar = {
       a1: 0.175, b1: 0.5, d1: 1.1, 
       a2: 0.2, b2: 0.5, d2: 1.1,
       x2: 0.5, y2: 0.5,
+      ynash: 0.5196,
       tol:0.03,
       random: 1, rev: 0,
       xpert: 0, ypert: 0, 
