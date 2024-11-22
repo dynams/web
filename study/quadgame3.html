@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      #main{
+        text-align: center;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.4.2/math.js"></script>
+  </head>
+  <body>
+    <div id="main">
+      <svg width="512" height="512">
+        <circle id="output" cx="256" cy="256" r="200" stroke="black"/>
+      </svg>
+    </div>
+    <script>
+      const P = {
+        a: 1,
+        b: -1/3,
+        h: 7/15,
+        d: 1,
+        c: -1,
+        e: 2,
+        x1: 1/10,
+        y1: 7/10,
+        x2: 0,
+        y2: 0,
+        lr: 0.3,
+
+        fps: 60,
+        duration: 10
+      }
+      var I = {
+        x: 0,
+        L: 0
+      }
+      var S = {
+        t: 0,
+        y: 0
+      }
+
+      var X = [];
+      var Y = [];
+
+      function cost(x,y) {
+        x -= P.x1;
+        y -= P.y1;
+        return P.a*x*x/2 + P.b*x*y + P.h*y*y/2;
+      }
+
+      function mousemove(e) {
+        let x = e.clientX/window.innerWidth*2-1;
+        let y = e.clientY/window.innerHeight*2-1;
+
+        I.x = x;
+        I.L = Math.tan(y*Math.PI/2);
+      }
+
+      function tick() {
+        S.t += 1;
+
+        const g = (P.d + P.c*I.L)*(S.y - P.y2)
+          + (P.c + P.e*I.L)*(I.x - P.x2);
+        const lr = 1/(P.d + P.c*I.L)/2;
+        const yp = S.y - lr*g;
+        S.y = Math.min(Math.max(yp, -2), 2);
+        f = cost(I.x, S.y)
+
+        X.push(I.x)
+        Y.push(S.y)
+
+        //console.log("x=" + I.x.toFixed(2) + " " 
+        //          + "L=" + I.L.toFixed(2) + " "
+        //          + "y=" + S.y.toFixed(2) + " " 
+        //          + f.toFixed(3))
+
+        output.setAttribute('r',Math.sqrt(f)*100)
+
+        if(S.t <= P.duration*P.fps) {
+          window.setTimeout(tick, 1000/P.fps)
+        } else {
+          console.log("median: "+math.median(X).toFixed(3) + "," + math.median(Y).toFixed(3));
+        }
+        
+      }
+      tick()
+
+      window.addEventListener('mousemove', mousemove)
+
+
+    </script>
+  </body>
+</html>

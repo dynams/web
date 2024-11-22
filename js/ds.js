@@ -25,16 +25,28 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
   let recieved_outer = { 
       0: false, 
-      1: false
+      1: false,
+      2: false, 
+      3: false
   }
 
   let I_outer = {
     cn:0,
     cp:0,
+
     xn:0,
     xp:0,
     yn:0,
-    yp:0
+    yp:0,
+
+    xnn:0,
+    xnp:0,
+    xpn:0,
+    xpp:0,
+    ynn:0,
+    ynp:0,
+    ypn:0,
+    ypp:0,
   };
 
   let P_outer = {
@@ -46,6 +58,12 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
     k: 0,
     l: 0
   };
+
+  let P_outer_default = {}
+
+  function reset_outer_loop(P){
+    return 
+  }
 
   function step_outer_loop(id, trial_dict) {
     console.log('step outer loop')
@@ -62,7 +80,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       }
       recieved_outer[id] = true;
 
-      console.log('reviter: '+id);
+      console.log('reviter-1: '+id);
       console.log(task.params)
       console.log(costy_median);
       console.debug({recieved_outer})
@@ -71,6 +89,53 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
         console.log('TAKING A STEP')
         recieved_outer[0] = false;
         recieved_outer[1] = false;
+
+        const next = RevIteration.step({ 
+          P: P_outer, 
+          S: S_outer, 
+          I: I_outer 
+        })
+        S_outer = next.Sp;
+        params_outer = { k: S_outer.k }
+
+        console.log('k:', next.Sp.k)
+      }
+    }
+    if(study.protocol == "reviter-2") {
+      const _x = trial_dict.map(a => a.S.x);
+      const _y = trial_dict.map(a => a.O.y);
+      const x = math.median(_x);
+      const y = math.median(_y);
+
+      if (id == 0) {
+        I_outer.xnn = x;
+        I_outer.ynn = y;
+      } else if (id == 1) {
+        I_outer.xnp = x;
+        I_outer.ynp = y;
+      } else if (id == 2) {
+        I_outer.xpn = x;
+        I_outer.ypn = y;
+      } else if (id == 3) {
+        I_outer.xpp = x;
+        I_outer.ypp = y;
+      } else {
+        console.warn('id: '+ id +' not valid')
+      }
+      recieved_outer[id] = true;
+
+      console.log('reviter-3: '+id);
+      console.log(task.params)
+      console.log(costy_median);
+      console.debug({recieved_outer})
+
+      if (recieved_outer[0] && recieved_outer[1] &&
+          recieved_outer[2] && recieved_outer[3]) {
+        console.log('TAKING A STEP')
+        recieved_outer[0] = false;
+        recieved_outer[1] = false;
+        recieved_outer[2] = false;
+        recieved_outer[3] = false;
 
         const next = RevIteration.step({ 
           P: P_outer, 
@@ -125,12 +190,13 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
   return { load, start, pause, resume, progress, getSpace, mount, save }
 
-  function load(s, api, sess={}, P={}) {
+  function load(s, api, sess={}, P={}, outer_P={}) {
     study = s
     upload_api = api
     count = 0
     session = sess;
     params = P
+    P_outer_default = outer_P
     random_permutation = _.shuffle(_.range(s.tasks.length));
     console.log(random_permutation);
   }
@@ -197,14 +263,23 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
     if (hasOuterTask()) {
       if(study.protocol == "reviter-1") {
-        S_outer.k = study.params.k;
+        if(P_outer_default.k) {
+          S_outer.k = P_outer_default.k
+        } else {
+          S_outer.k = study.params.k;
+        }
         params_outer.k = S_outer.k;
         task.params.k = S_outer.k;
       } else if(study.protocol == "conjectureiter-1") {
-        S_outer.l = study.params.l;
+        if(P_outer_default.l) {
+          S_outer.l = P_outer_default.l
+        } else {
+          S_outer.l = study.params.l;
+        }
         params_outer.l = S_outer.l;
         task.params.l = S_outer.l;
       }
+      
       Object.assign(P_outer, study.params)
       console.debug({params_outer})
     }
@@ -274,6 +349,7 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       session,
       ...object
     }
+    console.log(object.params)
 
     const body = JSON.stringify(payload)
     fetch(upload_api, {
