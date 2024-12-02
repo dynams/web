@@ -344,12 +344,11 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
     console.log('upload')
     console.log('len='+object.data.length);
     let payload = {
-      id: count,
       sid: study.sid,
       session,
       ...object
     }
-    console.log(object.params)
+    payload.id = payload.id.toString()
 
     const body = JSON.stringify(payload)
     fetch(upload_api, {
@@ -357,7 +356,6 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
       headers: {
         'accept': 'application/json',
         'Content-Type': 'application/json',
-        'mode': 'cors'
       },
       body 
     })
@@ -492,7 +490,6 @@ export function CreateMachine(object) {
           headers: {
             'accept': 'application/json',
             'Content-Type': 'application/json',
-            'mode': 'cors'
           },
           body
         }).then(res => res.json())
