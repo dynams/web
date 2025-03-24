@@ -360,10 +360,10 @@ const data = {
     x2: 0,
     y1: 0,
     y2: -2,
-    a: 1.8,
+    a: 1,
     b: -.15,
     c: .15,
-    d: .7,
+    d: 1,
     e: 3,
     h: 1,
     k:0, 
@@ -948,6 +948,92 @@ function update(S, I, O, P) {
    }
 }
 
+
+
+function solve(A, v) {
+  const a = A[0][0];
+  const b = A[0][1];
+  const c = A[1][0];
+  const d = A[1][1];
+  const det = a*d - b*c;
+  return [(d*v[0] - b*v[1])/det,
+          (-c*v[0] + a*v[1])/det]
+}
+
+function eq(k, l, P) {
+    const J = [[P.a + P.b*k, P.b + P.h*k],
+               [P.c + P.e*l, P.d + P.c*l]]
+    const J0 = [(J[0][0]*P.x1 + J[0][1]*P.y1)*P.scale, 
+                (J[1][0]*P.x2 + J[1][1]*P.y2)*P.scale]
+    return solve(J, J0);
+}
+
+function stable(k,l,P) {
+  const J = [[P.a + P.b*k, P.b + P.h*k],
+             [P.c + P.e*l, P.d + P.c*l]]
+  const a = J[0][0];
+  const b = J[0][1];
+  const c = J[1][0];
+  const d = J[1][1];
+
+}
+
+function draw_more(ctx, P) {
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  let first = true;
+  for(let l = -10; l<10; l+=.01) {
+    const k = -(P.c + P.e*l)/(P.d + P.c*l);
+    const pt = eq(k,l,P)
+    if (first) {
+      first = false;
+      ctx.moveTo(pt[0],pt[1])
+    } else {
+      ctx.lineTo(pt[0],pt[1])
+    }
+  }
+  ctx.stroke();
+
+  ctx.lineWidth = 2;
+  first = true;
+  let pt_prev;
+  for(let k = -100; k<100; k+=.1) {
+    const l = -(P.b + P.h*k)/(P.a + P.b*k);
+    const pt = eq(k,l,P)
+    if (first || (pt_prev[0]-pt[0])**2+(pt_prev[1]-pt[1])**2 > 0.1) {
+      first = false;
+      ctx.moveTo(pt[0],pt[1])
+    } else {
+      ctx.lineTo(pt[0],pt[1])
+    }
+    pt_prev = pt;
+  }
+  ctx.stroke();
+
+  first = true;
+  let k = 0;
+  let l = 0;
+  for(let s = 0; s<20; s+=1) {
+    k = -(P.c + P.e*l)/(P.d + P.c*l);
+    const pt = eq(k,l,P)
+    l = -(P.b + P.h*k)/(P.a + P.b*k);
+    ctx.beginPath()
+    ctx.ellipse(pt[0],pt[1],5,5,0,0,2*Math.PI)
+    ctx.fill()
+  }
+  ctx.lineWidth = 3;
+  const pt = eq(k,l,P)
+  if (P.stableccve){
+    ctx.strokeStyle = 'green'
+  } else {
+    ctx.strokeStyle = 'red'
+  }
+  ctx.beginPath()
+  ctx.ellipse(pt[0],pt[1],8,8,0,0,2*Math.PI)
+  ctx.stroke()
+
+}
+
 function draw(canvas, S, I, O, P, H) {
   let ctx = canvas.getContext('2d')
   let w = canvas.width
@@ -1347,6 +1433,10 @@ ctx.lineTo(H.S.x[i], H.S.y[i])
 
 
      }
+
+
+
+     draw_more(ctx, P)
    } // end show info
 
   

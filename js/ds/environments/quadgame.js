@@ -119,6 +119,8 @@ function step({ P, S, I }) {
             const { bry } = bestresponse_rev({ P, S:Ss });
             y_next = bry;
         }
+    } else if (P.lr == 0) {
+        y_next = P.ynash;
     } else {
       console.log('error')
     }
@@ -135,7 +137,7 @@ function step({ P, S, I }) {
 
 function output({ P, S }) {
     const { costx, costy } = costs({ P, S })
-    const O = { cost: costx, costy }
+    const O = { cost: Math.sqrt(costx), costx, costy }
     return { O }
 }
     
@@ -154,14 +156,14 @@ function step_sim({ P, S }) {
 }
 
 function reset({ P }) {
-    const x0 = P.random ? random_uniform(-.8,.8) : P.x0;
-    let y0 = P.random ? random_uniform(-.8,.8) : P.y0;
+    const x0 = P.random ? random_uniform(-.4,.4) : P.x0;
+    let y0 = P.random ? random_uniform(-.4,.4) : P.y0;
 
     const Ss = { t:0, x: x0, y: y0 };
-    const I = { x: x0 };
-    const { Sp } = step({ P, S:Ss, I });
+    const { Sp } = step({ P, S:Ss, I: { x: x0 } });
     const S = { t:0, x: x0, y: Sp.y };
     const { O } = output({ P, S })
+    const I = { x: 0  };
 
     return { P, S, I, O };
 }

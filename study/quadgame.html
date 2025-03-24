@@ -6,6 +6,7 @@
   <script src="/js/dist/papaparse.min.js"></script>
   <script src="/js/dist/lodash.min.js"></script>
   <script src="/js/dist/rangetouch.js"></script>
+  <script src="/js/dist/math.js"></script>
   <!--<script src="https://cdn.rangetouch.com/2.0.1/rangetouch.js"></script>-->
   <script type="module" src="/js/ds.js"></script>
   <script src="/js/scripts.js"></script>
@@ -91,7 +92,7 @@ rect {
         you will follow on-screen instructions to provide <i>input</i> that makes an object satisfy an <i>objective</i>. -->
         For example, you may be asked to make an object as <i>small</i> or <i>large</i> as possible.
         <p> After the experiment, we will ask a some question to evaluate the interaction. 
-        <span style="display:none;">The entire experimental session should take around <span style="font-weight:bold;" id="time_remaining_welcome">10 minutes</span>.</span>
+        <span>The entire experimental session should take around <span style="font-weight:bold;" id="time_remaining_welcome">10 minutes</span>.</span>
 
         <p> You are encouraged to 
         be comfortably seated with your device and
@@ -340,6 +341,7 @@ const PROLIFIC_PID = query.PROLIFIC_PID;
 const SESSION_ID = query.SESSION_ID;
 const STUDY_ID = query.STUDY_ID;
 let params= {};
+let outer_params = {};
 if(query.k) {
   params.k = parseFloat(query.k)
 }
@@ -361,6 +363,56 @@ if(query.ypert) {
 if(query.s) {
   params.s = parseFloat(query.s)
 }
+if(query.duration) {
+  params.duration = parseFloat(query.duration)
+}
+if(query.random) {
+  params.random = parseFloat(query.random)
+}
+if(query.x0) {
+  params.x0 = parseFloat(query.x0)
+}
+if(query.y0) {
+  params.y0 = parseFloat(query.y0)
+}
+if(query.x2) {
+  params.x2 = parseFloat(query.x2)
+}
+if(query.y2) {
+  params.y2 = parseFloat(query.y2)
+}
+if(query.protocol) {
+  params.protocol = query.protocol
+}
+if(query.lr_rev) {
+  outer_params.lr_rev = parseFloat(query.lr_rev)
+}
+//if(query.revrand) {
+//var rad = query.revrand;
+//var r1 = 100;
+//var r2 = 100;
+//while(r1**2+r2**2 > rad**2){
+  //var r1 = Math.random();
+  //var r2 = Math.random();
+  //r1 = (2*r1-1) * rad;
+  //r2 = (2*r2-1) * rad;
+//}
+//params.x2 = r1;
+//params.y2 = r2;
+//}
+
+
+
+/*
+if(query.outer_k) {
+  outer_params.k = parseFloat(query.outer_k)
+}
+
+if(query.outer_l) {
+  outer_params.l = parseFloat(query.outer_l)
+}
+*/
+
 
 window.onload = function() {
   function touchstart(e) {
@@ -381,9 +433,9 @@ window.onload = function() {
 
   let api_url; 
   if (!query.dev) {
-    api_url = "https://api.dynam.space/"
+    api_url = "https://dynam.space/"
   } else {
-    api_url = "http://localhost:8000/"
+    api_url = "http://localhost:8080/"
   }
 
   const completed_url = "https://app.prolific.co/submissions/complete?cc=";
@@ -454,8 +506,11 @@ window.onload = function() {
           const extra_time = 1;
           console.log("Welcome!")
           console.log(">> Starting controller")
-          ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID}, params)
-          const prog = ds.progress(30)
+          if (outer_params.lr_rev) {
+            context.study.lr = outer_params.lr_rev
+          }
+          ds.load(context.study, api_upload_url, {PROLIFIC_PID, SESSION_ID, STUDY_ID}, params)//, outer_params)
+          const prog = ds.progress()
           console.log(prog)
           if(prog.time_remaining) {
             const label = document.getElementById('time_remaining_welcome')
@@ -500,10 +555,10 @@ window.onload = function() {
         screen: 'rest',
         onEntry: function() {
           ds.pause()
-          const prog = ds.progress(30)
+          const prog = ds.progress()
           let str = "<p><b>✅ Completed tasks:</b> "+prog.current+"/"+prog.total;
           if(prog.time_remaining) {
-            str += "<p><b>⏱ Remaining time: </b> ~"+prog.time_remaining +" min";
+            str += "<p><b>⏱ Remaining time: </b> ~"+Math.ceil(prog.time_remaining) +" min";
           }
           const el = document.getElementById('progress_div')
           el.innerHTML = str;

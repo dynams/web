@@ -1,6 +1,8 @@
 import { log, init_zip, zip, save_zip, zip_add_file } from '/js/ds/analysis/utils.js'
 //import SampleStudy from '/js/protocols/sample_study.json'
 import quadgame from '/js/ds/environments/quadgame.js'
+import cobbgame from '/js/ds/environments/cobbgame.js'
+//import vectgame from '/js/ds/environments/vectgame.js'
 import graddescent from '/js/ds/environments/graddescent.js'
 import reftrack from '/js/ds/environments/reftrack.js'
 
@@ -39,7 +41,8 @@ export default function TaskController({
     freq: 40,
     duration: 30,
     ready_wait: 2,
-    is_exit: false
+    is_exit: false,
+    count: -1
   };
 
   return {
@@ -57,8 +60,6 @@ export default function TaskController({
     };
   function start() {
     console.log('Controller: start')
-    console.log('params: ')
-    console.log(state.task)
     state.state = init('standby', 0)
     state.zip = init_zip()
     state.zip
@@ -81,13 +82,21 @@ export default function TaskController({
     if ( task == null ) {
       console.log("Warning: task initialized to null")
     }
-    // TODO: fix done state
+    state.count += 1;
+    task.id = state.count;
     state.task = task
-    const protocol = task.protocol
+    let protocol;
     const params = task.params
+    if(params.protocol) {
+      protocol=params.protocol
+    } else {
+      protocol = task.protocol
+    }
+    task.protocol = protocol
+    console.log('load task:')
+    console.log(task)
     const proto = registrar[protocol]
 
-    console.log(task.params.duration)
     // Initialize a trial
     state.freq = proto.freq
     state.duration = task.params.duration || proto.duration;
@@ -104,13 +113,18 @@ export default function TaskController({
     } else if (proto.env == 'quadgame') {
       state.step_fn = quadgame.step
       state.reset_fn = quadgame.reset
+    } else if (proto.env == 'cobbgame') {
+      state.step_fn = cobbgame.step
+      state.reset_fn = cobbgame.reset
+    //} else if (proto.env == 'vectgame') {
+    //  state.step_fn = vectgame.step
+    //  state.reset_fn = vectgame.reset
     } else if (proto.env == 'reftrack') {
       state.step_fn = reftrack.step
       state.reset_fn = reftrack.reset
     } else {
       return false
     }
-    
 
     let PP = {...proto.preset, ...params}
 
@@ -213,7 +227,9 @@ export default function TaskController({
         })
       }
 
-      done_fn()
+      console.log(P)
+      console.log("P.id="+P.id)
+      done_fn(P.id, trial_dict)
   }
 
   function save() {

@@ -53,8 +53,17 @@ const registrar = {
   'quadgame-2': {
     env: 'quadgame',
     preset: {
-    d:1.8000, c:-0.5595, b:-0.7000, a:0.7000, h:3.4696, e:0.3976, x2:1.9967, y2:8.6417, x1:0.2896, y1:0.2896,
-    k:0, l:0, lr:0.1, s:.2, x0: 0.5, y0: 0.5, tol:0.03 
+    a: 1, b: -1/3, h: 7/15,
+    d: 1, c: -1, e: 2,
+    x1: 0.1, y1: 0.7,
+    x2: 0, y2: 0,
+    s: 1, sx:1, sy:1, cx:0, cy:0,
+    x0: 0.5, y0: 0.5, tol:0.03,
+    random: 1, rev: 0,
+    xpert: 0, ypert: 0, 
+    kpert: 0, lpert: 0,
+    k: 0, l: 0, lr: 0.1, 
+    ynash: -0.2
     },
     params: {
       lr: 0.1, xflip: 0
@@ -85,7 +94,50 @@ const registrar = {
     duration: 40,
     ready_wait: 2,
     standby_wait: 5
-  }
+  },
+  'cobbgame-1': {
+    env: 'cobbgame',
+    preset: {
+      a1: 0.3, b1: 0.6, d1: 9/8,
+      a2: 0.4, b2: 0.8, d2: 1,
+      x2: 0.7, y2: 0.7,
+      tol:0.03,
+      random: 1, rev: 0,
+      xpert: 0, ypert: 0, 
+      kpert: 0, lpert: 0,
+      k: 0, l: 0, 
+      lr: 0.1, 
+    },
+    params: {
+      lr: 0.1, xflip: 0
+    },
+    freq: 60,
+    duration: 30,
+    ready_wait: 1,
+    standby_wait: 5
+  },
+  'cobbgame-2': {
+    env: 'cobbgame',
+    preset: {
+      a1: 0.175, b1: 0.5, d1: 1.1, 
+      a2: 0.2, b2: 0.5, d2: 1.1,
+      x2: 0.5, y2: 0.5,
+      ynash: 0.5196,
+      tol:0.03,
+      random: 1, rev: 0,
+      xpert: 0, ypert: 0, 
+      kpert: 0, lpert: 0,
+      k: 0, l: 0, 
+      lr: -1, 
+    },
+    params: {
+      lr: 0.1, xflip: 0
+    },
+    freq: 60,
+    duration: 30,
+    ready_wait: 1,
+    standby_wait: 5
+  },
 }
 
 export default registrar
