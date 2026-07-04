@@ -3,9 +3,11 @@ import StandbyReadyGoFixedProtocol from '/js/ds/protocols/standby_ready_go_fixed
 import TaskController from '/js/ds/controller.js'
 import SisoExperiment from '/js/ds/experiments/siso.js'
 import ReftrackExperiment from '/js/ds/experiments/reftrack.js'
+import NxmExperiment from '/js/ds/experiments/nxm.js'
 
 import ConjectureIteration from '/js/ds/protocols/conjectureiter.js'
 import RevIteration from '/js/ds/protocols/reviter.js'
+import NxmIteration from '/js/ds/protocols/nxmiter.js'
 
 //import * as workerTimersBroker from '/js/dist/worker-timers-broker.js';
 //import * as workerTimers from '/js/dist/worker-timers.js';
@@ -61,12 +63,28 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
   let P_outer_default = {}
 
+  /* n x m outer-loop state (conjectureiter-nxm / policyiter-nxm) */
+  let S_outer_nxm = null
+
+  function isNxmOuter() {
+    return study && (study.protocol == 'conjectureiter-nxm' ||
+                     study.protocol == 'policyiter-nxm')
+  }
+
   function reset_outer_loop(P){
-    return 
+    return
   }
 
   function step_outer_loop(id, trial_dict) {
     console.log('step outer loop')
+    if (isNxmOuter()) {
+      const { stepped } = NxmIteration.collect(S_outer_nxm, id, trial_dict)
+      S_outer.t = S_outer_nxm.t
+      if (stepped) {
+        console.log('nxm outer step -> t=' + S_outer_nxm.t)
+      }
+      return
+    }
     if(study.protocol == "reviter-1") {
       const costy = trial_dict.map(a => a.O.costy);
       const costy_median = math.median(costy);
@@ -246,6 +264,9 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
     }
     else if (experiment == 'reftrack') {
       Experiment = ReftrackExperiment
+    }
+    else if (experiment == 'nxm') {
+      Experiment = NxmExperiment
     } else {
       console.log('Experiment ' + experiment + ' not supported')
     }
@@ -261,7 +282,13 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
     const idx = random_permutation[count];
     task = study.tasks[idx]
 
-    if (hasOuterTask()) {
+    if (isNxmOuter()) {
+      // task identity must come from task.params.id — the controller
+      // overwrites task.id with its own monotonic counter on reset
+      S_outer_nxm = NxmIteration.init(study)
+      S_outer.t = 0
+      Object.assign(task.params, NxmIteration.taskParams(S_outer_nxm, task.params.id))
+    } else if (hasOuterTask()) {
       if(study.protocol == "reviter-1") {
         if(P_outer_default.k) {
           S_outer.k = P_outer_default.k
@@ -297,7 +324,8 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
   }
 
   function hasOuterTask() {
-    return study.protocol == "reviter-1" || study.protocol == "conjectureiter-1"
+    return study.protocol == "reviter-1" || study.protocol == "conjectureiter-1" ||
+           isNxmOuter()
   }
 
   function nextTask() {
@@ -322,7 +350,9 @@ export default function DynamSpace({ update_fn, experiment, done_fn } = {}) {
 
     if (task) {
       Object.assign(task.params, params)
-      if(hasOuterTask()) {
+      if (isNxmOuter()) {
+        Object.assign(task.params, NxmIteration.taskParams(S_outer_nxm, task.params.id))
+      } else if(hasOuterTask()) {
         Object.assign(task.params, params_outer)
         console.debug({params_outer})
       }

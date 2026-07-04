@@ -5,6 +5,7 @@ import cobbgame from '/js/ds/environments/cobbgame.js'
 //import vectgame from '/js/ds/environments/vectgame.js'
 import graddescent from '/js/ds/environments/graddescent.js'
 import reftrack from '/js/ds/environments/reftrack.js'
+import nxmgame from '/js/ds/environments/nxmgame.js'
 
 /**
  * Creates an experiment that operates according to the passed in functions and parameters, and returns
@@ -122,6 +123,9 @@ export default function TaskController({
     } else if (proto.env == 'reftrack') {
       state.step_fn = reftrack.step
       state.reset_fn = reftrack.reset
+    } else if (proto.env == 'nxmgame') {
+      state.step_fn = nxmgame.step
+      state.reset_fn = nxmgame.reset
     } else {
       return false
     }

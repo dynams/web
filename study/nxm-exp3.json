@@ -1,0 +1,14 @@
+{
+  "sid": "nxm-exp3",
+  "desc": "nxm Experiment 3: SPSA policy gradient on the machine's affine policy y = l + Lx (3x2 game), two trials per round at (L,l) = unpack(theta +- delta*Delta), warm-started from the follower policy. Prediction: the machine's realized cost decreases across rounds and the median human action is steered to the machine's global optimum x2, even though the human plays optimally against the cost landscape it experiences.",
+  "protocol": "policyiter-nxm",
+  "params": {
+    "num_iter": 30, "n": 3, "m": 2, "delta": 0.06, "lr": 0.2, "decay": 0.995, "seed": 42,
+    "L0": [[-0.1505, 0.6221, -0.2105], [-0.0193, 0.6351, -0.2611]],
+    "l0": [-0.3024, -0.1857]
+  },
+  "tasks": [
+    { "id": "0", "protocol": "nxmgame-3x2", "params": { "id": "0", "map": "pairs", "duration": 25 } },
+    { "id": "1", "protocol": "nxmgame-3x2", "params": { "id": "1", "map": "pairs", "duration": 25 } }
+  ]
+}

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>nxm game demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden;
+             background: #111; color: #eee; font-family: sans-serif; }
+#wrap { display: flex; height: 100%; }
+#left { width: 220px; padding: 10px; background: #1a1a1a; font-size: 13px; }
+#left label { display: block; margin: 8px 0 2px; color: #999; }
+#left select, #left input[type=range], #left button { width: 100%; }
+#mid { width: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#mid svg { width: 70px; height: 70vh; }
+#mid .cap { font-size: 11px; color: #aaa; text-align: center; }
+#right { flex: 1; display: flex; flex-direction: column; }
+canvas { width: 100%; }
+#ui { flex: 1; }
+#dbg { height: 130px; border-top: 1px solid #333; }
+.small { font-size: 11px; color: #888; }
+  </style>
+</head>
+<body>
+<div id="wrap">
+  <div id="left">
+    <b>n&times;m game demo</b>
+    <label>game preset</label>
+    <select id="preset">
+      <option value="2x2">2 x 2</option>
+      <option value="3x2" selected>3 x 2</option>
+      <option value="4x2">4 x 2</option>
+    </select>
+    <label>input mapping</label>
+    <select id="mapping">
+      <option value="direct">direct (n=2 only)</option>
+      <option value="pairs" selected>pairs (drag + switch)</option>
+      <option value="velocity">velocity (stick + switch)</option>
+      <option value="spokes">spokes (radial sliders)</option>
+    </select>
+    <label>machine</label>
+    <select id="machine">
+      <option value="grad">gradient (rate below)</option>
+      <option value="br">best response</option>
+      <option value="cc">conjectural BR (CCVE K)</option>
+      <option value="policy">steering policy (rev. Stackelberg)</option>
+      <option value="nash">hold Nash y</option>
+    </select>
+    <label>gradient rate: <span id="lrval">0.05</span></label>
+    <input type="range" id="lr" min="-4" max="0.3" step="0.05" value="-1.3">
+    <label><input type="checkbox" id="debug" checked> show equilibria meters</label>
+    <label><input type="checkbox" id="auto"> autopilot (ideal user &rarr; SE)</label>
+    <button id="reset">reset trial</button>
+    <p class="small">
+      pairs: hold click to drag the active pair; scroll / space switches.<br>
+      velocity: pointer offset = stick; scroll switches plane.<br>
+      spokes: grab a knob near its value and drag along its diameter.
+    </p>
+    <div id="median" class="small"></div>
+  </div>
+  <div id="mid">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+      <rect id="bar" x="15" y="70" width="70" height="10" fill="#eee"/>
+    </svg>
+    <div class="cap">make this as small as possible</div>
+  </div>
+  <div id="right">
+    <canvas id="ui"></canvas>
+    <canvas id="dbg"></canvas>
+  </div>
+</div>
+
+<script type="module">
+import M from '/js/ds/environments/nxm_math.js'
+import nxmgame from '/js/ds/environments/nxmgame.js'
+import Maps from '/js/ds/experiments/nxm_mappings.js'
+
+const PRESETS = {
+  '2x2': { n: 2, m: 2, seed: 3 },
+  '3x2': { n: 3, m: 2, seed: 4 },
+  '4x2': { n: 4, m: 2, seed: 7 },
+}
+
+const $ = id => document.getElementById(id)
+let P, S, G, map, auto = null
+let ev = { px: 0, py: 0, wheel: 0, key: null, down: false }
+let xs = [] // trace of x for the median readout
+
+function setup() {
+  const pr = PRESETS[$('preset').value]
+  const base = { ...pr, tol: 0.08, sx: 1, cx: 0, random: 1, lr: 0.05 }
+  const mode = $('machine').value
+  const lr = Math.pow(10, parseFloat($('lr').value))
+  if (mode === 'grad') base.lr = lr
+  if (mode === 'br') base.lr = -1
+  if (mode === 'nash') base.lr = 0
+  const r = nxmgame.reset({ P: base })
+  P = r.P; S = r.S
+  G = M.makeGame(P)
+  if (mode === 'cc') { P.lr = -1; P.K = M.ccve(G).K }
+  if (mode === 'policy') { P.L = P.eq.steering.L; P.l = P.eq.steering.l }
+  let type = $('mapping').value
+  if (type === 'direct' && P.n !== 2) { type = 'pairs'; $('mapping').value = 'pairs' }
+  map = Maps.createMapping({ type, n: P.n })
+  Maps.mappingSync(map, S.x)
+  auto = $('auto').checked ? Maps.simulatedUser(map, P.eq.SE.x) : null
+  xs = []
+}
+
+$('preset').onchange = setup
+$('mapping').onchange = setup
+$('machine').onchange = setup
+$('auto').onchange = setup
+$('reset').onclick = setup
+$('lr').oninput = () => {
+  $('lrval').textContent = Math.pow(10, parseFloat($('lr').value)).toFixed(4)
+  if ($('machine').value === 'grad') setup()
+}
+
+const ui = $('ui'), dbg = $('dbg')
+function ptr(e) {
+  const r = ui.getBoundingClientRect()
+  const scale = Math.min(r.width, r.height) * 0.42
+  ev.px = (e.clientX - (r.left + r.width / 2)) / scale
+  ev.py = -(e.clientY - (r.top + r.height / 2)) / scale
+}
+window.addEventListener('mousemove', ptr)
+window.addEventListener('mousedown', () => { ev.down = true })
+window.addEventListener('mouseup', () => { ev.down = false })
+window.addEventListener('wheel', e => { ev.wheel += Math.sign(e.deltaY) })
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space') { ev.key = 'next'; e.preventDefault() }
+})
+
+function tick() {
+  const e2 = { ...ev }
+  ev.wheel = 0; ev.key = null
+  if (auto) {
+    const ae = auto.step(1 / 60)
+    e2.px = ae.px; e2.py = ae.py; e2.wheel = ae.wheel; e2.key = ae.key; e2.down = ae.down
+  }
+  const x = Maps.mappingUpdate(map, e2, 1 / 60)
+  const st = nxmgame.step({ P, S, I: { x } })
+  S = st.Sp
+  xs.push(S.x)
+  if (xs.length > 3600) xs.shift()
+  drawBar(st.O)
+  drawUI()
+  drawDbg(st.O)
+  requestAnimationFrame(tick)
+}
+
+function drawBar(O) {
+  let v = O.cost
+  if (v > 0.5) v = Math.atan(Math.PI * (v - 0.5)) / Math.PI + 0.5
+  const bar = $('bar')
+  bar.setAttribute('height', v * 60 + 10)
+  bar.setAttribute('y', (1 - v) * 60 + 10)
+}
+
+const FG = '#eee', DIMC = '#666', HI = '#6cf'
+function drawUI() {
+  fit(ui)
+  const ctx = ui.getContext('2d')
+  const W = ui.width, H = ui.height
+  ctx.clearRect(0, 0, W, H)
+  const d = Maps.mappingDisplay(map)
+  if (d.type === 'spokes') {
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.42
+    ctx.strokeStyle = DIMC
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke()
+    ctx.beginPath(); ctx.arc(cx, cy, R * map.deadzone, 0, 7); ctx.stroke()
+    for (let i = 0; i < d.n; i++) {
+      const th = i * Math.PI / d.n
+      const g = d.spoke === i
+      ctx.strokeStyle = g ? HI : DIMC
+      ctx.lineWidth = g ? 3 : 1
+      ctx.beginPath()
+      ctx.moveTo(cx - R * Math.cos(th), cy + R * Math.sin(th))
+      ctx.lineTo(cx + R * Math.cos(th), cy - R * Math.sin(th))
+      ctx.stroke()
+      ctx.fillStyle = g ? HI : FG
+      ctx.beginPath()
+      ctx.arc(cx + d.x[i] * R * Math.cos(th), cy - d.x[i] * R * Math.sin(th), 7, 0, 7)
+      ctx.fill()
+    }
+    ctx.fillStyle = '#999'
+    ctx.beginPath(); ctx.arc(cx + ev.px * R, cy - ev.py * R, 3, 0, 7); ctx.fill()
+  } else {
+    const pad = W * 0.1, gap = (W - 2 * pad) / Math.max(d.n - 1, 1)
+    const top = H * 0.1, bot = H * 0.9
+    const yOf = v => bot - (v + 1) / 2 * (bot - top)
+    const ap = d.pairs[d.active] || []
+    for (let i = 0; i < d.n; i++) {
+      const x = d.n === 1 ? W / 2 : pad + i * gap
+      const a = d.type !== 'direct' && ap.includes(i)
+      ctx.strokeStyle = a ? HI : DIMC
+      ctx.lineWidth = a ? 3 : 1
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bot); ctx.stroke()
+      ctx.fillStyle = a ? HI : FG
+      const ky = yOf(d.x[i])
+      ctx.beginPath()
+      ctx.moveTo(x, ky - 8); ctx.lineTo(x + 8, ky); ctx.lineTo(x, ky + 8); ctx.lineTo(x - 8, ky)
+      ctx.closePath(); ctx.fill()
+      ctx.fillStyle = DIMC
+      ctx.font = '12px sans-serif'; ctx.textAlign = 'center'
+      ctx.fillText('x' + (i + 1), x, bot + 14)
+    }
+  }
+}
+
+function drawDbg(O) {
+  fit(dbg)
+  const ctx = dbg.getContext('2d')
+  const W = dbg.width, H = dbg.height
+  ctx.clearRect(0, 0, W, H)
+  if (!$('debug').checked) return
+  // median action over the last minute + distance meters to each equilibrium
+  const med = medianVec(xs)
+  const rows = [
+    ['NE  (Nash)', O.dNE, medDist(med, P.eq.NE.x)],
+    ['SE  (human-led Stackelberg)', O.dSE, medDist(med, P.eq.SE.x)],
+    ['CC  (consistent conjectures)', O.dCC, medDist(med, P.eq.CC.x)],
+    ['MO  (machine optimum)', O.dMO, medDist(med, P.eq.MO.x)],
+  ]
+  ctx.font = '12px monospace'
+  rows.forEach(([name, dNow, dMed], i) => {
+    const y = 22 + i * 26
+    ctx.fillStyle = '#aaa'
+    ctx.textAlign = 'left'
+    ctx.fillText(name, 10, y)
+    const bx = 260, bw = W - bx - 220
+    ctx.strokeStyle = '#444'
+    ctx.strokeRect(bx, y - 10, bw, 12)
+    const frac = Math.max(0, 1 - dNow / 2)
+    ctx.fillStyle = frac > 0.94 ? '#6f6' : '#39f'
+    ctx.fillRect(bx, y - 10, bw * frac, 12)
+    ctx.fillStyle = '#888'
+    ctx.fillText('now ' + dNow.toFixed(2) + '  median ' + dMed.toFixed(2), bx + bw + 10, y)
+  })
+  $('median').textContent = 'median x: [' + med.map(v => v.toFixed(2)).join(', ') + ']'
+}
+
+function medianVec(rows) {
+  if (!rows.length) return new Array(P.n).fill(0)
+  const h = rows.slice(Math.floor(rows.length / 2))
+  return Array.from({ length: P.n }, (_, i) => {
+    const v = h.map(r => r[i]).sort((a, b) => a - b)
+    return v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2
+  })
+}
+const medDist = (a, b) => Math.sqrt(a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0))
+
+function fit(c) {
+  if (c.width !== c.clientWidth || c.height !== c.clientHeight) {
+    c.width = c.clientWidth
+    c.height = c.clientHeight
+  }
+}
+
+setup()
+tick()
+</script>
+</body>
+</html>

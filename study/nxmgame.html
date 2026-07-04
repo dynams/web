@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>nxm game</title>
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/dist/lodash.min.js"></script>
+  <script src="/js/dist/papaparse.min.js"></script>
+  <script src="/js/dist/jszip.min.js"></script>
+  <script src="/js/dist/FileSaver.min.js"></script>
+  <script type="module" src="/js/ds.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+html, body { width: 100%; height: 100%; overflow: hidden; background: #111; color: #eee; }
+.screen { position: absolute; inset: 0; }
+.hidden { display: none; }
+.text { display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; font-family: sans-serif; }
+#study { display: flex; flex-direction: row; align-items: stretch; }
+#barbox { width: 18%; display: flex; flex-direction: column; align-items: center;
+          justify-content: center; }
+#barbox svg { width: 6em; height: 70vh; }
+#caption { font-family: sans-serif; font-size: 0.9em; color: #aaa; text-align: center; }
+#uibox { flex: 1; display: flex; align-items: center; justify-content: center; }
+#nxmcanvas { width: 90%; height: 85vh; }
+.footer { position: fixed; bottom: 0; left: 0; right: 0; background: #222;
+          font-family: sans-serif; font-size: 0.8em; padding: 4px 10px;
+          display: flex; gap: 1.5em; align-items: center; z-index: 10; }
+.footer input, .footer select, .footer button { font-size: 1em; }
+#status { color: #8c8; }
+  </style>
+</head>
+<body>
+  <div id="welcome" class="screen text">
+    <p>n&times;m game &mdash; the bar shows your cost.</p>
+    <p>Align every marker with the orange targets to start each trial,<br>
+       then make the bar as small as possible.</p>
+    <p><b>Click anywhere to begin.</b></p>
+  </div>
+
+  <div id="study" class="screen hidden">
+    <div id="barbox">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+        <rect id="output" x="15" y="70" width="70" height="10" fill="#eee"/>
+      </svg>
+      <div id="caption">make this as small as possible</div>
+    </div>
+    <div id="uibox">
+      <canvas id="nxmcanvas"></canvas>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>nxm game</span>
+    <label>protocol
+      <select id="protosel">
+        <option value="nxmgame-2x2">2x2</option>
+        <option value="nxmgame-3x2" selected>3x2</option>
+        <option value="nxmgame-4x2">4x2</option>
+      </select>
+    </label>
+    <label>mapping
+      <select id="mapsel">
+        <option value="direct">direct (n=2)</option>
+        <option value="pairs" selected>pairs</option>
+        <option value="velocity">velocity</option>
+        <option value="spokes">spokes</option>
+      </select>
+    </label>
+    <button onclick="save()">Save zip</button>
+    <span id="status"></span>
+  </div>
+
+<script type="text/javascript">
+// Query overrides: ?protocol=nxmgame-4x2&map=spokes&lr=0.5&duration=40
+// Machine mode per task comes from the study's params (lr sweep below).
+function getQuery() {
+  let q = {}
+  location.search.substr(1).split('&').forEach(function (item) {
+    const kv = item.split('=')
+    if (kv[0]) q[kv[0]] = decodeURIComponent(kv[1])
+  })
+  return q
+}
+const query = getQuery()
+
+let ds
+let stateMachine
+
+function buildStudy(protocol, map) {
+  // Experiment 1 shape in miniature: a practice alignment trial, then a
+  // machine-rate sweep (2 reps each), shuffled by the loader.
+  const rates = [0.002, 0.02, 0.2]
+  const tasks = []
+  let id = 0
+  tasks.push({ id: String(id++), protocol, params: { id: '0', lr: 0.02, map, duration: 30 } })
+  for (const lr of rates) {
+    for (let rep = 0; rep < 2; rep++) {
+      tasks.push({ id: String(id), protocol, params: { id: String(id), lr, map } })
+      id++
+    }
+  }
+  if (query.lr) tasks.forEach(t => { t.params.lr = parseFloat(query.lr) })
+  if (query.duration) tasks.forEach(t => { t.params.duration = parseFloat(query.duration) })
+  return { sid: 'nxm-local', desc: 'nxm game local study', params: {}, tasks }
+}
+
+window.onload = function () {
+  const protosel = document.getElementById('protosel')
+  const mapsel = document.getElementById('mapsel')
+  if (query.protocol) protosel.value = query.protocol
+  if (query.map) mapsel.value = query.map
+
+  ds = DynamSpace({
+    update_fn: update,
+    experiment: 'nxm',
+  })
+
+  stateMachine = CreateMachine({
+    id: 'study',
+    initial: 'welcome',
+    context: {},
+    states: {
+      welcome: {
+        screen: 'welcome',
+        on: { CLICK: { target: 'study' } },
+        onEntry: function () {
+          ds.load(buildStudy(protosel.value, mapsel.value))
+        },
+      },
+      study: {
+        screen: 'study',
+        onEntry: function () { ds.start() },
+      },
+    },
+  })
+}
+
+let myMsg = ''
+function update({ msg, state } = {}) {
+  if (msg) myMsg = msg
+  const el = document.getElementById('status')
+  if (el) el.innerHTML = myMsg
+}
+
+function save() { ds.save() }
+</script>
+</body>
+</html>

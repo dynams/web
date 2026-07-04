@@ -1,0 +1,21 @@
+{
+  "sid": "nxm-exp1",
+  "desc": "nxm Experiment 1: machine gradient play, 7 adaptation rates x 2 reps (3x2 game, pairs mapping). Prediction: median human action shifts from the Nash equilibrium at slow rates to the human-led Stackelberg equilibrium at fast rates.",
+  "params": {},
+  "tasks": [
+    { "id": "000", "protocol": "nxmgame-3x2", "params": { "id": "000", "lr": 0.001, "map": "pairs" } },
+    { "id": "001", "protocol": "nxmgame-3x2", "params": { "id": "001", "lr": 0.001, "map": "pairs" } },
+    { "id": "002", "protocol": "nxmgame-3x2", "params": { "id": "002", "lr": 0.003, "map": "pairs" } },
+    { "id": "003", "protocol": "nxmgame-3x2", "params": { "id": "003", "lr": 0.003, "map": "pairs" } },
+    { "id": "004", "protocol": "nxmgame-3x2", "params": { "id": "004", "lr": 0.01,  "map": "pairs" } },
+    { "id": "005", "protocol": "nxmgame-3x2", "params": { "id": "005", "lr": 0.01,  "map": "pairs" } },
+    { "id": "006", "protocol": "nxmgame-3x2", "params": { "id": "006", "lr": 0.03,  "map": "pairs" } },
+    { "id": "007", "protocol": "nxmgame-3x2", "params": { "id": "007", "lr": 0.03,  "map": "pairs" } },
+    { "id": "008", "protocol": "nxmgame-3x2", "params": { "id": "008", "lr": 0.1,   "map": "pairs" } },
+    { "id": "009", "protocol": "nxmgame-3x2", "params": { "id": "009", "lr": 0.1,   "map": "pairs" } },
+    { "id": "010", "protocol": "nxmgame-3x2", "params": { "id": "010", "lr": 0.3,   "map": "pairs" } },
+    { "id": "011", "protocol": "nxmgame-3x2", "params": { "id": "011", "lr": 0.3,   "map": "pairs" } },
+    { "id": "012", "protocol": "nxmgame-3x2", "params": { "id": "012", "lr": 1.0,   "map": "pairs" } },
+    { "id": "013", "protocol": "nxmgame-3x2", "params": { "id": "013", "lr": 1.0,   "map": "pairs" } }
+  ]
+}

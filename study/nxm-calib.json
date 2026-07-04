@@ -1,0 +1,21 @@
+{
+  "sid": "nxm-calib",
+  "desc": "nxm controllability calibration battery: reaching (scalar-cost-only feedback) and tracking across mappings and dimensions. Gates admission to the game studies (see docs/nxmgame-design.md: acceptance criteria) and measures each subject's effective descent rate used to center the Experiment 1 rate sweep.",
+  "params": {},
+  "tasks": [
+    { "id": "R00", "protocol": "nxmreach-0", "params": { "id": "R00", "n": 2, "map": "pairs",    "seed": 21 } },
+    { "id": "R01", "protocol": "nxmreach-0", "params": { "id": "R01", "n": 2, "map": "pairs",    "seed": 22 } },
+    { "id": "R02", "protocol": "nxmreach-0", "params": { "id": "R02", "n": 4, "map": "pairs",    "seed": 23 } },
+    { "id": "R03", "protocol": "nxmreach-0", "params": { "id": "R03", "n": 4, "map": "pairs",    "seed": 24 } },
+    { "id": "R04", "protocol": "nxmreach-0", "params": { "id": "R04", "n": 6, "map": "pairs",    "seed": 25 } },
+    { "id": "R05", "protocol": "nxmreach-0", "params": { "id": "R05", "n": 2, "map": "velocity", "seed": 21 } },
+    { "id": "R06", "protocol": "nxmreach-0", "params": { "id": "R06", "n": 4, "map": "velocity", "seed": 23 } },
+    { "id": "R07", "protocol": "nxmreach-0", "params": { "id": "R07", "n": 6, "map": "velocity", "seed": 25 } },
+    { "id": "R08", "protocol": "nxmreach-0", "params": { "id": "R08", "n": 2, "map": "spokes",   "seed": 21 } },
+    { "id": "R09", "protocol": "nxmreach-0", "params": { "id": "R09", "n": 4, "map": "spokes",   "seed": 23 } },
+    { "id": "R10", "protocol": "nxmreach-0", "params": { "id": "R10", "n": 6, "map": "spokes",   "seed": 25 } },
+    { "id": "T00", "protocol": "nxmtrack-0", "params": { "id": "T00", "n": 4, "map": "pairs" } },
+    { "id": "T01", "protocol": "nxmtrack-0", "params": { "id": "T01", "n": 4, "map": "velocity" } },
+    { "id": "T02", "protocol": "nxmtrack-0", "params": { "id": "T02", "n": 4, "map": "spokes" } }
+  ]
+}

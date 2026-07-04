@@ -1,0 +1,12 @@
+{
+  "sid": "nxm-exp2",
+  "desc": "nxm Experiment 2: iterated conjecture estimation (3x2 game). Each round plays 2m=4 probe trials; the machine best-responds through its conjecture K plus +-delta offsets along each of its axes, then refits K by least squares on realized actions (damped). Prediction: median human action shifts from the human-led Stackelberg equilibrium toward the consistent conjectural variations equilibrium.",
+  "protocol": "conjectureiter-nxm",
+  "params": { "num_iter": 8, "n": 3, "m": 2, "delta": 0.15, "damp": 0.5 },
+  "tasks": [
+    { "id": "0", "protocol": "nxmgame-3x2", "params": { "id": "0", "lr": -1, "map": "pairs", "duration": 25 } },
+    { "id": "1", "protocol": "nxmgame-3x2", "params": { "id": "1", "lr": -1, "map": "pairs", "duration": 25 } },
+    { "id": "2", "protocol": "nxmgame-3x2", "params": { "id": "2", "lr": -1, "map": "pairs", "duration": 25 } },
+    { "id": "3", "protocol": "nxmgame-3x2", "params": { "id": "3", "lr": -1, "map": "pairs", "duration": 25 } }
+  ]
+}
